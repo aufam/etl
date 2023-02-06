@@ -7,5 +7,3 @@ int main(int argc, char **argv) {
     std::cout << (res == 0 ? "SUCCESS\n" : "FAILED\n");
     return res;
 }
-
-bool IsEq(int a, int b) { return a==b; }

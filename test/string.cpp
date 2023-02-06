@@ -1,30 +1,24 @@
 #include "gtest/gtest.h"
 #include "etl/string.h"
 
-bool IsEq(const char* a, const char* b) { return strcmp(a, b) == 0; }
-
-TEST(String, Push) {
-    Project::etl::String s;
-    s("Test");
-    s += '\n';
-    EXPECT_PRED2(IsEq, "Test\n", s.data());
-}
+using namespace Project::etl;
 
 TEST(String, Append) {
-    Project::etl::String s;
-    s("Test");
-    s += "123";
-    EXPECT_PRED2(IsEq, "Test123", s.data());
+    String<6> s = "Test";
+    EXPECT_EQ(s.rem(), 1);
+    s += '\n';
+    s += "1"; // cannot
+    EXPECT_EQ(s, "Test\n");
 }
 
 TEST(String, Assign) {
-    Project::etl::String s { "Test "};
-    s = "Test123";
-    EXPECT_PRED2(IsEq, "Test123", s.data());
+    const String s = "Test";
+    EXPECT_EQ(s, "Test");
 }
 
 TEST(String, IsContaining) {
-    const Project::etl::String s {"Test %d%d%d", 1, 2, 3};
-    EXPECT_TRUE(s.isContaining("123"));
-    EXPECT_TRUE(!s.isContaining("321"));
+    String f;
+    f("Test %d%d%d", 1, 2, 3);
+    EXPECT_TRUE(f.isContaining("123"));
+    EXPECT_TRUE(!f.isContaining("321"));
 }

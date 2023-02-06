@@ -26,8 +26,13 @@ namespace Project::etl {
 
         static constexpr size_t size() { return N; }
         [[nodiscard]] size_t len() const { return strlen(str); }
-        [[nodiscard]] size_t rem() const { return size() - len(); } ///< remaining space
         void clear() { memset(str, 0, N); }
+
+        ///< remaining space
+        [[nodiscard]] size_t rem() const {
+            auto n = len();
+            return N > n ? N - n - 1 : 0;
+        }
 
         char* data()    { return str; }
         char* begin()   { return str; }
@@ -52,9 +57,15 @@ namespace Project::etl {
         String &operator=(char ch)                  { str[0] = ch; str[1] = '\0'; return *this; }
 
         template <size_t M>
-        String &operator+=(const String<M>& other)  { strncpy(end(), other.data(), rem() - 1); return *this; }
-        String &operator+=(const char* other)       { strncpy(end(), other, rem() - 1); return *this; }
-        String &operator+=(char ch)                 { size_t i = len(); str[i++] = ch; str[i] = '\0'; return *this; }
+        String &operator+=(const String<M>& other)  { strncpy(end(), other.data(), rem()); return *this; }
+        String &operator+=(const char* other)       { strncpy(end(), other, rem()); return *this; }
+        String &operator+=(char ch) {
+            if (rem() == 0) return *this;
+            auto i = len();
+            str[i] = ch;
+            str[i+1] = '\0';
+            return *this;
+        }
 
         char *operator ()(const char* fmt, ...) {
             va_list vl;
@@ -75,7 +86,7 @@ namespace Project::etl {
         template <size_t M> bool operator >(const String<M>& other)       const { return compare(other) > 0; }
         template <size_t M> bool operator <(const String<M>& other)       const { return compare(other) < 0; }
         int compare(const char* other, size_t n)                          const { return strncmp(str, other, n); }
-        int compare(const char* other)                                    const { return strcmp(str, other); }
+        int compare(const char* other)                                    const { return strncmp(str, other, N); }
         bool operator ==(const char* other)                               const { return compare(other) == 0; }
         bool operator >(const char* other)                                const { return compare(other) > 0; }
         bool operator <(const char* other)                                const { return compare(other) < 0; }
