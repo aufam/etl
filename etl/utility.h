@@ -1,10 +1,6 @@
 #ifndef ETL_UTILITY_H
 #define ETL_UTILITY_H
 
-//#include "hal.h"
-//#include "ch.h"
-#include <cstddef>
-
 namespace Project::etl {
 
     /// @defgroup Tuple @{

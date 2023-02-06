@@ -1,5 +1,5 @@
-#include "etl/string.h"
 #include "gtest/gtest.h"
+#include "etl/string.h"
 
 bool IsEq(const char* a, const char* b) { return strcmp(a, b) == 0; }
 

@@ -1,6 +1,5 @@
-#include "etl/vector.h"
-#include "etl/algorithm.h"
 #include "gtest/gtest.h"
+#include "etl/vector.h"
 
 using namespace Project::etl;
 

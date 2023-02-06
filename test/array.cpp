@@ -1,6 +1,6 @@
+#include "gtest/gtest.h"
 #include "etl/array.h"
 #include "etl/algorithm.h"
-#include "gtest/gtest.h"
 
 using namespace Project::etl;
 

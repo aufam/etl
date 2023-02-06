@@ -9,8 +9,9 @@ TEST(Map, dynamic) {
     map["one"] = 1;
     map["two"] = 2;
     map["three"] = 3;
+    map["three"] = 4;
 
     EXPECT_EQ(map["one"], 1);
     EXPECT_EQ(map["two"], 2);
-    EXPECT_EQ(map["three"], 3);
+    EXPECT_EQ(map["three"], 4);
 }

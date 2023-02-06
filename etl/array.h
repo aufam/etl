@@ -1,8 +1,6 @@
 #ifndef ETL_ARRAY_H
 #define ETL_ARRAY_H
 
-#include <cstddef>
-
 namespace Project::etl {
 
     template <class T, size_t N>

@@ -168,7 +168,7 @@ namespace Project::etl {
     template <class T> constexpr T absolute(const T& x) { return x < 0 ? -x : x; }
 
     /// interpolate x given [x1, y1] and [x2, y2]
-    /// @param trim truncate the result to range (y1, y2). default = true
+    /// @param trim clamp the result to range (y1, y2). default = true
     /// @{
     template <class X, class Y>
     constexpr Y interpolate(const X& x, const X& x1, const X& x2, const Y& y1, const Y& y2, bool trim = true) {

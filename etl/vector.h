@@ -1,12 +1,6 @@
 #ifndef WTP_BLUEPILL_VECTOR_H
 #define WTP_BLUEPILL_VECTOR_H
 
-//#include "hal.h"
-//#include "ch.h"
-
-#include <cstddef>
-#include <cstring>
-
 namespace Project::etl {
 
     template <class T>

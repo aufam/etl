@@ -6,9 +6,7 @@
 #endif
 
 #if ETL_LINKED_LIST_USE_MUTEX == 1
-#include "ch.h"
-#include "hal.h"
-#include "mutex.h"
+#include "etl/mutex.h"
 #define ETL_LINKED_LIST_SCOPE_LOCK() MutexScope lock(mutex)
 #else
 #include <cstdint>
