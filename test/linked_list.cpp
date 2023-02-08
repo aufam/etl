@@ -1,6 +1,5 @@
-#include "etl/linked_list.h"
-#include "etl/algorithm.h"
 #include "gtest/gtest.h"
+#include "etl/all.h"
 
 using namespace Project::etl;
 
@@ -24,6 +23,10 @@ TEST(LinkedList, Pop) {
         EXPECT_EQ(item, i);
     }
     EXPECT_EQ(list.len(), 0);
+
+    list << 0 << 1 << 2 << 3 << 4;
+    list.pop(item, 1);
+    EXPECT_EQ(item, 1);
 }
 
 TEST(LinkedList, ForLoop) {
@@ -62,7 +65,7 @@ TEST(LinkedList, Iterator) {
     EXPECT_EQ(res[0], *iter1);
     EXPECT_EQ(res[1], *iter2);
 
-    iter2 += -1;
+    iter2 -= 1;
     EXPECT_EQ(res[0], *iter2);
 
     iter1 = list.tail();

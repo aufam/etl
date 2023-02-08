@@ -9,8 +9,6 @@
 #include "etl/mutex.h"
 #define ETL_LINKED_LIST_SCOPE_LOCK() MutexScope lock(mutex)
 #else
-#include <cstdint>
-#include <cstddef>
 #define ETL_LINKED_LIST_SCOPE_LOCK()
 #endif
 
@@ -91,14 +89,6 @@ namespace Project::etl {
             bool operator !=(const Iterator& other) const { return node != other.node; }
             explicit operator bool() const { return node != nullptr; }
 
-            Iterator& operator +=(int pos) {
-                if (pos > 0)
-                    for (; pos > 0 && node; node = node->next) pos--;
-                else if (pos < 0)
-                    for (; pos < 0 && node; node = node->prev) pos++;
-                return *this;
-            }
-
             Iterator operator +(int pos) const {
                 Iterator res { node };
                 if (pos > 0)
@@ -106,6 +96,18 @@ namespace Project::etl {
                 else if (pos < 0)
                     for (; pos < 0 && res; res = res.prev()) pos++;
                 return res;
+            }
+            Iterator operator -(int pos) const {
+                return *this + (-pos);
+            }
+
+            Iterator& operator +=(int pos) {
+                *this = *this + pos;
+                return *this;
+            }
+            Iterator& operator -=(int pos) {
+                *this = *this - pos;
+                return *this;
             }
 
             Iterator& operator ++() {
@@ -212,7 +214,7 @@ namespace Project::etl {
         int pop(T& item, size_t pos = 0) const {
             ETL_LINKED_LIST_SCOPE_LOCK();
             auto node = head + pos;
-            if (node) item = node[pos];
+            if (node) item = *node;
             if (pos == 0) head = head.next();
             return node.erase();
         }
@@ -224,9 +226,10 @@ namespace Project::etl {
         int popBack(T& item)  const { return pop(item, len() - 1); }
         int popFront(T& item) const { return pop(item); }
 
-        explicit operator bool()               const { return head; }
         const LinkedList& operator <<(const T &item) const { push(item); return *this; }
         const LinkedList& operator >>(T &item)       const { pop(item); return *this; }
+
+        explicit operator bool() const { return head; }
 
         /// get i-th item by dereference
         /// @warning if head + i = null, make new node and return last item

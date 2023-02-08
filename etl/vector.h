@@ -1,5 +1,5 @@
-#ifndef WTP_BLUEPILL_VECTOR_H
-#define WTP_BLUEPILL_VECTOR_H
+#ifndef ETL_VECTOR_H
+#define ETL_VECTOR_H
 
 namespace Project::etl {
 
@@ -88,4 +88,4 @@ namespace Project::etl {
     };
 }
 
-#endif //WTP_BLUEPILL_VECTOR_H
+#endif //ETL_VECTOR_H

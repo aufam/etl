@@ -16,10 +16,9 @@ namespace Project::etl {
 
     /// recursive specialization
     template <size_t i, typename HeadItem, typename... TailItems>
-    struct xTupleImpl<i, HeadItem, TailItems...> :
-            public xTupleLeaf<i, HeadItem>,
-            public xTupleImpl<i + 1, TailItems...>
-    {};
+    struct xTupleImpl<i, HeadItem, TailItems...>
+            : public xTupleLeaf<i, HeadItem>
+            , public xTupleImpl<i + 1, TailItems...> {};
 
 
     /// obtain a reference to i-th item in a tuple
@@ -37,7 +36,7 @@ namespace Project::etl {
     /// @}
 
     /// implements binary tuple, i.e. a pair of values
-    template <class X, class Y> struct Pair { X x; Y y; };
+    template <class X, class Y = X> struct Pair { X x; Y y; };
 
     /// @defgroup Function @{
     /// proxy structure
