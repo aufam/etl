@@ -59,7 +59,7 @@ TEST(Utility, range) {
     using vector = Vector<int>;
 
     array p = {};
-    generate(p.begin(), p.end(), range(1, 0));
+    generate(p, range(1, 0));
     EXPECT_TRUE(compare_all(p, array { 1, 0, 0 }));
 
     vector q;
@@ -72,15 +72,17 @@ TEST(Utility, range) {
     EXPECT_TRUE(compare_all(q, array { 0, 1, 2}));
     EXPECT_EQ(q.len(), 3);
 
-    Pair<int> num = { 1, 0 };
+    Pair<int> num = { 0, 1 };
     Function<int()> fib = { [](auto context) {
         auto& num = *reinterpret_cast<Pair<int>*>(context);
-        int temp = num.x;
-        num.x += num.y;
-        num.y = temp;
-        return num.x;
+        int temp = num.y;
+        num.y += num.x;
+        num.x = temp;
+        return temp;
     }, &num };
 
-    generate(p.begin(), p.end(), fib);
-    EXPECT_TRUE(compare_all(p, array { 1, 2, 3 }));
+    const int fibonacci_sequence[10] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55 };
+    int r[10];
+    generate(r, fib);
+    EXPECT_TRUE(compare_all(r, fibonacci_sequence));
 }

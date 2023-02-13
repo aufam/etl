@@ -16,7 +16,7 @@ namespace Project::etl {
     /// forward an rvalue
     template <typename T> constexpr T&&
     forward(remove_reference_t<T>&& t) {
-        static_assert(! is_reference_v<T>, "Invalid rvalue to lvalue conversion");
+        static_assert(! is_lvalue_reference_v<T>, "Invalid rvalue to lvalue conversion");
         return static_cast<T&&>(t);
     }
 
@@ -104,16 +104,16 @@ namespace Project::etl {
     class range_ {
         int first, last;
         unsigned int step;
-        bool inverse;
+        bool reverse;
 
     public:
         constexpr range_(int first, int last, unsigned int step = 1)
-        : first(first), last(last), step(step), inverse(first > last) {}
+        : first(first), last(last), step(step), reverse(first > last) {}
 
         constexpr range_& begin() { return *this; }
         constexpr range_& end()   { return *this; }
-        constexpr bool operator != (const range_&) const { return inverse ? first > last : first < last; }
-        constexpr void operator ++ ()       { first += (inverse ? -int(step) : int(step)); }
+        constexpr bool operator != (const range_&) const { return reverse ? first > last : first < last; }
+        constexpr void operator ++ ()       { first += (reverse ? -int(step) : int(step)); }
         constexpr int operator * () const   { return first; }
         constexpr int operator () ()        { auto res = *(*this); if (*this != end()) ++(*this); return res; }
     };

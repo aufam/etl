@@ -38,8 +38,8 @@ Simply add [include](include) to your project include directories
 
 ## Build test and documentation
 Prerequisites:
-* Google Test
-* Doxygen
+* [Google Test](https://github.com/google/googletest)
+* [Doxygen](https://github.com/doxygen/doxygen.git)
 
 ```bash
 mkdir build
