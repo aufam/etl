@@ -11,8 +11,6 @@ TEST(Utility, enumerate) {
     using array = Array<int, 3>;
     array p = { 10, 11, 12 };
 
-    bool sdf = 1 is_not 10;
-
     int i = 0; // loop guard
     for (auto [x, y] in enumerate(p, 10)) {
         EXPECT_EQ(x, y);

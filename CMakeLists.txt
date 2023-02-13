@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(Threads REQUIRED)
 
-file(GLOB TEST_SRCS etl/*.* test/*.*)
+file(GLOB TEST_SRCS test/*.*)
 add_executable(${PROJECT_NAME} ${TEST_SRCS})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
