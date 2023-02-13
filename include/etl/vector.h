@@ -3,6 +3,7 @@
 
 namespace Project::etl {
 
+    /// dynamic contiguous array
     template <class T>
     class Vector {
         T* buffer;
@@ -39,7 +40,6 @@ namespace Project::etl {
         }
 
         [[nodiscard]] size_t len() const { return nItems; }
-        void clear() { memset(buffer, 0, nItems); }
 
         T* data()   { return buffer; }
         T* begin()  { return buffer; }

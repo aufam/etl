@@ -1,9 +1,7 @@
 #ifndef ETL_COMPLEX_H
 #define ETL_COMPLEX_H
 
-#include "etl/utility.h"
 #include "etl/math.h"
-#include <array>
 
 namespace Project::etl {
     /// complex number with integer type. real and image represent their amplitude
@@ -17,7 +15,7 @@ namespace Project::etl {
         static constexpr bool is_complex32 = is_same_v<T, int32_t>;
         static constexpr bool is_complex16 = is_same_v<T, int16_t>;
         static constexpr bool is_complex8  = is_same_v<T, int8_t >;
-        static_assert(is_complex32 or is_complex16 or is_complex8, "Type has to be signed integral");
+        static_assert(is_complex32 || is_complex16 || is_complex8, "Type has to be signed integral");
 
         T real, imag;
         constexpr explicit complex(int32_t real, int32_t imag = 0)  : real(real), imag(imag) {}
@@ -26,10 +24,10 @@ namespace Project::etl {
         constexpr complex() : real(0), imag(0) {}
 
         typedef T value_type;
-        static constexpr T max_value = is_complex32 ? 0x7F'FF'FF'FF : is_complex16 ? 0x7F'FF : 0x7F;
+        static constexpr T max_value = is_complex32 ? 0x7FFF'FFFF : is_complex16 ? 0x7FFF : 0x7F;
         static constexpr float max_value_f = static_cast<float> (max_value);
 
-        /// conversion operations @{
+        /* conversion operations */
         explicit constexpr operator complex32 () const {
             if      constexpr (is_complex32) return complex32 { real, imag };
             else if constexpr (is_complex16) return complex32 { real * 0x1'0000, imag * 0x1'0000 };
@@ -49,25 +47,20 @@ namespace Project::etl {
         [[nodiscard]] constexpr float real_f() const { return static_cast<float> (real) / max_value_f; }
         [[nodiscard]] constexpr float imag_f() const { return static_cast<float> (imag) / max_value_f; }
         [[nodiscard]] constexpr Pair<float> to_float() const { return { real_f(), imag_f() }; }
-        /// @}
 
-        /// arithmatic operations
-        /// @warning it doesn't have overload handling
-        /// @note return type is this type
-        /// @{
+        constexpr explicit operator bool () const { return real && imag; }
+
+        /* arithmetic operations */
         template <class T2> constexpr enable_if_t<is_floating_point_v<T2>, complex> operator + (T2 val) const {
             return complex { real + from_float_(val), imag };
         }
         template <class T2> constexpr enable_if_t<is_floating_point_v<T2>, complex> operator - (T2 val) const {
             return complex { real - from_float_(val), imag };
         }
-
-        template <class T2>
-        constexpr enable_if_t<is_floating_point_v<T2> or is_integral_v<T2>, complex> operator * (T2 val) const {
+        template <class T2> constexpr enable_if_t<is_arithmetic_v<T2>, complex> operator * (T2 val) const {
             return complex { static_cast<T>(real * val), static_cast<T>(imag * val) };
         }
-        template <class T2>
-        constexpr enable_if_t<is_floating_point_v<T2> or is_integral_v<T2>, complex> operator / (T2 val) const {
+        template <class T2> constexpr enable_if_t<is_arithmetic_v<T2>, complex> operator / (T2 val) const {
             return complex { real_f() / val, imag_f() / val };
         }
 
@@ -98,10 +91,10 @@ namespace Project::etl {
         template <class T2> constexpr complex& operator -= (const T2& val) { *this = *this - val; return *this; }
         template <class T2> constexpr complex& operator *= (const T2& val) { *this = *this * val; return *this; }
         template <class T2> constexpr complex& operator /= (const T2& val) { *this = *this / val; return *this; }
-        /// @}
+        template <class T2> constexpr complex& operator ^= (const T2& val) { *this = *this ^ val; return *this; }
 
-        /// special operations @{
-        /// multiply this and conjugate of other
+        /* special operations */
+        /// multiply this by conjugate of other
         template <class T2>
         [[nodiscard]] constexpr complex multiply_conjugate(const complex<T2>& other) const  {
             auto [a, b] = pair16_(other);
@@ -134,11 +127,11 @@ namespace Project::etl {
         /// return multiply conjugate of other
         template <class T2>
         constexpr auto operator ^ (const complex<T2>& other) const { return multiply_conjugate(other); }
-        constexpr auto operator ~ () const { return conjugate(); } ///< return conjugate of this
-        constexpr explicit operator bool () const { return real and imag; }
-        /// @}
 
-        /// compare operation. compare the magnitude @{
+        /// return conjugate of this
+        constexpr auto operator ~ () const { return conjugate(); }
+
+        /// compare operation. compare the magnitude
         template <class T2>
         constexpr bool operator == (const complex<T2>& other) const {
             auto [a, b] = pair_smallest_(other);
@@ -154,7 +147,6 @@ namespace Project::etl {
             auto [a, b] = pair_smallest_(other);
             return a.magnitude_square() < b.magnitude_square();
         }
-        /// @}
 
     private:
         template <class T2>
@@ -170,43 +162,44 @@ namespace Project::etl {
         static constexpr T from_float_(float val) { return static_cast<T>(max_value_f * val); }
     };
 
-    /// additional type trait
+    /* is_complex type trait */
     template <typename T> struct is_complex {
-        static const bool value = is_same_v<T, complex8> or is_same_v<T, complex16> or is_same_v<T, complex32>;
+        static const bool value = is_same_v<T, complex8> || is_same_v<T, complex16> || is_same_v<T, complex32>;
     };
     template <typename T> inline const bool is_complex_v = is_complex<T>::value;
 
+    /* complex arithmatic operations */
     template <class T, class C>
-    constexpr enable_if_t<not is_complex_v<T>, complex<C>> operator + (T val, const complex<C>& c) {
+    constexpr enable_if_t<! is_complex_v<T>, complex<C>> operator + (T val, const complex<C>& c) {
         return c + val;
     }
     template <class T, class C>
-    constexpr enable_if_t<not is_complex_v<T>, complex<C>> operator - (T val, const complex<C>& c) {
+    constexpr enable_if_t<! is_complex_v<T>, complex<C>> operator - (T val, const complex<C>& c) {
         return -c + val;
     }
     template <class T, class C>
-    constexpr enable_if_t<not is_complex_v<T>, complex<C>> operator * (T val, const complex<C>& c) {
+    constexpr enable_if_t<! is_complex_v<T>, complex<C>> operator * (T val, const complex<C>& c) {
         return c * val;
     }
     template <class T, class C>
-    constexpr enable_if_t<not is_complex_v<T>, complex<C>> operator / (T val, const complex<C>& c) {
+    constexpr enable_if_t<! is_complex_v<T>, complex<C>> operator / (T val, const complex<C>& c) {
         return complex<C> { val } / c;
     }
     template <class T, class C>
-    constexpr enable_if_t<not is_complex_v<T>, bool> operator == (T val, const complex<C>& c) {
+    constexpr enable_if_t<! is_complex_v<T>, complex<C>> operator ^ (T val, const complex<C>& c) {
+        return complex<C> { val } ^ c;
+    }
+    template <class T, class C>
+    constexpr enable_if_t<! is_complex_v<T>, bool> operator == (T val, const complex<C>& c) {
         return complex<C> { val } == c;
     }
     template <class T, class C>
-    constexpr enable_if_t<not is_complex_v<T>, bool> operator > (T val, const complex<C>& c) {
+    constexpr enable_if_t<! is_complex_v<T>, bool> operator > (T val, const complex<C>& c) {
         return complex<C> { val } > c;
     }
     template <class T, class C>
-    constexpr enable_if_t<not is_complex_v<T>, bool> operator < (T val, const complex<C>& c) {
+    constexpr enable_if_t<! is_complex_v<T>, bool> operator < (T val, const complex<C>& c) {
         return complex<C> { val } < c;
-    }
-    template <class T, class C>
-    constexpr enable_if_t<not is_complex_v<T>, complex<C>> operator ^ (T val, const complex<C>& c) {
-        return complex<C> { val } ^ c;
     }
 }
 

@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "etl/all.h"
+#include "etl/complex.h"
 
 using namespace Project::etl;
 
@@ -13,13 +13,13 @@ TEST(Complex, Conversion) {
             EXPECT_TRUE(a == b and a == c);
         } {
             const auto b = static_cast<complex32> (a);
-            const auto c = complex32{1 * 0x1'00'00'00, -1 * 0x1'00'00'00};
+            const auto c = complex32{1 * 0x100'0000, -1 * 0x100'0000};
             EXPECT_EQ(b.real, c.real);
             EXPECT_EQ(b.imag, c.imag);
             EXPECT_TRUE(a == b and a == c);
         }
     } /* from complex32 */ {
-        const auto a = complex32{0x1'00'00, -0x1'00'00}; {
+        const auto a = complex32{0x1'0000, -0x1'0000}; {
             const auto b = static_cast<complex8> (a);
             const auto c = complex8{};
             EXPECT_EQ(b.real, c.real);
@@ -35,7 +35,7 @@ TEST(Complex, Conversion) {
     }
 }
 
-TEST(Complex, Arithmatic) {
+TEST(Complex, Arithmetic) {
     /* operator +- */ {
         const auto a = complex8 { 1, -1 };
         const auto b = complex16 { 0x1'00, -1}; {
@@ -96,6 +96,7 @@ TEST(Complex, Compare) {
     const auto g = e.imag;
 
     const auto h = a.magnitude_square();
-    const auto i = c.magnitude_square();
+    const auto i = e.magnitude_square();
+    const auto j = d.magnitude_square();
 
 }

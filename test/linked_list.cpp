@@ -1,5 +1,7 @@
 #include "gtest/gtest.h"
-#include "etl/all.h"
+#include "etl/linked_list.h"
+#include "etl/algorithm.h"
+#include "etl/python_keywords.h"
 
 using namespace Project::etl;
 
@@ -9,7 +11,7 @@ TEST(LinkedList, Push) {
     list.push(2, 1);
     list.pushFront(0);
 
-    for (int i = 0; i < 5; ++i) EXPECT_EQ(list[i], i);
+    for (auto [x, y] in enumerate(list)) EXPECT_EQ(x, y);
     EXPECT_EQ(list.len(), 5);
 }
 
@@ -18,7 +20,7 @@ TEST(LinkedList, Pop) {
     list << 0 << 1 << 2 << 3 << 4;
 
     int item;
-    for (int i = 0; i < 5; ++i) {
+    for (int i in range(5)) {
         list >> item;
         EXPECT_EQ(item, i);
     }
@@ -32,11 +34,11 @@ TEST(LinkedList, Pop) {
 TEST(LinkedList, ForLoop) {
     const LinkedList<int> list;
     int res[] = {1, 2, 3, 4, 5};
-    for (auto item : res) list << item;
+    for (auto item in res) list << item;
 
     // forward
     int *p = res;
-    for (auto item : list) EXPECT_EQ(item, *p++);
+    for (auto item in list) EXPECT_EQ(item, *p++);
 
     //backward
     p = &res[4];
@@ -48,7 +50,7 @@ TEST(LinkedList, ForLoop) {
 TEST(LinkedList, Iterator) {
     const LinkedList<int> list;
     int res[] = {1, 2, 3, 4, 5};
-    for (auto item : res) list << item;
+    for (auto item in res) list << item;
 
     auto iter1 = list.begin();
     ++iter1;
@@ -91,8 +93,7 @@ TEST(LinkedList, Non_constant) {
 }
 
 TEST(LinkedList, Fold) {
-    const LinkedList<int> list;
-    list << 1 << 2 << 3 << 4 << 5;
+    const LinkedList<int> list = { 1, 2, 3, 4, 5 };
 
     int sum = 0;
     fold(list.begin(), list.end(), [](auto& item, auto& res) { res += item; }, sum);

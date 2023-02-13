@@ -14,9 +14,9 @@ namespace Project::etl {
     /// simple string class with c-style formatter
     template <size_t N = ETL_STRING_DEFAULT_SIZE>
     class String {
-        char str[N];
+        char str[N] = {};
     public:
-        constexpr String() : str{} {}
+        constexpr String() = default;
         String(const char* fmt, ...) {
             va_list vl;
             va_start(vl, fmt);
@@ -28,7 +28,7 @@ namespace Project::etl {
         [[nodiscard]] size_t len() const { return strlen(str); }
         void clear() { memset(str, 0, N); }
 
-        ///< remaining space
+        /// remaining space
         [[nodiscard]] size_t rem() const {
             auto n = len();
             return N > n ? N - n - 1 : 0;

@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
-#include "etl/all.h"
+#include "etl/map.h"
+#include "etl/string.h"
 
 using namespace Project::etl;
 
