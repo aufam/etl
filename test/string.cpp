@@ -22,3 +22,11 @@ TEST(String, IsContaining) {
     EXPECT_TRUE(f.isContaining("123"));
     EXPECT_TRUE(!f.isContaining("321"));
 }
+
+TEST(String, SplitString) {
+    const String s = "Test 123";
+    auto ss = SplitString(s);
+    EXPECT_EQ(ss[0], "Test");
+    EXPECT_EQ(ss[1], "123");
+    EXPECT_EQ(s, "Test 123");
+}
