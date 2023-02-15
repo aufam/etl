@@ -12,20 +12,20 @@ namespace Project::etl {
         typedef K Key;
         typedef V Value;
 
-        bool hasKey(const K& key) {
-            for (auto& [x, y] : *this) if (x == key) return true;
+        bool hasKey(const K &key) const {
+            for (auto &[x, y]: *this) if (x == key) return true;
             return false;
         }
 
-        V& operator[] (const Key& key) {
-            for (auto& [x, y] : *this) if (x == key) return y;
-            this->append(Pair<K,V> { key, Value {}});
+        V &operator[](const Key &key) {
+            for (auto &[x, y]: *this) if (x == key) return y;
+            this->append(Pair<K, V>{key, Value{}});
             return this->back().y;
         }
 
-        const V& operator[] (const Key& key) const {
-            for (auto& [x, y] : *this) if (x == key) return y;
-            return Value {};
+        const V &operator[](const Key &key) const {
+            for (auto &[x, y]: *this) if (x == key) return y;
+            return Value{};
         }
     };
 }
