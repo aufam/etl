@@ -14,6 +14,7 @@ namespace Project::etl {
 
         Fn fn = nullptr;            ///< function pointer, default null
         void *context = nullptr;    ///< alternative of capture list, default null
+        constexpr Function(Fn fn = nullptr, void *context = nullptr) : fn(fn), context(context) {}
 
         Function& operator = (Fn function) { fn = function; return *this; }
         explicit operator Fn () { return fn; }
@@ -29,6 +30,7 @@ namespace Project::etl {
 
         Fn fn = nullptr;            ///< function pointer, default null
         void *context = nullptr;    ///< alternative of capture list, default null
+        constexpr Function(Fn fn = nullptr, void *context = nullptr) : fn(fn), context(context) {}
 
         Function& operator = (Fn function) { fn = function; return *this; }
         explicit operator Fn () { return fn; }
