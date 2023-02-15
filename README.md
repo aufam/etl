@@ -15,9 +15,10 @@ ETL is not meant to completely replace STL, but to complement
 it. ETL also has some useful components that are not present
 in STL.
 
-## Requirement
+## Requirements
 * C++17
-* math library 
+* math library
+* cmake (optional)
 
 ## Features
 * Cross-platform
@@ -35,6 +36,11 @@ in STL.
 
 ## How to use
 Simply add [include](include) to your project include directories
+and specify some macros (optional):
+```cmake
+add_definitions(ETL_LINKED_LIST_USE_MUTEX=n) # default = 0
+add_definitions(ETL_STRING_DEFAULT_SIZE=n) # default = 64
+```
 
 ## Build test and documentation
 Prerequisites:
