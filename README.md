@@ -35,11 +35,12 @@ in STL.
 * Easy to read and documented source
 
 ## How to use
-Simply add [include](include) to your project include directories
-and specify some macros (optional):
+Simply add [etl/include](include) to your project include directories
+and specify some macros (optional)
 ```cmake
-add_definitions(ETL_LINKED_LIST_USE_MUTEX=n) # default = 0
-add_definitions(ETL_STRING_DEFAULT_SIZE=n) # default = 64
+include_directories(etl/include)
+add_definitions(-DETL_LINKED_LIST_USE_MUTEX=${val}) # default = 0
+add_definitions(-DETL_STRING_DEFAULT_SIZE=${val}) # default = 64
 ```
 
 ## Build test and documentation
