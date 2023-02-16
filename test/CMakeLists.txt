@@ -1,16 +1,19 @@
 find_package(Threads REQUIRED)
-find_package(GTest)
+find_package(GTest REQUIRED)
+if (NOT GTEST_FOUND)
+    message(FATAL_ERROR "Cannot find gtest")
+endif()
 
-if (GTEST_FOUND)
-    set(CMAKE_CXX_STANDARD 17)
+enable_testing()
 
-    file(GLOB TEST_SRCS *.*)
-    add_executable(${PROJECT_NAME} ${TEST_SRCS})
+file(GLOB TEST_SRCS *.*)
+add_executable(test_all ${TEST_SRCS})
 
-    target_include_directories(${PROJECT_NAME} PRIVATE /usr/local/include/gtest/)
+target_include_directories(test_all PRIVATE
+        ${CMAKE_HOME_DIRECTORY}/include
+        ${GTEST_SOURCE_DIR}/include ${GTEST_SOURCE_DIR})
 
-    target_link_libraries(${PROJECT_NAME} PRIVATE
-            m
-            Threads::Threads
-            /usr/local/lib/libgtest.a)
-endif(GTEST_FOUND)
+target_link_libraries(test_all PRIVATE
+        m
+        Threads::Threads
+        ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
