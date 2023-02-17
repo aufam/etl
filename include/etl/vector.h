@@ -6,6 +6,7 @@ namespace Project::etl {
     /// dynamic contiguous array
     template <class T>
     class Vector {
+    protected:
         T* buffer;
         size_t nItems;
         Vector(T* buffer, size_t nItems) : buffer(buffer), nItems(nItems) {}
@@ -75,6 +76,21 @@ namespace Project::etl {
             delete [] buffer;
             buffer = temp;
             nItems++;
+        }
+
+        void remove(size_t index) {
+            if (index >= this->len()) return;
+
+            auto buf = new T[this->len() - 1];
+            size_t i = 0;
+            for (auto& item : *this) {
+                if (i == index) continue;
+                buf[i++] = item;
+            }
+
+            delete [] buffer;
+            buffer = buf;
+            --nItems;
         }
 
         Vector& operator += (const Vector& other) {
