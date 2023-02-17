@@ -15,3 +15,19 @@ TEST(Map, dynamic) {
     EXPECT_EQ(map["two"], 2);
     EXPECT_EQ(map["three"], 4);
 }
+
+TEST(Map, remove) {
+    Map<String<8>, int> map;
+    map["one"] = 1;
+    map["two"] = 2;
+    EXPECT_EQ(len(map), 2);
+
+    map.remove("one");
+    EXPECT_FALSE(map.has("one"));
+    EXPECT_EQ(len(map), 1);
+    EXPECT_EQ(map["two"], 2);
+    EXPECT_EQ(len(map), 1);
+
+    map.remove("two");
+    EXPECT_EQ(len(map), 0);
+}
