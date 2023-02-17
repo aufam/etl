@@ -13,9 +13,10 @@ TEST(Bit, Bit_Cast) {
     EXPECT_EQ(bit_cast<uint32_t>(-NAN), 1u << 31 | 0xFFu << 23 | 1u << 22);
 
     union {
-        float f;
+        float f = 0.1f;
         uint8_t u[4];
     };
-    f = 10.f;
     EXPECT_EQ(bit_cast<float>(u), f);
+    EXPECT_EQ(bit_cast<float>(u), *reinterpret_cast<float *>(u));
+    EXPECT_EQ(f, *reinterpret_cast<float *>(u));
 }
