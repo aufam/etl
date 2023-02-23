@@ -2,8 +2,6 @@
 #ifndef ETL_FUNCTION_H
 #define ETL_FUNCTION_H
 
-#include "etl/utility.h"
-
 namespace Project::etl {
     /// function class that holds function pointer and context (alternative of capture list)
     template <typename T> struct Function;
