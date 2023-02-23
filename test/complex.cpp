@@ -2,6 +2,7 @@
 #include "etl/complex.h"
 
 using namespace Project::etl;
+using namespace Project::etl::literals;
 
 TEST(Complex, Conversion) {
     /* from complex8 */ {
