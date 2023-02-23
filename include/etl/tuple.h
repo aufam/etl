@@ -1,8 +1,6 @@
 #ifndef ETL_TUPLE_H
 #define ETL_TUPLE_H
 
-#include "etl/algorithm.h"
-
 namespace Project::etl {
     /// contains the actual value for one item in the tuple.
     /// @tparam i allows the get function to find the value in O(1) time
