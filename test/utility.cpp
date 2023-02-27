@@ -8,8 +8,7 @@
 using namespace Project::etl;
 
 TEST(Utility, enumerate) {
-    using array = Array<int, 3>;
-    array p = { 10, 11, 12 };
+    auto p = array(10, 11, 12);
 
     int i = 0; // loop guard
     for (auto [x, y] in enumerate(p, 10)) {
@@ -17,15 +16,12 @@ TEST(Utility, enumerate) {
         y -= 10;
         if (i++ == 5) break;
     }
-    EXPECT_TRUE(compare_all(p, array{0, 1, 2}));
+    EXPECT_TRUE(compare_all(p, array(0, 1, 2)));
 }
 
 TEST(Utility, zip) {
-    using vector = Vector<int>;
-    using array = Array<int, 3>;
-
-    vector p = { 2, 4, 6, 8 };
-    constexpr array q = { 1, 2, 3 };
+    auto p = vector(2, 4, 6, 8);
+    constexpr auto q = array(1, 2, 3);
 
     int i = 0; // break guard
     for (auto [x, y] in zip(p, q)) {
@@ -36,10 +32,10 @@ TEST(Utility, zip) {
 
     EXPECT_TRUE(compare_all(p, q));
 
-    constexpr Array<int, 3> a = { 1, 2, 3};
-    constexpr Array<int, 3> b = { 2, 4, 6};
+    constexpr auto a = array(1, 2, 3);
+    constexpr auto b = array(2, 4, 6);
 
-    constexpr auto f = [](const Array<int, 3> & a, const Array<int, 3> & b) {
+    constexpr auto f = [](const Array<int, 3>& a, const Array<int, 3>& b) {
         int res = 0, i = 0;
         for (auto [x, y] in zip(a, b)) {
             res += x * y;
@@ -53,31 +49,28 @@ TEST(Utility, zip) {
 }
 
 TEST(Utility, range) {
-    using array = Array<int, 3>;
-    using vector = Vector<int>;
-
-    array p = {};
+    Array<int, 3> p = {};
     generate(p, range(1, 0));
-    EXPECT_TRUE(compare_all(p, array { 1, 0, 0 }));
+    EXPECT_TRUE(compare_all(p, array(1, 0, 0 )));
 
-    vector q;
+    Vector<int> q;
     int j = 0;
     for (auto i in range(3)) {
         q.append(i);
         if (j++ == 5) break;
     }
 
-    EXPECT_TRUE(compare_all(q, array { 0, 1, 2}));
+    EXPECT_TRUE(compare_all(q, array(0, 1, 2)));
     EXPECT_EQ(q.len(), 3);
 
-    Pair<int> num = { 0, 1 };
-    Function<int()> fib = { [](auto context) {
+    auto num = pair(0, 1);
+    auto fib = Function<int()>( [](auto context) {
         auto& num = *reinterpret_cast<Pair<int>*>(context);
         int temp = num.y;
         num.y += num.x;
         num.x = temp;
         return temp;
-    }, &num };
+    }, &num);
 
     const int fibonacci_sequence[10] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55 };
     int r[10];

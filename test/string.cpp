@@ -2,31 +2,100 @@
 #include "etl/string.h"
 
 using namespace Project::etl;
+using namespace Project::etl::literals;
 
-TEST(String, Append) {
-    String<6> s = "Test";
-    EXPECT_EQ(s.rem(), 1);
-    s += '\n';
-    s += "1"; // cannot
-    EXPECT_EQ(s, "Test\n");
+TEST(String, Empty) {
+    String s;
+    EXPECT_EQ(s.len(), 0);
+    EXPECT_EQ(s.rem(), s.size() - 1);
+}
+
+TEST(String, CStyleFormatter) {
+    String s = {"Test %d", 123};
+    EXPECT_EQ(s, "Test 123");
+    EXPECT_EQ(s.len(), 8);
+    EXPECT_EQ(s.rem(), s.size() - 1 - 8);
+
+    s("pi ~= %d/%d", 22, 7);
+    EXPECT_EQ(s, "pi ~= 22/7");
+}
+
+TEST(String, IterateThrough) {
+    String s = {"Test %d", 123};
+    EXPECT_TRUE(compare_all(s, "Test 123"));
 }
 
 TEST(String, Assign) {
-    const String s = "Test";
+    String s = "Test";
     EXPECT_EQ(s, "Test");
+    s = {"Test %d", 123};
+    EXPECT_EQ(s, "Test 123");
+    s = string("123");
+    EXPECT_EQ(s, "123");
+    s = "abc";
+    EXPECT_EQ(s, "abc");
+    s = 'z';
+    EXPECT_EQ(s, "z");
+}
+
+TEST(String, Append) {
+    String<9> s = "Test"; // size is deduced
+    EXPECT_EQ(s, "Test");
+    EXPECT_EQ(s.len(), 4);
+    EXPECT_EQ(s.rem(), 4);
+
+    s += ' ';
+    EXPECT_EQ(s, "Test ");
+    EXPECT_EQ(s.len(), 5);
+    EXPECT_EQ(s.rem(), 3);
+
+    s += string("123");
+    EXPECT_EQ(s, "Test 123");
+    EXPECT_EQ(s.len(), 8);
+    EXPECT_EQ(s.rem(), 0);
+
+    s += "\n"; // cannot, string buffer is full
+    EXPECT_EQ(s, "Test 123");
+    EXPECT_EQ(s.len(), 8);
+    EXPECT_EQ(s.rem(), 0);
 }
 
 TEST(String, IsContaining) {
-    String f;
-    f("Test %d%d%d", 1, 2, 3);
+    String f = {"Test %d%d%d", 1, 2, 3};
     EXPECT_TRUE(f.isContaining("123"));
     EXPECT_TRUE(!f.isContaining("321"));
 }
 
 TEST(String, SplitString) {
-    const String s = "Test 123";
-    auto ss = SplitString(s);
-    EXPECT_EQ(ss[0], "Test");
-    EXPECT_EQ(ss[1], "123");
-    EXPECT_EQ(s, "Test 123");
+    auto ss = string("Test 123 abc").split();
+    EXPECT_STREQ(ss[0], "Test");
+    EXPECT_STREQ(ss[1], "123");
+    EXPECT_STREQ(ss[2], "abc");
+    EXPECT_EQ(ss[3], nullptr);
+    EXPECT_EQ(ss[4], nullptr);
+    EXPECT_EQ(len(ss), 3);
+}
+
+TEST(String, Constexpr) {
+    // size is ETL_SHORT_STRING_DEFAULT_SIZE
+    constexpr auto a = "abc"s;
+    EXPECT_EQ(a, "abc");
+    EXPECT_EQ(a.size(), ETL_SHORT_STRING_DEFAULT_SIZE);
+
+    constexpr String<3> b = a;
+    EXPECT_EQ(b, "ab");
+    EXPECT_EQ(b.size(), 3);
+    EXPECT_EQ(b.len(), 2);
+
+    constexpr auto c = a[0];
+    EXPECT_EQ(c, 'a');
+
+    constexpr auto d = len(a); // or a.len()
+    constexpr auto e = a.rem();
+    constexpr auto f = a.front();
+    constexpr auto g = a.back();
+
+    // size is deduced
+    constexpr auto s = string("Test ") + string("123 ") + string("abc");
+    EXPECT_EQ(s, "Test 123 abc");
 }

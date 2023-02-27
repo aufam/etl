@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "etl/tuple.h"
+#include "etl/python_keywords.h"
 
 using namespace Project::etl;
 
@@ -15,4 +16,12 @@ TEST(Tuple, tuple) {
 
     // not working
     // auto [a, b, c] = t;
+}
+
+TEST(Tuple, TypeDeduced) {
+    auto a = tuple(0.1f, 2, 0.3);
+    auto t = tuple(1);
+    EXPECT_EQ(get<0>(a), 0.1f);
+    EXPECT_EQ(get<1>(a), 2);
+    EXPECT_EQ(get<2>(a), 0.3);
 }

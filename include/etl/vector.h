@@ -1,6 +1,8 @@
 #ifndef ETL_VECTOR_H
 #define ETL_VECTOR_H
 
+#include "etl/type_traits.h"
+
 namespace Project::etl {
 
     /// dynamic contiguous array
@@ -102,6 +104,10 @@ namespace Project::etl {
             return *this;
         }
     };
+
+    /// create vector with variadic template function, Type is deduced
+    template<typename T, typename... U> Vector<enable_if_t<(is_same_v<T, U> && ...), T>>
+    vector(const T& t, const U&...u) { return Vector<T>{t, u...}; }
 }
 
 #endif //ETL_VECTOR_H

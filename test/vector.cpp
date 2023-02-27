@@ -23,3 +23,9 @@ TEST(Vector, remove) {
     EXPECT_EQ(len(a), 6);
     for (int i in range(6)) EXPECT_EQ(a[i], i);
 }
+
+TEST(Vector, TypeDeduced) {
+    auto a = vector(0, 1, 2, 3, 4, 5);
+    EXPECT_EQ(len(a), 6);
+    for (auto [x, y] in enumerate(a)) EXPECT_EQ(x, y);
+}
