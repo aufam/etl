@@ -27,7 +27,6 @@ in STL.
 * No RTTI
 * No virtual functions
 * Templated compile time constants
-* Many utilities for template support
 * Python-like [keywords](include/etl/python_keywords.h)
 * Some useful [mathematics user-defined literals](include/etl/math.h)
 * [Complex number](include/etl/complex.h) with custom size
@@ -49,8 +48,8 @@ sudo make uninstall -C build
 
 ## How to use
 If it's already installed, you can use it right away. To make sure
-if it's correctly installed to include path, you can import to your
-project like so:
+if it's correctly installed to include path, you can import the 
+library to your cmake project:
 ```cmake
 find_package(etl CONFIG REQUIRED)
 target_link_libraries(yourApp etl)
@@ -74,6 +73,7 @@ make -C build
 ```
 
 ## Build documentation
+Prerequisites:
 * [Doxygen](https://github.com/doxygen/doxygen.git)
 ```bash
 cmake -DBUILD_DOCS=ON -B build

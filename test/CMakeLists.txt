@@ -13,6 +13,8 @@ target_include_directories(test_all PRIVATE
         ${CMAKE_HOME_DIRECTORY}/include
         ${GTEST_SOURCE_DIR}/include ${GTEST_SOURCE_DIR})
 
+target_compile_options(test_all PRIVATE -Wno-literal-suffix)
+
 target_link_libraries(test_all PRIVATE
         m
         Threads::Threads

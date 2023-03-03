@@ -54,7 +54,7 @@ TEST(String, Append) {
     EXPECT_EQ(s.len(), 8);
     EXPECT_EQ(s.rem(), 0);
 
-    s += "\n"; // cannot, string buffer is full
+    s += "\n"; // cannot, string buf is full
     EXPECT_EQ(s, "Test 123");
     EXPECT_EQ(s.len(), 8);
     EXPECT_EQ(s.rem(), 0);
@@ -74,6 +74,12 @@ TEST(String, SplitString) {
     EXPECT_EQ(ss[3], nullptr);
     EXPECT_EQ(ss[4], nullptr);
     EXPECT_EQ(len(ss), 3);
+
+    auto s = string("Test 123");
+    auto sp = SplitString(s);
+    EXPECT_STREQ(sp[0], "Test");
+    EXPECT_STREQ(sp[1], "123");
+    EXPECT_EQ(len(sp), 2);
 }
 
 TEST(String, Constexpr) {
@@ -98,4 +104,5 @@ TEST(String, Constexpr) {
     // size is deduced
     constexpr auto s = string("Test ") + string("123 ") + string("abc");
     EXPECT_EQ(s, "Test 123 abc");
+    EXPECT_EQ(s.size(), s.len() + 1);
 }
