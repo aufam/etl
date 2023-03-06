@@ -89,7 +89,7 @@ namespace Project::etl {
         constexpr bool operator!=(const Enumerate&) { return first != last; }
         constexpr void operator++()   { ++first; ++cnt; }
         constexpr auto operator*()    { return Pair<int, decltype(*first)>{cnt, *first }; }
-        constexpr auto operator()()   { auto res = *(*this); if (*this != end()) ++(*this); return res; }
+        constexpr auto operator()()   { auto res = *(*this); ++(*this); return res; }
     };
 
     template <typename Iterator> constexpr auto
@@ -111,7 +111,7 @@ namespace Project::etl {
         constexpr bool operator!=(const Zip&) { return first.x != last.x && first.y != last.y; }
         constexpr void operator++()   { ++first.x; ++first.y; }
         constexpr auto operator*()    { return Pair<decltype(*first.x), decltype(*first.y)> { *first.x, *first.y }; }
-        constexpr auto operator()()   { auto res = *(*this); if (*this != end()) ++(*this); return res; }
+        constexpr auto operator()()   { auto res = *(*this); ++(*this); return res; }
     };
 
     template <typename Iterator1, typename Iterator2> constexpr auto
@@ -122,29 +122,46 @@ namespace Project::etl {
     /// python-like range
     template <typename T>
     class Range {
-        T first, last;
-        add_unsigned_t<T> step;
+        T first, last, step;
         bool reverse;
 
     public:
-        typedef T Type;
-
-        constexpr Range(T first, T last, add_unsigned_t<T> step)
+        constexpr Range(T first, T last, T step)
         : first(first), last(last), step(step), reverse(first > last) {}
 
         constexpr Range& begin() { return *this; }
         constexpr Range& end()   { return *this; }
         constexpr bool operator!=(const Range&) const { return reverse ? first > last : first < last; }
-        constexpr void operator++()     { first += reverse ? -T(step) : T(step); }
-        constexpr T operator*() const   { return first; }
-        constexpr T operator()()        { auto res = *(*this); if (*this != end()) ++(*this); return res; }
+        constexpr void operator++() { first += step; } // prefix increment
+        constexpr T operator*()     { return first; }
+        constexpr T operator()()    { auto res = *(*this); ++(*this); return res; }
     };
 
     template <typename T> constexpr enable_if_t<is_arithmetic_v<T>, Range<T>>
-    range(T last) { return Range(T(0), last, add_unsigned_t<T>(1)); }
+    range(T last) { return Range(T(0), last, T(1)); }
     template <typename T> constexpr enable_if_t<is_arithmetic_v<T>, Range<T>>
-    range(T first, T last, add_unsigned_t<T> step = 1) { return Range(first, last, step); }
+    range(T first, T last, T step = 1) { return Range(first, last, step); }
 
+    /// python-like iter
+    template <typename Iterator>
+    class Iter {
+        Iterator first, last;
+
+    public:
+        constexpr Iter(Iterator first, Iterator last) : first(first), last(last) {}
+
+        constexpr Iter& begin() { return *this; }
+        constexpr Iter& end()   { return *this; }
+        constexpr bool operator!=(const Iter&) const { return first != last; }
+        constexpr void operator++() { ++first; } // prefix increment
+        constexpr auto operator*()  { return *first; }
+        constexpr auto operator()() { return *first++; }
+    };
+
+    template <typename Iterator> constexpr auto
+    iter(Iterator first, Iterator last) { return Iter(first, last); }
+    template <typename Container> constexpr auto
+    iter(Container& cont) { return Iter(begin(cont), end(cont)); }
 }
 
 #endif //ETL_UTILITY_H
