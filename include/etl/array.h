@@ -1,12 +1,12 @@
 #ifndef ETL_ARRAY_H
 #define ETL_ARRAY_H
 
-#include "etl/utility.h"
-#include <array>
+#include "etl/algorithm.h"
 
 namespace Project::etl {
 
-    template <typename T, size_t N> struct array_traits {
+    template <typename T, size_t N> 
+    struct array_traits {
         static_assert(N > 0, "Array size can't be zero");
         typedef T type[N];
         static constexpr T* ptr(const type& buf) { return const_cast<T*>(buf); }
@@ -53,6 +53,22 @@ namespace Project::etl {
     /// create array with variadic template function, array size is deduced
     template<typename T, typename... U> constexpr Array<enable_if_t<(is_same_v<T, U> && ...), T>, 1 + sizeof...(U)>
     array(const T& t, const U&... u) { return Array<T, 1 + sizeof...(U)>{t, u...}; }
+
+    /// cast reference from iterator
+    template <class T, size_t N> constexpr Array<T, N>&
+    array_cast(T* a) { return *reinterpret_cast<Array<T, N>*>(a); }
+
+    /// cast const reference from iterator
+    template <class T, size_t N> constexpr const Array<T, N>&
+    array_cast(const T* a) { return *reinterpret_cast<const Array<T, N>*>(a); }
+
+    /// cast reference from traditional array
+    template <class T, size_t N> constexpr Array<T, N>&
+    array_cast(T (&a)[N]) { return *reinterpret_cast<Array<T, N>*>(a); }
+
+    /// cast const reference from traditional array
+    template <class T, size_t N> constexpr const Array<T, N>&
+    array_cast(const T (&a)[N]) { return *reinterpret_cast<const Array<T, N>*>(a); }
 
     /// get functions
     template<int i, typename T, size_t N> constexpr T&

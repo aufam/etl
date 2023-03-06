@@ -41,3 +41,20 @@ TEST(Array, Swap) {
     EXPECT_EQ(a[1], 5);
     EXPECT_EQ(a[2], 6);
 }
+
+TEST(Array, Move) {
+    auto a = array(1, 2, 3);
+    auto b = move(a);
+    EXPECT_EQ(b[0], 1);
+    EXPECT_EQ(b[1], 2);
+    EXPECT_EQ(b[2], 3);
+}
+
+TEST(Array, Cast) {
+    int a[] = {10, 1, 2, 3, 4, 5};
+    auto& b = array_cast(a);
+    EXPECT_TRUE(compare_all(b, a));
+    EXPECT_EQ(&b[0], &a[0]); // a and b share the same address
+    b[0] = 0;
+    EXPECT_TRUE(all_of(b, range(6)));
+}
