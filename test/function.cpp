@@ -3,24 +3,26 @@
 
 using namespace Project::etl;
 
-TEST(Function, Void) {
-    Function<void(int &)> square;
-
-    int i = 4;
-    square(i); // do nothing
+TEST(Function, Context) {
+    int i = 2;
+    /// equivalent to:
+    /// ```C++
+    /// std::function<void()> square = [&i]{ i *= i; };
+    /// ```
+    Function<void(), int&> square = { [](int& i) { i *= i; }, i };
+    square();
     EXPECT_EQ(i, 4);
 
-    // no context
-    square = [](auto, int& val) { val *= val; };
-    square(i);
-    EXPECT_EQ(i, 16);
+    square.fn = nullptr;
+    square(); // do nothing
+    EXPECT_EQ(i, 4);
+}
 
-    // with context
-    square = {[](auto context, auto) {
-        int& i = *reinterpret_cast<int*>(context);
-        i *= i;
-    }, &i};
-    int dummy =10000;
-    square(dummy);
-    EXPECT_EQ(i, 256);
+TEST(Function, ContextVoid) {
+    /// equivalent to:
+    /// ```C++
+    /// std::function<int(int)> square = [](int i){ return i *= i; };
+    /// ```
+    Function<int(int)> square = {[](int i) { return i * i; }};
+    EXPECT_EQ(square(2), 4);
 }
