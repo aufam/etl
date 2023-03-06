@@ -86,6 +86,35 @@ namespace Project::etl {
         return none_if(begin(cont), end(cont), fn);
     }
 
+    /// compare all, any or none of between a container and a generator
+    template <class Iterator, class Generator> constexpr bool
+    all_of(Iterator first, Iterator last, Generator fn) {
+        for (; first != last; ++first) if (*first != fn()) return false;
+        return true;
+    }
+    template <class Container, class Generator> constexpr bool
+    all_of(const Container& cont, Generator fn) {
+        return all_of(begin(cont), end(cont), fn);
+    }
+    template <class Iterator, class Generator> constexpr bool
+    any_of(Iterator first, Iterator last, Generator fn) {
+        for (; first != last; ++first) if (*first == fn()) return true;
+        return false;
+    }
+    template <class Container, class Generator> constexpr bool
+    any_of(const Container& cont, Generator fn) {
+        return any_of(begin(cont), end(cont), fn);
+    }
+    template <class Iterator, class Generator> constexpr bool
+    none_of(Iterator first, Iterator last, Generator fn) {
+        for (; first != last; ++first) if (*first == fn()) return false;
+        return true;
+    }
+    template <class Container, class Generator> constexpr bool
+    none_of(const Container& cont, Generator fn) {
+        return none_of(begin(cont), end(cont), fn);
+    }
+
     /// compare all, any or none of between two containers
     template <class Container1, class Container2> constexpr bool
     compare_all(const Container1& cont1, const Container2& cont2) {

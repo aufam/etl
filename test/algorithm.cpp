@@ -11,7 +11,7 @@ TEST(Algorithm, Find) {
     EXPECT_EQ(*find_if_not(a, [](auto& item) { return item != 3; }), 3);
 }
 
-TEST(Algorithm, All_Any_None) {
+TEST(Algorithm, AllAnyNone) {
     auto check = [](const int& item) { return item == 3; };
     const int a[3] = { 3, 3, 3};
     EXPECT_TRUE (all(a, 3));
@@ -28,13 +28,16 @@ TEST(Algorithm, All_Any_None) {
     EXPECT_FALSE(all_if(b, check));
     EXPECT_TRUE (any_if(b, check));
     EXPECT_FALSE(none_if(b, check));
+    EXPECT_TRUE (all_of(b, range(1, 4)));
+    EXPECT_TRUE (any_of(b, range(1, 4)));
+    EXPECT_FALSE(none_of(b, range(1, 4)));
 
     EXPECT_FALSE(compare_all(a, b));
     EXPECT_TRUE (compare_any(a, b));
     EXPECT_FALSE(compare_none(a, b));
 }
 
-TEST(Algorithm, Foreach_Fold) {
+TEST(Algorithm, ForeachFold) {
     const int a[4] = { 1, 2, 3, 4};
     int res = 0;
     fold(a, [](auto& item, auto& res) { res += item; }, res);
@@ -47,7 +50,7 @@ TEST(Algorithm, Foreach_Fold) {
     foreach(b, [](auto& item) { EXPECT_EQ(item, 4); });
 }
 
-TEST(Algorithm, Fill_Generate) {
+TEST(Algorithm, FillGenerate) {
     constexpr auto makeArray = [](int val) {
         Array<int, 3> res = {};
         fill(res, val);
@@ -58,7 +61,7 @@ TEST(Algorithm, Fill_Generate) {
 
     int b[3];
     generate(b, range(3));
-    EXPECT_TRUE(compare_all(b, Array<int, 3> {0, 1, 2}));
+    EXPECT_TRUE(all_of(b, range(3)));
 }
 
 TEST(Algorithm, Count) {
