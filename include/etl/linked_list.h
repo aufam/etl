@@ -110,6 +110,12 @@ namespace Project::etl {
         const LinkedList& operator <<(const T &item) const { push(item); return *this; }
         const LinkedList& operator >>(T &item)       const { pop(item); return *this; }
 
+        template <class Container>
+        bool operator==(const Container& other) const { return compare_all(*this, other); }
+
+        template <class Container>
+        bool operator!=(const Container& other) const { return !operator==(other); }
+
         int push(const T& item) const {
             auto node = iterator(item);
             if (!node) return 0;

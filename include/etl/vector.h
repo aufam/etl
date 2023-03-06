@@ -141,14 +141,20 @@ namespace Project::etl {
             --nItems;
         }
 
-        Vector& operator += (const Vector& other) {
+        Vector& operator+=(const Vector& other) {
             append(other);
             return *this;
         }
-        Vector& operator += (const T& other) {
+        Vector& operator+=(const T& other) {
             append(other);
             return *this;
         }
+
+        template <class Container>
+        bool operator==(const Container& other) const { return compare_all(*this, other); }
+
+        template <class Container>
+        bool operator!=(const Container& other) const { return !operator==(other); }
     };
 
     /// create vector with variadic template function, type is deduced
