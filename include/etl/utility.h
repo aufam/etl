@@ -123,15 +123,13 @@ namespace Project::etl {
     template <typename T>
     class Range {
         T first, last, step;
-        bool reverse;
 
     public:
-        constexpr Range(T first, T last, T step)
-        : first(first), last(last), step(step), reverse(first > last) {}
+        constexpr Range(T first, T last, T step) : first(first), last(last), step(step) {}
 
         constexpr Range& begin() { return *this; }
         constexpr Range& end()   { return *this; }
-        constexpr bool operator!=(const Range&) const { return reverse ? first > last : first < last; }
+        constexpr bool operator!=(const Range&) const { return step < 0 ? first > last : first < last; }
         constexpr void operator++() { first += step; } // prefix increment
         constexpr T operator*()     { return first; }
         constexpr T operator()()    { auto res = *(*this); ++(*this); return res; }
