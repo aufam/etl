@@ -24,13 +24,14 @@ in STL.
 * Headers only
 * No dynamic memory allocation (Except [Vector](include/etl/vector.h),
 [LinkedList](include/etl/linked_list.h), and [Map](include/etl/map.h))
+* Static [string class](include/etl/string.h)
+* Static [function class](include/etl/function.h)
 * No RTTI
 * No virtual functions
 * Templated compile time constants
-* Python-like [keywords](include/etl/python_keywords.h)
 * Some useful [mathematics user-defined literals](include/etl/math.h)
 * [Complex number](include/etl/complex.h) with custom size
-* Easy to read and documented source
+* Additional [keywords](include/etl/keywords.h)
 
 ## Installation
 ```bash

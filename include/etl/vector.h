@@ -57,6 +57,7 @@ namespace Project::etl {
         /// copy assignment
         Vector& operator=(const Vector& other) {
             if (this == &other) return *this;
+            delete [] buf;
             nItems = other.nItems;
             buf = new T[nItems];
             copy(other.begin(), other.end(), buf);
@@ -126,6 +127,16 @@ namespace Project::etl {
             nItems++;
         }
 
+
+        Vector& operator+=(const Vector& other) {
+            append(other);
+            return *this;
+        }
+        Vector& operator+=(const T& other) {
+            append(other);
+            return *this;
+        }
+
         void remove(size_t index) {
             if (len() == 0) return;
             if (index >= len()) return;
@@ -141,15 +152,6 @@ namespace Project::etl {
             --nItems;
         }
 
-        Vector& operator+=(const Vector& other) {
-            append(other);
-            return *this;
-        }
-        Vector& operator+=(const T& other) {
-            append(other);
-            return *this;
-        }
-
         template <class Container>
         bool operator==(const Container& other) const { return compare_all(*this, other); }
 
@@ -161,6 +163,22 @@ namespace Project::etl {
     template <typename T, typename... U> Vector<enable_if_t<(is_same_v<T, U> && ...), T>>
     vector(const T& t, const U&...u) { return Vector<T>{t, u...}; }
 
+    /// create empty vector
+    template <typename T> Vector<T>
+    vector() { return Vector<T>{}; }
+
+    /// type traits
+    template <typename T> struct is_vector : false_type {};
+    template <typename T> struct is_vector<Vector<T>> : true_type {};
+    template <typename T> struct is_vector<const Vector<T>> : true_type {};
+    template <typename T> struct is_vector<volatile Vector<T>> : true_type {};
+    template <typename T> struct is_vector<const volatile Vector<T>> : true_type {};
+    template <typename T> inline constexpr bool is_vector_v = is_vector<T>::value;
+
+    template <typename T> struct remove_extent<Vector<T>> { typedef T type; };
+    template <typename T> struct remove_extent<const Vector<T>> { typedef T type; };
+    template <typename T> struct remove_extent<volatile Vector<T>> { typedef T type; };
+    template <typename T> struct remove_extent<const volatile Vector<T>> { typedef T type; };
 }
 
 #endif //ETL_VECTOR_H

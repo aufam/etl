@@ -3,3 +3,6 @@
 /*[Rr]elease*
 
 .*
+!.gitignore
+
+compile_commands.json

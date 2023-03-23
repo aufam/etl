@@ -226,8 +226,8 @@ namespace Project::etl {
         T& operator *() { return node->item; }
         const T& operator *() const { return node->item; }
 
-        bool operator ==(const iterator& other) const { return node == other.node; }
-        bool operator !=(const iterator& other) const { return node != other.node; }
+        bool operator ==(iterator other) const { return node == other.node; }
+        bool operator !=(iterator other) const { return node != other.node; }
         explicit operator bool() const { return node != nullptr; }
 
         iterator operator +(int pos) const {
@@ -271,6 +271,16 @@ namespace Project::etl {
             return res;
         }
 
+        size_t operator -(iterator other) {
+            size_t i = 0;
+            if (node == 0) {
+                for (; other; ++other, ++i);
+                return i;
+            }
+            for (auto p = *this; p && p != other; --p, ++i);
+            return i;
+        }
+
         /// get i-th item by dereference
         /// @warning make sure node + i is not null
         T& operator[](int i) const {
@@ -279,6 +289,18 @@ namespace Project::etl {
         }
     };
 
+    /// type traits
+    template <typename T> struct is_linked_list : false_type {};
+    template <typename T> struct is_linked_list<LinkedList<T>> : true_type {};
+    template <typename T> struct is_linked_list<const LinkedList<T>> : true_type {};
+    template <typename T> struct is_linked_list<volatile LinkedList<T>> : true_type {};
+    template <typename T> struct is_linked_list<const volatile LinkedList<T>> : true_type {};
+    template <typename T> inline constexpr bool is_linked_list_v = is_linked_list<T>::value;
+
+    template <typename T> struct remove_extent<LinkedList<T>> { typedef T type; };
+    template <typename T> struct remove_extent<const LinkedList<T>> { typedef T type; };
+    template <typename T> struct remove_extent<volatile LinkedList<T>> { typedef T type; };
+    template <typename T> struct remove_extent<const volatile LinkedList<T>> { typedef T type; };
 }
 
 #endif //ETL_LINKED_LIST_H

@@ -36,8 +36,22 @@ namespace Project::etl {
     template <typename T, size_t N> constexpr T*
     end(T (&arr)[N]) { return arr + N; }
 
+    /// python-like len
+    template <typename Container> constexpr auto
+    len(Container& cont) -> decltype(cont.len()) { return cont.len(); }
+    template <typename Container> constexpr auto
+    len(const Container& cont) -> decltype(cont.len()) { return cont.len(); }
+    template <typename T, size_t N> constexpr auto
+    len(T (&)[N]) { return N; }
+
+    /// python-like next
+    template <typename Generator> constexpr auto
+    next(Generator& gen) -> decltype(gen()) { return gen(); }
+    template <typename Generator> constexpr auto
+    next(const Generator& gen) -> decltype(gen()) { return gen(); }
+
     /// pair of values with possible different types
-    template <class X, class Y = X>
+    template <typename X, typename Y = X>
     struct Pair {
         X x; Y y;
         constexpr bool operator==(const Pair& other) const { return x == other.x && y == other.y; }
@@ -45,8 +59,46 @@ namespace Project::etl {
     };
 
     /// create pair, types are deduced
-    template <class X, class Y> constexpr auto
+    template <typename X, typename Y> constexpr auto
     pair(X x, Y y) { return Pair<X, Y>{x, y}; }
+
+    /// type traits
+    template <typename T> struct is_pair : false_type {};
+    template <typename X, typename Y> struct is_pair<Pair<X, Y>> : true_type {};
+    template <typename X, typename Y> struct is_pair<const Pair<X, Y>> : true_type {};
+    template <typename X, typename Y> struct is_pair<volatile Pair<X, Y>> : true_type {};
+    template <typename X, typename Y> struct is_pair<const volatile Pair<X, Y>> : true_type {};
+    template <typename T> inline constexpr bool is_pair_v = is_pair<T>::value;
+
+    /// get specifier
+    template <size_t i, typename X, typename Y> constexpr auto&
+    get(Pair<X, Y>& p) {
+        static_assert(i < 2, "index has to be less than 2");
+        if constexpr (i == 0) return p.x;
+        else return p.y;
+    }
+    template <size_t i, typename X, typename Y> constexpr auto&&
+    get(Pair<X, Y>&& p) {
+        static_assert(i < 2, "index has to be less than 2");
+        if constexpr (i == 0) return p.x;
+        else return p.y;
+    }
+    template <size_t i, typename X, typename Y> constexpr auto&
+    get(const Pair<X, Y>& p) {
+        static_assert(i < 2, "index has to be less than 2");
+        if constexpr (i == 0) return p.x;
+        else return p.y;
+    }
+    template <size_t i, typename X, typename Y> constexpr auto&&
+    get(const Pair<X, Y>&& p) {
+        static_assert(i < 2, "index has to be less than 2");
+        if constexpr (i == 0) return p.x;
+        else return p.y;
+    }
+
+    /// len specifier
+    template <typename X, typename Y> constexpr size_t
+    len(const Pair<X, Y>&) { return 2; }
 
     /// triple of values with possible different types
     template <class X, class Y = X, class Z = Y>
@@ -60,19 +112,47 @@ namespace Project::etl {
     template <class X, class Y, class Z> constexpr auto
     triple(X x, Y y, Z z) { return Triple<X, Y, Z>{x, y, z}; }
 
-    /// python-like len
-    template <typename Container> constexpr auto
-    len(Container& cont) -> decltype(cont.len()) { return cont.len(); }
-    template <typename Container> constexpr auto
-    len(const Container& cont) -> decltype(cont.len()) { return cont.len(); }
-    template <typename T, size_t N> constexpr auto
-    len(T (&arr)[N]) { return N; }
+    /// type traits
+    template <typename T> struct is_triple : false_type {};
+    template <typename X, typename Y, typename Z> struct is_triple<Triple<X, Y, Z>> : true_type {};
+    template <typename X, typename Y, typename Z> struct is_triple<const Triple<X, Y, Z>> : true_type {};
+    template <typename X, typename Y, typename Z> struct is_triple<volatile Triple<X, Y, Z>> : true_type {};
+    template <typename X, typename Y, typename Z> struct is_triple<const volatile Triple<X, Y, Z>> : true_type {};
+    template <typename T> inline constexpr bool is_triple_v = is_triple<T>::value;
 
-    /// python-like next
-    template <typename Generator> constexpr auto
-    next(Generator& gen) -> decltype(gen()) { return gen(); }
-    template <typename Generator> constexpr auto
-    next(const Generator& gen) -> decltype(gen()) { return gen(); }
+    /// get specifier
+    template <size_t i, class X, class Y, class Z> constexpr auto&
+    get(Triple<X, Y, Z>& p) {
+        static_assert(i < 2, "index has to be less than 3");
+        if constexpr (i == 0) return p.x;
+        if constexpr (i == 1) return p.y;
+        else return p.z;
+    }
+    template <size_t i, class X, class Y, class Z> constexpr auto&&
+    get(Triple<X, Y, Z>&& p) {
+        static_assert(i < 2, "index has to be less than 3");
+        if constexpr (i == 0) return p.x;
+        if constexpr (i == 1) return p.y;
+        else return p.z;
+    }
+    template <size_t i, class X, class Y, class Z> constexpr auto&
+    get(const Triple<X, Y, Z>& p) {
+        static_assert(i < 2, "index has to be less than 3");
+        if constexpr (i == 0) return p.x;
+        if constexpr (i == 1) return p.y;
+        else return p.z;
+    }
+    template <size_t i, class X, class Y, class Z> constexpr auto&&
+    get(const Triple<X, Y, Z>&& p) {
+        static_assert(i < 2, "index has to be less than 3");
+        if constexpr (i == 0) return p.x;
+        if constexpr (i == 1) return p.y;
+        else return p.z;
+    }
+
+    /// len specifier
+    template <typename X, typename Y, typename Z> constexpr size_t
+    len(const Triple<X, Y, Z>&) { return 3; }
 
     /// python-like enumerate
     template <typename Iterator>
@@ -87,9 +167,9 @@ namespace Project::etl {
         constexpr Enumerate& begin() { return *this; }
         constexpr Enumerate& end()   { return *this; }
         constexpr bool operator!=(const Enumerate&) { return first != last; }
-        constexpr void operator++()   { ++first; ++cnt; }
-        constexpr auto operator*()    { return Pair<int, decltype(*first)>{cnt, *first }; }
-        constexpr auto operator()()   { auto res = *(*this); ++(*this); return res; }
+        constexpr void operator++()  { ++first; ++cnt; }
+        constexpr auto operator*()   { return Pair<int, decltype(*first)>{cnt, *first }; }
+        constexpr auto operator()()  { auto res = *(*this); ++(*this); return res; }
     };
 
     template <typename Iterator> constexpr auto
@@ -154,12 +234,17 @@ namespace Project::etl {
         constexpr void operator++() { ++first; } // prefix increment
         constexpr auto operator*()  { return *first; }
         constexpr auto operator()() { return *first++; }
+
+        constexpr auto& operator[](size_t i) { return *(first + i); }
+        constexpr const auto& operator[](size_t i) const { return *(first + i); }
+
+        constexpr size_t len() { return last - first; }
     };
 
     template <typename Iterator> constexpr auto
     iter(Iterator first, Iterator last) { return Iter(first, last); }
     template <typename Container> constexpr auto
-    iter(Container& cont) { return Iter(begin(cont), end(cont)); }
+    iter(Container& cont) { return Iter(begin(cont), end(cont)); }  
 }
 
 #endif //ETL_UTILITY_H

@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "etl/linked_list.h"
 #include "etl/algorithm.h"
-#include "etl/python_keywords.h"
+#include "etl/keywords.h"
 
 using namespace Project::etl;
 
@@ -73,6 +73,16 @@ TEST(LinkedList, Iterator) {
     iter1 = a.tail();
     EXPECT_EQ(res[4], *iter1);
     EXPECT_EQ(res[3], iter1[-1]);
+
+    auto b = a.begin() + 1;
+    auto c = a.begin() + 4;
+    EXPECT_EQ(c - b, 3);
+
+    auto d = a.end();
+    EXPECT_EQ(d - b, 4);
+
+    auto e = a.begin();
+    EXPECT_EQ(b - e, 1);
 
     EXPECT_EQ(a.len(), 5);
 }

@@ -1,7 +1,6 @@
 #include "gtest/gtest.h"
 #include "etl/vector.h"
-#include "etl/utility.h"
-#include "etl/python_keywords.h"
+#include "etl/keywords.h"
 
 using namespace Project::etl;
 

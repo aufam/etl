@@ -74,7 +74,8 @@ TEST(Complex, Arithmetic) {
             EXPECT_EQ(c.real, 20);
             EXPECT_EQ(c.imag, -20);
         } {
-            const auto c = a * 1.0_i;
+            const auto d = 1.0_i;
+            const auto c = a * d;
             EXPECT_EQ(c.real, 10);
             EXPECT_EQ(c.imag, 10);
         } {

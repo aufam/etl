@@ -19,7 +19,7 @@ namespace Project::etl {
     template <typename T, size_t N> using array_traits_t = typename array_traits<T, N>::type;
 
     /// static contiguous array
-    template <class T, size_t N>
+    template <typename T, size_t N>
     struct Array {
         typedef T value_type;
         typedef array_traits<T, N> traits;
@@ -46,29 +46,33 @@ namespace Project::etl {
         constexpr const_reference front() const { return traits::ref(buf, 0); }
         constexpr const_reference back()  const { return traits::ref(buf, N - 1); }
 
-        constexpr reference operator [](int i) { return traits::ref(buf, i); }
-        constexpr const_reference operator [](int i) const { return traits::ref(buf, i); }
+        constexpr reference operator[](int i) { return traits::ref(buf, i); }
+        constexpr const_reference operator[](int i) const { return traits::ref(buf, i); }
+
+        constexpr auto operator()(size_t i, size_t j) const { return iter(begin() + i, begin() + j); }
+
+        template <class Container>
+        constexpr bool operator==(const Container& other) const { return compare_all(*this, other); }
+
+        template <class Container>
+        constexpr bool operator!=(const Container& other) const { return !operator==(other); }
     };
 
     /// create array with variadic template function, array size is deduced
-    template<typename T, typename... U> constexpr Array<enable_if_t<(is_same_v<T, U> && ...), T>, 1 + sizeof...(U)>
-    array(const T& t, const U&... u) { return Array<T, 1 + sizeof...(U)>{t, u...}; }
+    template <typename T, typename... U> constexpr Array<enable_if_t<(is_same_v<T, U> && ...), T>, 1 + sizeof...(U)>
+    array(const T& t, const U&... u) { return Array<T, 1 + sizeof...(U)> { t, u... }; }
 
-    /// cast reference from iterator
-    template <class T, size_t N> constexpr Array<T, N>&
-    array_cast(T* a) { return *reinterpret_cast<Array<T, N>*>(a); }
+    /// create array with default constructed T 
+    template <typename T, size_t N> constexpr auto
+    array() { return Array<T, N> {}; }
 
-    /// cast const reference from iterator
-    template <class T, size_t N> constexpr const Array<T, N>&
-    array_cast(const T* a) { return *reinterpret_cast<const Array<T, N>*>(a); }
+    /// cast reference from other pointer
+    template <typename T, size_t N, typename U> constexpr auto&
+    array_cast(U* a) { return *reinterpret_cast<conditional_t<is_const_v<U>, const Array<T, N>*, Array<T, N>*>>(a); }
 
-    /// cast reference from traditional array
-    template <class T, size_t N> constexpr Array<T, N>&
-    array_cast(T (&a)[N]) { return *reinterpret_cast<Array<T, N>*>(a); }
-
-    /// cast const reference from traditional array
-    template <class T, size_t N> constexpr const Array<T, N>&
-    array_cast(const T (&a)[N]) { return *reinterpret_cast<const Array<T, N>*>(a); }
+    /// cast const reference from any type
+    template <typename T = void, typename U, typename V = conditional_t<is_void_v<T>, remove_extent_t<U>, T>> constexpr auto&
+    array_cast(U &a) { return array_cast<V, sizeof(U) / sizeof(V)>(&a); }
 
     /// get functions
     template<int i, typename T, size_t N> constexpr T&
@@ -83,6 +87,20 @@ namespace Project::etl {
     template<int i, typename T, size_t N> constexpr const T&&
     get(const Array<T, N>&& arr) { return move(get<i>(arr)); }
 
+    /// swap specialization, avoid creating large temporary variable 
+    template <typename T, typename U> enable_if_t<is_same_v<remove_extent_t<T>, remove_extent_t<U>>>
+    swap(T& a, U& b) { swap_element(a, b); }
+
+    /// type traits
+    template <typename T, size_t N> struct is_array<Array<T, N>> : true_type {};
+    template <typename T, size_t N> struct is_array<const Array<T, N>> : true_type {};
+    template <typename T, size_t N> struct is_array<volatile Array<T, N>> : true_type {};
+    template <typename T, size_t N> struct is_array<const volatile Array<T, N>> : true_type {};
+
+    template <typename T, size_t N> struct remove_extent<Array<T, N>> { typedef T type; };
+    template <typename T, size_t N> struct remove_extent<const Array<T, N>> { typedef T type; };
+    template <typename T, size_t N> struct remove_extent<volatile Array<T, N>> { typedef T type; };
+    template <typename T, size_t N> struct remove_extent<const volatile Array<T, N>> { typedef T type; };
 }
 
 //// some specializations to enable structure binding
