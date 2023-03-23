@@ -1,9 +1,7 @@
 #ifndef ETL_MAP_H
 #define ETL_MAP_H
 
-#include "etl/type_traits.h"
 #include "etl/vector.h"
-#include "etl/utility.h"
 
 namespace Project::etl {
 
