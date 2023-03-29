@@ -23,8 +23,8 @@ namespace Project::etl {
     Tuple = TupleImpl<0, Items...>;
 
     /// create tuple with variadic template function
-    template <typename Item, typename... Items> constexpr auto
-    tuple(const Item& head, const Items&... items) { return Tuple<Item, Items...>{head, items...}; }
+    template <typename... Items> constexpr auto
+    tuple(const Items&... items) { return Tuple<Items...>{items...}; }
 
     /// len specifier
     template <typename... T> constexpr size_t
@@ -32,25 +32,25 @@ namespace Project::etl {
 
     /// obtain a reference to i-th item in a tuple
     template <size_t i, typename Item, typename... Items> constexpr auto&
-    get(TupleImpl<i, Item, Items...>& tuple) { return tuple.TupleHead<i, Item>::item; }
+    get(TupleImpl<i, Item, Items...>& t) { return t.TupleHead<i, Item>::item; }
 
     template <size_t i, typename Item, typename... Items> constexpr auto&&
-    get(TupleImpl<i, Item, Items...>&& tuple) { return move(get(tuple)); }
+    get(TupleImpl<i, Item, Items...>&& t) { return move(get(t)); }
 
     template <size_t i, typename Item, typename... Items> constexpr const auto&
-    get(const TupleImpl<i, Item, Items...>& tuple) { return tuple.TupleHead<i, Item>::item; }
+    get(const TupleImpl<i, Item, Items...>& t) { return t.TupleHead<i, Item>::item; }
 
     template <size_t i, typename Item, typename... Items> constexpr const auto&&
-    get(const TupleImpl<i, Item, Items...>&& tuple) { return move(get(tuple)); }
+    get(const TupleImpl<i, Item, Items...>&& t) { return move(get(t)); }
 
     template <size_t... i, typename T> auto
-    tuple_slice(const T& t, index_sequence<i...>) { return tuple(get<i>(t)...); }
+    tuple_slice(T& t, integer_sequence<size_t, i...>) { return tuple(get<i>(t)...); }
 
-    template <size_t Start, size_t End, typename T, typename... Args> auto
-    slice(const T& t) {
+    template <size_t Start, size_t End, typename... Args> auto
+    get(const Tuple<Args...>& t) {
         static_assert(Start <= End, "Start cannot be greater than End");
         static_assert(End <= sizeof...(Args), "End cannot be greater than number or Args");
-        return tuple_slice(t, index_sequence_for<Args...>{}); 
+        return tuple_slice(t, make_range_sequence<Start, End>());
     }
 
     /// type_traits

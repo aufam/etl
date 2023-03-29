@@ -45,3 +45,10 @@ TEST(Tuple, Compare) {
     EXPECT_EQ(len(c), 3);
     EXPECT_EQ(len(d), 3);
 }
+
+TEST(Tuple, Slice) {
+    val a = tuple(1, 0.3, 1, 0.3f);
+    val b = get<1, 3>(a);
+    EXPECT_EQ(get<0>(b), 0.3);
+    EXPECT_EQ(get<1>(b), 1);
+}

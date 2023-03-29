@@ -1,104 +1,114 @@
 #include "gtest/gtest.h"
 #include "etl/complex.h"
+#include "etl/keywords.h"
 
 using namespace Project::etl;
 using namespace Project::etl::literals;
 
 TEST(Complex, Conversion) {
     /* from complex8 */ {
-        const auto a = complex8{1, -1}; {
-            const auto b = static_cast<complex16> (a);
-            const auto c = complex16{1 * 0x1'00, -1 * 0x1'00};
-            EXPECT_EQ(b.real, c.real);
-            EXPECT_EQ(b.imag, c.imag);
-            EXPECT_TRUE(a == b and a == c);
+        val a = complex8(1, -1); {
+            val b = static_cast<complex16>(a);
+            val c = complex16(0x1'00, -0x1'00);
+            EXPECT_TRUE(a == b);
+            EXPECT_TRUE(a == c);
         } {
-            const auto b = static_cast<complex32> (a);
-            const auto c = complex32{1 * 0x100'0000, -1 * 0x100'0000};
-            EXPECT_EQ(b.real, c.real);
-            EXPECT_EQ(b.imag, c.imag);
-            EXPECT_TRUE(a == b and a == c);
+            val b = static_cast<complex32> (a);
+            val c = complex32(0x100'0000, -0x100'0000);
+            EXPECT_TRUE(a == b);
+            EXPECT_TRUE(a == c);
         }
     } /* from complex32 */ {
-        const auto a = complex32{0x1'0000, -0x1'0000}; {
-            const auto b = static_cast<complex8> (a);
-            const auto c = complex8{};
-            EXPECT_EQ(b.real, c.real);
-            EXPECT_EQ(b.imag, c.imag);
-            EXPECT_TRUE(a == b and a == c);
+        val a = complex32{0x1'0000, -0x1'0000}; {
+            val b = static_cast<complex8>(a);
+            val c = complex8(); // too small, so it is 0 + 0i
+            EXPECT_TRUE(a == b);
+            EXPECT_TRUE(a == c);
         } {
-            const auto b = static_cast<complex16> (a);
-            const auto c = complex16{1, -1};
-            EXPECT_EQ(b.real, c.real);
-            EXPECT_EQ(b.imag, c.imag);
-            EXPECT_TRUE(a == b and a == c);
+            val b = static_cast<complex16>(a);
+            val c = complex16(1, -1);
+            EXPECT_TRUE(a == b);
+            EXPECT_TRUE(a == c);
         }
     }
 }
 
 TEST(Complex, Arithmetic) {
     /* operator +- */ {
-        const auto a = complex8 { 1, -1 };
-        const auto b = complex16 { 0x1'00, -1}; {
-            const auto c = a + b;
+        val a = complex8(1, -1);
+        val b = complex16(0x1'00, -1); {
+            val c = a + b;
             EXPECT_EQ(c.real, 2);
             EXPECT_EQ(c.imag, -1); // b.imag is too small compared to a.imag
         } {
-            const auto c = a - b;
+            val c = a - b;
             EXPECT_EQ(c.real, 0);
             EXPECT_EQ(c.imag, -1); // b.imag is too small compared to a.imag
         } {
-            const auto c = a + (0.1 + 0.1_i);
+            val c = a + (0.1 + 0.1_i);
             EXPECT_EQ(c.real, a.real + static_cast<complex8::value_type> (0.1 * complex8::max_value_f));
             EXPECT_EQ(c.imag, a.imag + static_cast<complex8::value_type> (0.1 * complex8::max_value_f));
         } {
-            const auto c = a + 0.1;
+            val c = a + 0.1;
             EXPECT_EQ(c.real, a.real + static_cast<complex8::value_type> (0.1 * complex8::max_value_f));
             EXPECT_EQ(c.imag, a.imag);
         } {
-            const auto c = 0.1 + a;
+            val c = 0.1 + a;
             EXPECT_EQ(c.real, a.real + static_cast<complex8::value_type> (0.1 * complex8::max_value_f));
             EXPECT_EQ(c.imag, a.imag);
         }  /* not allowed
-            const auto c = a + 2;
-            const auto c = a - 3;
+            val c = a + 2;
+            val c = a - 3;
         */
     } /* operator *\ */ {
-        const auto a = complex8 { 10, -10 };
-        const auto b = complex16 { 0x1'00, -1}; {
-            const auto c = a * 2;
-            EXPECT_EQ(c.real, 20);
-            EXPECT_EQ(c.imag, -20);
+        val a = complex8(10, -10); {
+            val b = a * 2;
+            val c = complex8(20, -20);
+            EXPECT_EQ(b, c);
         } {
-            const auto c = 2 * a;
-            EXPECT_EQ(c.real, 20);
-            EXPECT_EQ(c.imag, -20);
+            val b = 2 * a;
+            val c = complex8(20, -20);
+            EXPECT_EQ(b, c);
         } {
-            const auto d = 1.0_i;
-            const auto c = a * d;
-            EXPECT_EQ(c.real, 10);
-            EXPECT_EQ(c.imag, 10);
+            val d = 1.0_i;
+            val b = a * d;
+            val c = complex8(-10, 10);
+            EXPECT_EQ(b, c);
         } {
-            const auto c = a / 2;
-            EXPECT_EQ(c.real, 5);
-            EXPECT_EQ(c.imag, -5);
+            val b = a / 2;
+            val c = complex8(5, -5);
+            EXPECT_EQ(b, c);
+        } {
+            val b = 0.1 + 0.3_i;
+            val c = 0.1 - 0.2_i;
+            val d = b * c;
+            val e = 0.07 + 0.01_i;
+            val f = d.to_float();
+            val g = e.to_float();
+            EXPECT_EQ(d, e);
+            EXPECT_NEAR(f.x, g.x, 0.01);
+            EXPECT_NEAR(f.y, g.y, 0.01);
         }
     }
 }
 
 TEST(Complex, Compare) {
-    const auto a = complex8  { 0x7f, 0x7f };
-    const auto b = complex16 { 0x7fff, 0x7fff };
-    const auto c = complex32 { 0x7fff'ffff, 0x7fff'ffff };
-    const auto d = 1.0 + 1.0_i;
-    EXPECT_TRUE(a == b and a == c and a == d and b == c and b == d and c == d);
+    val a = complex8 (0x7f, 0x7f);
+    val b = complex16(0x7f00, 0x7f00);
+    val c = complex32(0x7f00'0000, 0x7f00'0000);
+    val d = 1.0 + 1.0_i;
+    EXPECT_TRUE(a == b);
+    EXPECT_TRUE(a == c);
+    EXPECT_TRUE(a == d);
+    EXPECT_TRUE(b == c);
+    EXPECT_TRUE(b == d);
+    EXPECT_TRUE(c == d);
 
-    const auto e = static_cast<complex8> (c);
-    const auto f = e.real;
-    const auto g = e.imag;
+    val e = static_cast<complex8>(c);
+    val f = e.real;
+    val g = e.imag;
 
-    const auto h = a.magnitude_square();
-    const auto i = e.magnitude_square();
-    const auto j = d.magnitude_square();
-
+    val h = a.magnitude_square();
+    val i = e.magnitude_square();
+    val j = d.magnitude_square();
 }

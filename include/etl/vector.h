@@ -2,6 +2,7 @@
 #define ETL_VECTOR_H
 
 #include "etl/algorithm.h"
+#include <cstddef>
 
 namespace Project::etl {
 
@@ -127,7 +128,6 @@ namespace Project::etl {
             nItems++;
         }
 
-
         Vector& operator+=(const Vector& other) {
             append(other);
             return *this;
@@ -137,20 +137,30 @@ namespace Project::etl {
             return *this;
         }
 
-        void remove(size_t index) {
+        void remove(int index) {
             if (len() == 0) return;
-            if (index >= len()) return;
-
+            if (index < 0) index = len() + index; // allowing negative index
+            if (index < 0 || size_t(index) >= len()) return; // out of range
+        
             auto newBuffer = new T[len() - 1];
-            size_t i = 0;
+            int i = 0;
             for (auto& item : *this) {
                 if (i == index) continue;
                 newBuffer[i++] = item;
             }
+
             delete [] buf;
             buf = newBuffer;
             --nItems;
         }
+
+        /// slice operator
+        Iter<iterator> operator()(int start, int stop, int step = 1)
+        { return start < stop ? iter(&operator[](start), &operator[](stop)) : iter(begin(), begin()); }
+
+        /// slice operator
+        Iter<const_iterator>operator()(int start, int stop, int step = 1) const
+        { return start < stop ? iter(&operator[](start), &operator[](stop)) : iter(begin(), begin()); }
 
         template <class Container>
         bool operator==(const Container& other) const { return compare_all(*this, other); }
@@ -164,7 +174,7 @@ namespace Project::etl {
     vector(const T& t, const U&...u) { return Vector<T>{t, u...}; }
 
     /// create empty vector
-    template <typename T> Vector<T>
+    template <typename T> Vector<T> constexpr
     vector() { return Vector<T>{}; }
 
     /// type traits

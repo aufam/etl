@@ -127,7 +127,6 @@ TEST(String, Swap) {
     var b = string("abc"); // size is 4
     swap(a, b);
     EXPECT_EQ(a, "abc");
-    std::cout << "=====TEST====\n" << b.data() << '\n';
     EXPECT_EQ(b, "123");
 
     var c = string("abc"); // size is 4

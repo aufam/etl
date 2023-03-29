@@ -294,17 +294,31 @@ namespace Project::etl {
     };
     template <typename T> using decay_t = typename decay<T>::type;
 
-    /// index sequence
-    template <size_t...> struct index_sequence {};
+    /// integer sequence
+    template<typename T, T... i>
+    struct integer_sequence {
+        typedef T value_type;
+        static constexpr size_t size() noexcept { return sizeof...(i); }
+    };
 
-    template <size_t N, size_t... i>
-    struct make_index_sequence_helper : make_index_sequence_helper<N - 1, N - 1, i...> {};
+    template <typename T, T Begin, T End, T... Is>
+    struct make_index_sequence_helper {
+        using type = typename make_index_sequence_helper<T, Begin, End-1, End-1, Is...>::type;
+    };
+
+    template <typename T, T Begin, T... Is>
+    struct make_index_sequence_helper<T, Begin, Begin, Is...> {
+        using type = integer_sequence<size_t, Is...>;
+    };
 
     template <size_t... i>
-    struct make_index_sequence_helper<0, i...> : index_sequence<i...> {};
+    using index_sequence = integer_sequence<size_t, i...>;
+
+    template <size_t Begin, size_t End>
+    using make_range_sequence = typename make_index_sequence_helper<size_t, Begin, End>::type;
 
     template <size_t N>
-    using make_index_sequence = make_index_sequence_helper<N>;
+    using make_index_sequence = typename make_index_sequence_helper<size_t, 0, N>::type;
 
     template <typename... T> using index_sequence_for = make_index_sequence<sizeof...(T)>;
 }

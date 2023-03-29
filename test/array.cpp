@@ -82,6 +82,11 @@ TEST(Array, Cast) {
 TEST(Array, Slice) {
     val a = array(0, 1, 2, 3, 4);
     val b = a(1, 3);
+
     EXPECT_EQ(b[0], 1);
     EXPECT_EQ(b[1], 2);
+
+    val& c = get<1, 3>(a);
+    EXPECT_EQ(b[0], c[0]);
+    EXPECT_EQ(b[1], c[1]);
 }

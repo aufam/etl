@@ -7,8 +7,7 @@ namespace Project::etl {
 
     /// collection of key-value pairs, keys are unique
     template <typename K, typename V>
-    struct Map : Vector<Pair<K, V>> {
-    private:
+    class Map : public Vector<Pair<K, V>> {
         Map(Pair<K, V>* buffer, size_t nItems) : Vector<Pair<K, V>>(buffer, nItems) {}
 
         Pair<K, V>* insert_(const Map& other) const {
@@ -72,7 +71,7 @@ namespace Project::etl {
             this->nItems = 0;
         }
 
-        /// check if a key are in this map
+        /// check if a key is in this map
         bool has(const K& key) const {
             for (auto &[x, y]: *this) if (x == key) return true;
             return false;
