@@ -7,6 +7,7 @@
  * - custom keywords may conflict with existing source codes or libraries
  * - don't put this into a header file (hence, no header guard)
  * - don't put this before other header files
+ * - define ETL_DISABLE_MORE_KEYWORDS to disable non-standard keywords
  */
 
 #include "etl/utility.h" // pair, triple, len, next, iter, enumerate, zip, range
@@ -17,7 +18,7 @@
 
 #define in :            // python's in (only for iterating a container)
 #define elif else if    // python's elif
-#define is ==           // python's is (should be used for comparing a variable to a literal)
+#define is ==           // python's is (should be used only for comparing a variable to a literal)
 
 #define null nullptr    // kotlin's null
 #define var auto        // kotlin's var
@@ -26,5 +27,5 @@
 
 #define lambda []       // capture-less lambda expression
 
-#endif // ETL_ENABLE_MORE_KEYWORDS
+#endif // ETL_DISABLE_MORE_KEYWORDS
 // #endif //ETL_KEYWORDS_H
