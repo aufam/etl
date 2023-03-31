@@ -182,6 +182,10 @@ namespace Project::etl {
     template <typename T, typename... U> LinkedList<enable_if_t<(is_same_v<T, U> && ...), T>>
     list(const T& t, const U&...u) { return LinkedList<T>{t, u...}; }
 
+    /// empty linked list
+    template <typename T> auto 
+    list() { return LinkedList<T> {}; }
+
     /// iter specialization
     template <typename T> auto
     iter(const LinkedList<T>& l, int step = 1) { return Iter(step >= 0 ? begin(l) : l.tail(), step >= 0 ? end(l) : begin(l) - 1, step); }
