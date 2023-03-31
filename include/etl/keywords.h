@@ -26,6 +26,7 @@
 #define fun auto        // kotlin's fun (should be used to define a function)
 
 #define lambda []       // capture-less lambda expression
+#define _ dummy__[[maybe_unused]] // unused variable
 
 #endif // ETL_DISABLE_MORE_KEYWORDS
 // #endif //ETL_KEYWORDS_H
