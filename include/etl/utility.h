@@ -63,7 +63,7 @@ namespace Project::etl {
     pair(X x, Y y) { return Pair<X, Y>{x, y}; }
 
     /// create empty pair
-    template <typename X, typename Y> constexpr auto
+    template <typename X, typename Y = X> constexpr auto
     pair() { return Pair<X, Y>{}; }
 
     /// type traits
@@ -117,7 +117,7 @@ namespace Project::etl {
     triple(X x, Y y, Z z) { return Triple<X, Y, Z>{x, y, z}; }
 
     /// create empty triple
-    template <class X, class Y, class Z> constexpr auto
+    template <class X, class Y = X, class Z = Y> constexpr auto
     triple() { return Triple<X, Y, Z>{}; }
 
     /// type traits
@@ -187,7 +187,7 @@ namespace Project::etl {
             return *(first + (step * i)); 
         }
 
-        constexpr explicit operator bool() const { return first != last; }
+        constexpr explicit operator bool() const { return step != 0 && first != last; }
 
         constexpr bool operator!=(const Iter&) const { return operator bool(); }
 
@@ -204,7 +204,7 @@ namespace Project::etl {
 
         constexpr auto operator()() {
             auto res = *first;
-            operator++();
+            if (operator bool()) operator++();
             return res;
         }
     };
@@ -226,12 +226,12 @@ namespace Project::etl {
         constexpr Range begin() const { return *this; }
         constexpr Range end()   const { return *this; }
 
-        constexpr explicit operator bool() const { return step < 0 ? first > last : first < last; }
+        constexpr explicit operator bool() const { return step == 0 ? false : step < 0 ? first > last : first < last; }
         constexpr bool operator!=(const Range&) const { return operator bool(); }
         constexpr void operator++() { first += step; }
 
         constexpr T operator*() { return first; }
-        constexpr T operator()() { auto res = operator*(); operator++(); return res; }
+        constexpr T operator()() { auto res = operator*(); if (operator bool()) operator++(); return res; }
     };
 
     template <typename T> constexpr enable_if_t<is_arithmetic_v<T>, Range<T>>
@@ -257,7 +257,7 @@ namespace Project::etl {
         constexpr void operator++() { ++iterator; ++cnt; }
 
         constexpr auto operator*() { return pair<int, decltype(*iterator)>(cnt, *iterator); }
-        constexpr auto operator()() { auto res = pair(cnt, *iterator); operator++(); return res; }
+        constexpr auto operator()() { auto res = pair(cnt, *iterator); if (operator bool()) operator++(); return res; }
     };
 
     template <typename Iterator> constexpr auto
@@ -282,7 +282,7 @@ namespace Project::etl {
         constexpr void operator++() { ++iterators.x; ++iterators.y; }
 
         constexpr auto operator*() { return pair<decltype(*iterators.x), decltype(*iterators.y)>(*iterators.x, *iterators.y); }
-        constexpr auto operator()() { auto res = pair(*iterators.x, *iterators.y); operator++(); return res; }
+        constexpr auto operator()() { auto res = pair(*iterators.x, *iterators.y); if (operator bool()) operator++(); return res; }
     };
 
     template <typename Iterator1, typename Iterator2> constexpr auto
@@ -311,7 +311,7 @@ namespace Project::etl {
         constexpr auto operator*()
         { return triple<decltype(*iterators.x), decltype(*iterators.y), decltype(*iterators.z)>(*iterators.x, *iterators.y, *iterators.z); }
 
-        constexpr auto operator()() { auto res = triple(*iterators.x, *iterators.y, *iterators.z); operator++(); return res; }
+        constexpr auto operator()() { auto res = triple(*iterators.x, *iterators.y, *iterators.z); if (operator bool()) operator++(); return res; }
     };
 
     template <typename Iterator1, typename Iterator2, typename Iterator3> constexpr auto
