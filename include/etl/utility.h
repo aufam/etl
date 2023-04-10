@@ -166,7 +166,7 @@ namespace Project::etl {
     template <typename Iterator>
     class Iter {
         Iterator first, last;
-        const int step;
+        int step;
 
     public:
         constexpr Iter(Iterator first, Iterator last, int step = 1) : first(first), last(last), step(step) {}
@@ -203,41 +203,53 @@ namespace Project::etl {
         constexpr auto& operator*() { return *first; }
 
         constexpr auto operator()() {
-            auto res = *first;
-            if (operator bool()) operator++();
+            using R = remove_reference_t<decltype(*first)>;
+            auto valid = operator bool();
+            auto res = valid ? *first : R{};
+            if (valid) operator++();
             return res;
         }
     };
 
     template <typename Iterator> constexpr auto
     iter(Iterator first, Iterator last, int step = 1) { return Iter(first, last, step); }
+
     template <typename Container> constexpr auto
-    iter(Container& cont, int step = 1) { return Iter(step >= 0 ? begin(cont) : end(cont) - 1, step >= 0 ? end(cont) : begin(cont) - 1, step); }
+    iter(Container& cont, int step = 1) 
+    { return step >= 0 ? Iter(etl::begin(cont), etl::end(cont), step) : Iter(etl::end(cont) - 1, etl::begin(cont) - 1, step); }
 
     /// python-like range
-    template <typename T>
+    template <typename T, typename U = remove_unsigned_t<T>>
     class Range {
         T first, last;
-        const T step;
+        U step;
 
     public:
-        constexpr Range(T first, T last, T step) : first(first), last(last), step(step) {}
+        constexpr Range(T first, T last, U step) : first(first), last(last), step(step) {}
 
+        [[nodiscard]] constexpr size_t len() const { return operator bool() ? (last - first) / step : 0; }
         constexpr Range begin() const { return *this; }
         constexpr Range end()   const { return *this; }
 
-        constexpr explicit operator bool() const { return step == 0 ? false : step < 0 ? first > last : first < last; }
+        constexpr explicit operator bool() const { return step == U(0) ? false : step < U(0) ? first > last : first < last; }
         constexpr bool operator!=(const Range&) const { return operator bool(); }
         constexpr void operator++() { first += step; }
 
         constexpr T operator*() { return first; }
-        constexpr T operator()() { auto res = operator*(); if (operator bool()) operator++(); return res; }
+
+        constexpr T operator()() { 
+            auto valid = operator bool();
+            auto res = valid ? first : T();
+            if (valid) operator++();
+            return res;
+        }
     };
 
     template <typename T> constexpr enable_if_t<is_arithmetic_v<T>, Range<T>>
-    range(T last) { return Range(T(0), last, T(1)); }
+    range(T last) { return Range(T(0), last, remove_unsigned_t<T>(1)); }
+
     template <typename T> constexpr enable_if_t<is_arithmetic_v<T>, Range<T>>
-    range(T first, T last, T step = 1) { return Range(first, last, step); }
+    range(T first, T last, remove_unsigned_t<T> step = 1) { return Range(first, last, step); }
 
     /// python-like enumerate
     template <typename Iterator>
@@ -249,6 +261,10 @@ namespace Project::etl {
         constexpr Enumerate(Iterator first, Iterator last, int cnt = 0, int step = 1)
         : iterator(first, last, step), cnt(cnt) {}
 
+        constexpr Enumerate(Iter<Iterator> iterator, int cnt = 0)
+        : iterator(iterator), cnt(cnt) {}  
+ 
+        [[nodiscard]] constexpr size_t len() { return iterator.len(); }
         constexpr Enumerate begin() const { return *this; }
         constexpr Enumerate end()   const { return *this; }
 
@@ -256,14 +272,22 @@ namespace Project::etl {
         constexpr bool operator!=(const Enumerate&) const { return operator bool(); }
         constexpr void operator++() { ++iterator; ++cnt; }
 
-        constexpr auto operator*() { return pair<int, decltype(*iterator)>(cnt, *iterator); }
-        constexpr auto operator()() { auto res = pair(cnt, *iterator); if (operator bool()) operator++(); return res; }
+        constexpr auto operator*() { return etl::pair<int, decltype(*iterator)>(cnt, *iterator); }
+        
+        constexpr auto operator()() {
+            using R = etl::Pair<int, remove_reference_t<decltype(*iterator)>>;
+            auto valid = operator bool();
+            auto res = valid ? R{cnt, *iterator} : R{};
+            if (valid) operator++();
+            return res;
+        }
     };
 
     template <typename Iterator> constexpr auto
-    enumerate(Iterator first, Iterator last, int cnt = 0) { return Enumerate(first, last, cnt); }
+    enumerate(Iterator first, Iterator last, int cnt = 0, int step = 1) { return Enumerate(first, last, cnt, step); }
+
     template <typename Container> constexpr auto
-    enumerate(Container& cont, int cnt = 0) { return Enumerate(begin(cont), end(cont), cnt); }
+    enumerate(Container& cont, int cnt = 0, int step = 1) { return Enumerate(etl::begin(cont), etl::end(cont), cnt, step); }
 
     /// python-like zip
     template <typename Iterator1, typename Iterator2>
@@ -274,6 +298,10 @@ namespace Project::etl {
         constexpr Zip2(Iter<Iterator1> iter1, Iter<Iterator2> iter2)
         : iterators { iter1, iter2 } {}
 
+        [[nodiscard]] constexpr size_t len() { 
+            auto [x, y] = etl::pair(iterators.x.len(), iterators.y.len());
+            return x < y ? x : y; 
+        }
         constexpr Zip2 begin() const { return *this; }
         constexpr Zip2 end()   const { return *this; }
 
@@ -281,16 +309,26 @@ namespace Project::etl {
         constexpr bool operator!=(const Zip2&) const { return operator bool(); }
         constexpr void operator++() { ++iterators.x; ++iterators.y; }
 
-        constexpr auto operator*() { return pair<decltype(*iterators.x), decltype(*iterators.y)>(*iterators.x, *iterators.y); }
-        constexpr auto operator()() { auto res = pair(*iterators.x, *iterators.y); if (operator bool()) operator++(); return res; }
+        constexpr Pair<decltype(*iterators.x), decltype(*iterators.y)> operator*() { 
+            return {*iterators.x, *iterators.y};
+        }
+
+        constexpr auto operator()() {
+            using R = Pair<remove_reference_t<decltype(*iterators.x)>, 
+                           remove_reference_t<decltype(*iterators.y)>>;
+            auto valid = operator bool();
+            auto res = valid ? R{*iterators.x, *iterators.y} : R{}; 
+            if (valid) operator++(); 
+            return res; 
+        }
     };
 
     template <typename Iterator1, typename Iterator2> constexpr auto
     zip(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2)
-    { return Zip2(iter(first1, last1), iter(first2, last2)); }
+    { return Zip2(etl::iter(first1, last1), etl::iter(first2, last2)); }
 
     template <typename Container1, typename Container2> constexpr auto
-    zip(Container1& cont1, Container2& cont2) { return Zip2(iter(cont1), iter(cont2)); }
+    zip(Container1& cont1, Container2& cont2) { return Zip2(etl::iter(cont1), etl::iter(cont2)); }
 
 
     template <typename Iterator1, typename Iterator2, typename Iterator3>
@@ -301,6 +339,11 @@ namespace Project::etl {
         constexpr Zip3(Iter<Iterator1> iter1, Iter<Iterator2> iter2, Iter<Iterator3> iter3)
         : iterators { iter1, iter2, iter3 } {}
 
+        [[nodiscard]] constexpr size_t len() {
+            auto [x, y, z] = etl::pair(iterators.x.len(), iterators.y.len(), iterators.z.len());
+            auto xy = x < y ? x : y;
+            return xy < z ? xy : z;  
+        }
         constexpr Zip3 begin() const { return *this; }
         constexpr Zip3 end()   const { return *this; }
         
@@ -308,18 +351,32 @@ namespace Project::etl {
         constexpr bool operator!=(const Zip3&) const { return operator bool(); }
         constexpr void operator++() { ++iterators.x; ++iterators.y; ++iterators.z; }
 
-        constexpr auto operator*()
-        { return triple<decltype(*iterators.x), decltype(*iterators.y), decltype(*iterators.z)>(*iterators.x, *iterators.y, *iterators.z); }
+        constexpr Triple<decltype(*iterators.x), decltype(*iterators.y), decltype(*iterators.z)> operator*() { 
+            return {*iterators.x, *iterators.y, *iterators.z}; 
+        }
 
-        constexpr auto operator()() { auto res = triple(*iterators.x, *iterators.y, *iterators.z); if (operator bool()) operator++(); return res; }
+        constexpr auto operator()() { 
+            using R = Triple<remove_reference_t<decltype(*iterators.x)>, 
+                             remove_reference_t<decltype(*iterators.y)>,
+                             remove_reference_t<decltype(*iterators.z)>>;
+            auto valid = operator bool();
+            auto res = valid ? R{*iterators.x, *iterators.y, *iterators.z} : R{}; 
+            if (valid) operator++(); 
+            return res; 
+        }
     };
-
+ 
     template <typename Iterator1, typename Iterator2, typename Iterator3> constexpr auto
     zip(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2, Iterator3 first3, Iterator3 last3)
-    { return Zip3(iter(first1, last1), iter(first2, last2), iter(first3, last3)); }
+    { return Zip3(etl::iter(first1, last1), etl::iter(first2, last2), etl::iter(first3, last3)); }
 
     template <typename Container1, typename Container2, typename Container3> constexpr auto
-    zip(Container1& cont1, Container2& cont2, Container3& cont3) { return Zip3(iter(cont1), iter(cont2), iter(cont3)); }
+    zip(Container1& cont1, Container2& cont2, Container3& cont3) 
+    { return Zip3(etl::iter(cont1), etl::iter(cont2), etl::iter(cont3)); }
+
+    /// python-like reversed
+    template <typename Container> constexpr auto
+    reversed(const Container& cont) { return etl::iter(cont, -1); }
 
 }
 

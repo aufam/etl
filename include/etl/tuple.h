@@ -35,22 +35,22 @@ namespace Project::etl {
     get(TupleImpl<i, Item, Items...>& t) { return t.TupleHead<i, Item>::item; }
 
     template <size_t i, typename Item, typename... Items> constexpr auto&&
-    get(TupleImpl<i, Item, Items...>&& t) { return move(get(t)); }
+    get(TupleImpl<i, Item, Items...>&& t) { return etl::move(etl::get(t)); }
 
     template <size_t i, typename Item, typename... Items> constexpr const auto&
     get(const TupleImpl<i, Item, Items...>& t) { return t.TupleHead<i, Item>::item; }
 
     template <size_t i, typename Item, typename... Items> constexpr const auto&&
-    get(const TupleImpl<i, Item, Items...>&& t) { return move(get(t)); }
+    get(const TupleImpl<i, Item, Items...>&& t) { return etl::move(etl::get(t)); }
 
     template <size_t... i, typename T> auto
-    tuple_slice(T& t, integer_sequence<size_t, i...>) { return tuple(get<i>(t)...); }
+    tuple_slice(T& t, integer_sequence<size_t, i...>) { return etl::tuple(etl::get<i>(t)...); }
 
     template <size_t Start, size_t End, typename... Args> auto
     get(const Tuple<Args...>& t) {
         static_assert(Start <= End, "Start cannot be greater than End");
         static_assert(End <= sizeof...(Args), "End cannot be greater than number or Args");
-        return tuple_slice(t, make_range_sequence<Start, End>());
+        return etl::tuple_slice(t, etl::make_range_sequence<Start, End>());
     }
 
     /// type_traits
@@ -74,41 +74,41 @@ namespace Project::etl {
     template <typename T, typename U, size_t i, size_t N> constexpr bool
     tuple_eq(const T& t, const U& u) {
         if constexpr (i >= N) return true;
-        else return get<i>(t) == get<i>(u) && tuple_eq<T, U, i + 1, N>(t, u);
+        else return etl::get<i>(t) == etl::get<i>(u) && etl::tuple_eq<T, U, i + 1, N>(t, u);
     }
 
     /// compare operator
     template <typename... T, typename... U> constexpr bool
     operator==(const Tuple<T...>& t, const Tuple<U...>& u) {
         static_assert(sizeof...(T) == sizeof...(U), "tuple objects can only be compared if they have equal sizes.");
-        return tuple_eq<Tuple<T...>, Tuple<U...>, 0, sizeof...(T)>(t, u);
+        return etl::tuple_eq<Tuple<T...>, Tuple<U...>, 0, sizeof...(T)>(t, u);
     }
 
     template <typename... T, typename... U> constexpr bool
     operator!=(const Tuple<T...>& t, const Tuple<U...>& u) { return !operator==(t, u); }
 
     template <typename X1, typename Y1, typename X2, typename Y2> constexpr bool
-    operator==(const Tuple<X1, Y1>& t, const Pair<X2, Y2>& p) { return get<0>(t) == p.x && get<1>(t) == p.y; }
+    operator==(const Tuple<X1, Y1>& t, const Pair<X2, Y2>& p) { return etl::get<0>(t) == p.x && etl::get<1>(t) == p.y; }
 
     template <typename X1, typename Y1, typename X2, typename Y2> constexpr bool
     operator!=(const Tuple<X1, Y1>& t, const Pair<X2, Y2>& p) { return !operator==(t, p); }
 
     template <typename X1, typename Y1, typename X2, typename Y2> constexpr bool
-    operator==(const Pair<X1, Y1>& p, const Tuple<X2, Y2>& t) { return get<0>(t) == p.x && get<1>(t) == p.y; }
+    operator==(const Pair<X1, Y1>& p, const Tuple<X2, Y2>& t) { return etl::get<0>(t) == p.x && etl::get<1>(t) == p.y; }
 
     template <typename X1, typename Y1, typename X2, typename Y2> constexpr bool
     operator!=(const Pair<X1, Y1>& p, const Tuple<X2, Y2>& t) { return !operator==(p, t); }
 
     template <typename X1, typename Y1, typename Z1, typename X2, typename Y2, typename Z2> constexpr bool
     operator==(const Tuple<X1, Y1, Z1>& t, const Triple<X2, Y2, Z2>& p)
-    { return get<0>(t) == p.x && get<1>(t) == p.y && get<2>(t) == p.z; }
+    { return etl::get<0>(t) == p.x && etl::get<1>(t) == p.y && etl::get<2>(t) == p.z; }
 
     template <typename X1, typename Y1, typename Z1, typename X2, typename Y2, typename Z2> constexpr bool
     operator!=(const Tuple<X1, Y1, Z1>& t, const Triple<X2, Y2, Z2>& p) { return !operator==(t, p); }
 
     template <typename X1, typename Y1, typename Z1, typename X2, typename Y2, typename Z2> constexpr bool
     operator==(const Triple<X1, Y1, Z1>& p, const Tuple<X2, Y2, Z2>& t)
-    { return get<0>(t) == p.x && get<1>(t) == p.y && get<2>(t) == p.z; }
+    { return etl::get<0>(t) == p.x && etl::get<1>(t) == p.y && etl::get<2>(t) == p.z; }
 
     template <typename X1, typename Y1, typename Z1, typename X2, typename Y2, typename Z2> constexpr bool
     operator!=(const Triple<X1, Y1, Z1>& t, const Tuple<X2, Y2, Z2>& p) { return !operator==(t, p); }

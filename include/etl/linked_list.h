@@ -1,8 +1,7 @@
 #ifndef ETL_LINKED_LIST_H
 #define ETL_LINKED_LIST_H
 
-#include "etl/utility.h"
-#include <cstddef>
+#include "etl/algorithm.h"
 
 namespace Project::etl {
 
@@ -39,20 +38,20 @@ namespace Project::etl {
         }
 
         /// move constructor
-        LinkedList(LinkedList&& l) noexcept : head(move(l.head)) {
+        LinkedList(LinkedList&& l) noexcept : head(etl::move(l.head)) {
             l.head = nullptr;
         }
 
         /// copy assignment
         LinkedList& operator=(const LinkedList& other) {
-            for (auto i : range(other.len())) operator[](i) = other[i];
+            for (auto i : etl::range(other.len())) operator[](i) = other[i];
             return *this;
         }
 
         /// move assignment
         LinkedList& operator=(LinkedList&& other) noexcept {
             clear();
-            head = move(other.head);
+            head = etl::move(other.head);
             other.head = nullptr;
             return *this;
         }
@@ -117,14 +116,14 @@ namespace Project::etl {
         Iter<iterator> operator()(int start, int stop, int step = 1) { 
             auto b = start >= 0 ? head + start : tail() + (start + 1);
             auto e = stop >= 0 ? head + stop : tail() + (stop + 1);
-            return iter(b, e, step);
+            return etl::iter(b, e, step);
         }
 
         /// slice operator
         Iter<const_iterator> operator()(int start, int stop, int step = 1) const { 
             auto b = start >= 0 ? head + start : tail() + (start + 1);
             auto e = stop >= 0 ? head + stop : tail() + (stop + 1);
-            return iter(b, e, step);
+            return etl::iter(b, e, step);
         }
 
         /// push operator
@@ -132,7 +131,7 @@ namespace Project::etl {
         const LinkedList& operator>>(T &item)       const { pop(item); return *this; }
 
         template <class Container>
-        bool operator==(const Container& other) const { return compare_all(*this, other); }
+        bool operator==(const Container& other) const { return etl::compare_all(*this, other); }
 
         template <class Container>
         bool operator!=(const Container& other) const { return !operator==(other); }
@@ -188,7 +187,8 @@ namespace Project::etl {
 
     /// iter specialization
     template <typename T> auto
-    iter(const LinkedList<T>& l, int step = 1) { return Iter(step >= 0 ? begin(l) : l.tail(), step >= 0 ? end(l) : begin(l) - 1, step); }
+    iter(const LinkedList<T>& l, int step = 1) 
+    { return Iter(step >= 0 ? etl::begin(l) : l.tail(), step >= 0 ? etl::end(l) : etl::begin(l) - 1, step); }
 
     template <class T>
     struct LinkedList<T>::Node {

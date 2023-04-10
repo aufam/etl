@@ -16,14 +16,14 @@ namespace Project::etl {
 
         T* insert_(const Vector& other) const {
             auto temp = new T[nItems + other.nItems];
-            copy(begin(), end(), temp);
-            copy(other.begin(), other.end(), temp + nItems);
+            etl::copy(begin(), end(), temp);
+            etl::copy(other.begin(), other.end(), temp + nItems);
             return temp;
         }
 
         T* insert_(const T& other) const {
             auto temp = new T[nItems + 1];
-            copy(begin(), end(), temp);
+            etl::copy(begin(), end(), temp);
             temp[nItems] = other;
             return temp;
         }
@@ -46,11 +46,11 @@ namespace Project::etl {
 
         /// copy constructor
         Vector(const Vector& v) : buf(new T[v.nItems]), nItems(v.nItems) {
-            copy(v.begin(), v.end(), buf);
+            etl::copy(v.begin(), v.end(), buf);
         }
 
         /// move constructor
-        Vector(Vector&& v) noexcept : buf(move(v.buf)), nItems(move(v.nItems)) {
+        Vector(Vector&& v) noexcept : buf(etl::move(v.buf)), nItems(etl::move(v.nItems)) {
             v.buf = nullptr;
             v.nItems = 0;
         }
@@ -61,14 +61,14 @@ namespace Project::etl {
             delete [] buf;
             nItems = other.nItems;
             buf = new T[nItems];
-            copy(other.begin(), other.end(), buf);
+            etl::copy(other.begin(), other.end(), buf);
             return *this;
         }
 
         /// move assignment
         Vector& operator=(Vector&& other) noexcept {
-            buf = move(other.buf);
-            nItems = move(other.nItems);
+            buf = etl::move(other.buf);
+            nItems = etl::move(other.nItems);
             other.buf = nullptr;
             other.nItems = 0;
             return *this;
@@ -156,14 +156,14 @@ namespace Project::etl {
 
         /// slice operator
         Iter<iterator> operator()(int start, int stop, int step = 1)
-        { return start < stop ? iter(&operator[](start), &operator[](stop)) : iter(begin(), begin()); }
+        { return start < stop ? etl::iter(&operator[](start), &operator[](stop)) : etl::iter(begin(), begin()); }
 
         /// slice operator
         Iter<const_iterator>operator()(int start, int stop, int step = 1) const
-        { return start < stop ? iter(&operator[](start), &operator[](stop)) : iter(begin(), begin()); }
+        { return start < stop ? etl::iter(&operator[](start), &operator[](stop)) : etl::iter(begin(), begin()); }
 
         template <class Container>
-        bool operator==(const Container& other) const { return compare_all(*this, other); }
+        bool operator==(const Container& other) const { return etl::compare_all(*this, other); }
 
         template <class Container>
         bool operator!=(const Container& other) const { return !operator==(other); }

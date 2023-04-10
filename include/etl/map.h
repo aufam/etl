@@ -12,14 +12,14 @@ namespace Project::etl {
 
         Pair<K, V>* insert_(const Map& other) const {
             auto temp = new Pair<K, V>[this->nItems + other.nItems];
-            copy(this->begin(), this->end(), temp);
-            copy(other.begin(), other.end(), temp + this->nItems);
+            etl::copy(this->begin(), this->end(), temp);
+            etl::copy(other.begin(), other.end(), temp + this->nItems);
             return temp;
         }
 
         Pair<K, V>* insert_(const Pair<K, V>& other) const {
             auto temp = new Pair<K, V>[this->nItems + 1];
-            copy(this->begin(), this->end(), temp);
+            etl::copy(this->begin(), this->end(), temp);
             temp[this->nItems] = other;
             return temp;
         }
@@ -37,11 +37,11 @@ namespace Project::etl {
 
         /// copy constructor
         Map(const Map& m) : Vector<Pair<K, V>>(new Pair<K, V>[m.nItems], m.nItems) {
-            copy(m.begin(), m.end(), this->buf);
+            etl::copy(m.begin(), m.end(), this->buf);
         }
 
         /// move constructor
-        Map(Map&& m) noexcept : Vector<Pair<K, V>>(move(m.buf), move(m.nItems)) {
+        Map(Map&& m) noexcept : Vector<Pair<K, V>>(etl::move(m.buf), etl::move(m.nItems)) {
             m.buf = nullptr;
             m.nItems = 0;
         }
@@ -52,14 +52,14 @@ namespace Project::etl {
             delete [] this->buf;
             this->nItems = other.nItems;
             this->buf = new Pair<K, V>[this->nItems];
-            copy(other.begin(), other.end(), this->buf);
+            etl::copy(other.begin(), other.end(), this->buf);
             return *this;
         }
 
         /// move assignment
         Map& operator=(Map&& other) noexcept {
-            this->buf = move(other.buf);
-            this->nItems = move(other.nItems);
+            this->buf = etl::move(other.buf);
+            this->nItems = etl::move(other.nItems);
             other.buf = nullptr;
             other.nItems = 0;
             return *this;
@@ -80,7 +80,7 @@ namespace Project::etl {
 
         V& operator[](const K& key) {
             for (auto &[x, y]: *this) if (x == key) return y;
-            this->append(pair(key, Value{}));
+            this->append(etl::pair(key, Value{}));
             return this->back().y;
         }
 
@@ -119,12 +119,12 @@ namespace Project::etl {
             auto index = this->len();
             if (index == 0) return;
 
-            for (auto [i, pair] : enumerate(*this)) if (pair.x == key) index = i;
+            for (auto [i, pair] : etl::enumerate(*this)) if (pair.x == key) index = i;
             if (index >= this->len()) return;
 
             auto buf = new Pair<K, V>[this->len() - 1];
             size_t i = 0;
-            for (auto [j, item] : enumerate(*this)) {
+            for (auto [j, item] : etl::enumerate(*this)) {
                 if (j == index) continue;
                 buf[i++] = item;
             }
@@ -136,7 +136,8 @@ namespace Project::etl {
     };
 
     /// create map using variadic function, type is deduced
-    template <typename K, typename... Ks, typename V, typename... Vs> constexpr enable_if_t<(is_same_v<K, Ks> && ...) && (is_same_v<V, Vs> && ...), Map<K, V>>
+    template <typename K, typename... Ks, typename V, typename... Vs> 
+    constexpr enable_if_t<(is_same_v<K, Ks> && ...) && (is_same_v<V, Vs> && ...), Map<K, V>>
     map(const Pair<K, V>& item, const Pair<Ks, Vs>&... items) { return Map<K, V> { item, items... }; }
 
     /// create empty map

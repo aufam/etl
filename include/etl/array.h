@@ -51,14 +51,14 @@ namespace Project::etl {
 
         /// slice operator
         constexpr Iter<iterator> operator()(int start, int stop, int step = 1)
-        { return start < stop ? iter(&operator[](start), &operator[](stop), step) : iter(begin(), begin(), step); }
+        { return start < stop ? etl::iter(&operator[](start), &operator[](stop), step) : etl::iter(begin(), begin(), step); }
 
         /// slice operator
         constexpr Iter<const_iterator>operator()(int start, int stop, int step = 1) const
-        { return start < stop ? iter(&operator[](start), &operator[](stop), step) : iter(begin(), begin(), step); }
+        { return start < stop ? etl::iter(&operator[](start), &operator[](stop), step) : etl::iter(begin(), begin(), step); }
 
         template <class Container>
-        constexpr bool operator==(const Container& other) const { return compare_all(*this, other); }
+        constexpr bool operator==(const Container& other) const { return etl::compare_all(*this, other); }
 
         template <class Container>
         constexpr bool operator!=(const Container& other) const { return !operator==(other); }
@@ -78,30 +78,30 @@ namespace Project::etl {
 
     /// cast reference from any type
     template <typename T = void, typename U, typename V = conditional_t<is_void_v<T>, remove_extent_t<U>, T>> constexpr auto&
-    array_cast(U& a) { return array_cast<V, sizeof(U) / sizeof(V)>(&a); }
+    array_cast(U& a) { return etl::array_cast<V, sizeof(U) / sizeof(V)>(&a); }
 
     /// get functions
     template <int i, typename T, size_t N> constexpr T&
     get(Array<T, N>& arr) { return array_traits<T, N>::ref(arr.buf, i); }
 
     template <int i, typename T, size_t N> constexpr T&&
-    get(Array<T, N>&& arr) { return move(get<i>(arr)); }
+    get(Array<T, N>&& arr) { return etl::move(etl::get<i>(arr)); }
 
     template <int i, typename T, size_t N> constexpr const T&
     get(const Array<T, N>& arr) { return array_traits<T, N>::ref(arr.buf, i); }
 
     template <int i, typename T, size_t N> constexpr const T&&
-    get(const Array<T, N>&& arr) { return move(get<i>(arr)); }
+    get(const Array<T, N>&& arr) { return etl::move(etl::get<i>(arr)); }
 
     template <int Start, int End, typename T, size_t N> constexpr auto&
-    get(const Array<T, N>& arr) { static_assert(End > Start); return array_cast<T, End - Start>(&arr[Start]); }
+    get(const Array<T, N>& arr) { static_assert(End > Start); return etl::array_cast<T, End - Start>(&arr[Start]); }
 
     template <int Start, int End, typename T, size_t N> constexpr auto&
-    get(Array<T, N>& arr) { static_assert(End > Start); return array_cast<T, End - Start>(&arr[Start]); }
+    get(Array<T, N>& arr) { static_assert(End > Start); return etl::array_cast<T, End - Start>(&arr[Start]); }
 
     /// swap specialization, avoid creating large temporary variable 
     template <typename T, typename U> enable_if_t<is_same_v<remove_extent_t<T>, remove_extent_t<U>>>
-    swap(T& a, U& b) { swap_element(a, b); }
+    swap(T& a, U& b) { etl::swap_element(a, b); }
 
     /// type traits
     template <typename T, size_t N> struct is_array<Array<T, N>> : true_type {};

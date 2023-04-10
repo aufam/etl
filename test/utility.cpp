@@ -8,6 +8,43 @@
 
 using namespace Project::etl;
 
+TEST(Utility, Iter) {
+    val a = array(1, 2, 3);
+    var i = iter(a);
+    EXPECT_EQ(next(i), 1);
+    EXPECT_EQ(next(i), 2);
+    EXPECT_EQ(next(i), 3);
+
+    i = iter(a, -1);
+    EXPECT_EQ(next(i), 3);
+    EXPECT_EQ(next(i), 2);
+    EXPECT_EQ(next(i), 1);
+
+
+    val v = vector(4, 5, 6);
+    var j = iter(v, -1);
+    EXPECT_EQ(next(j), 6);
+    EXPECT_EQ(next(j), 5);
+    EXPECT_EQ(next(j), 4);
+
+    j = iter(v, -1);
+    EXPECT_EQ(next(j), 6);
+    EXPECT_EQ(next(j), 5);
+    EXPECT_EQ(next(j), 4);
+
+
+    val l = list(7, 8, 9);
+    var k = iter(l);
+    EXPECT_EQ(next(k), 7);
+    EXPECT_EQ(next(k), 8);
+    EXPECT_EQ(next(k), 9);
+
+    k = iter(l, -1);
+    EXPECT_EQ(next(k), 9);
+    EXPECT_EQ(next(k), 8);
+    EXPECT_EQ(next(k), 7);
+}
+
 TEST(Utility, enumerate) {
     var p = array(10, 11, 12);
     var i = 0; // loop guard
@@ -37,7 +74,7 @@ TEST(Utility, zip) {
     constexpr val a = array(1, 2, 3);
     constexpr val b = array(2, 4, 6);
     constexpr val f = [](const decltype(a)& a, const decltype(b)& b) {
-        int res = 0, i = 0;
+        var [res, i] = pair(0, 0);
         for (val [x, y] in zip(a, b)) {
             res += x * y;
             if (i++ == 5) break; // loop guard
@@ -56,36 +93,17 @@ TEST(Utility, range) {
         if (j++ == 5) break;
     }
     EXPECT_TRUE(compare_all(q, array(0, 1, 2)));
+    EXPECT_EQ(q, array(0, 1, 2));
     EXPECT_EQ(q.len(), 3);
 }
 
 TEST(Utility, Next) {
-    var a = range(0, 3, 1);
+    var a = range(0, 3, 1); // start = 0, end = 3, increment = 1
     EXPECT_EQ(next(a), 0);
     EXPECT_EQ(next(a), 1);
     EXPECT_EQ(next(a), 2);
-    EXPECT_EQ(next(a), 3); // goes beyond the limit
-    EXPECT_EQ(next(a), 4);
-}
-
-TEST(Utility, Iter) {
-    val a = array(1, 2, 3);
-    var i = iter(a);
-    EXPECT_EQ(next(i), 1);
-    EXPECT_EQ(next(i), 2);
-    EXPECT_EQ(next(i), 3);
-
-    val v = vector(4, 5, 6);
-    var j = iter(v);
-    EXPECT_EQ(next(j), 4);
-    EXPECT_EQ(next(j), 5);
-    EXPECT_EQ(next(j), 6);
-
-    val l = list(7, 8, 9);
-    var k = iter(l);
-    EXPECT_EQ(next(k), 7);
-    EXPECT_EQ(next(k), 8);
-    EXPECT_EQ(next(k), 9);
+    EXPECT_EQ(next(a), 0); // out of limit, return default value
+    EXPECT_EQ(next(a), 0);
 }
 
 TEST(Utility, Generator) {
