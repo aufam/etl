@@ -20,6 +20,22 @@ namespace Project::etl {
         return static_cast<T&&>(t);
     }
 
+    /// swap 
+    template <class T> constexpr void
+    swap(T& a, T& b) {
+        T temp(etl::move(a));
+        a = etl::move(b);
+        b = etl::move(temp);
+    }
+
+    /// exchange
+    template <typename T> constexpr T 
+    exchange(T& obj, T&& new_value) {
+        T old = etl::move(obj);
+        obj = etl::forward<T>(new_value);
+        return old;
+    }
+
     /// pointer to first element
     template <typename Container> constexpr auto
     begin(Container& cont) -> decltype(cont.begin()) { return cont.begin(); }

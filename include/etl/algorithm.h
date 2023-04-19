@@ -1,6 +1,7 @@
 #ifndef ETL_ALGORITHM_H
 #define ETL_ALGORITHM_H
 
+#include "etl/type_traits.h"
 #include "etl/utility.h"
 
 namespace Project::etl {
@@ -230,12 +231,6 @@ namespace Project::etl {
     }
 
     /// swap
-    template <class T> constexpr void
-    swap(T& a, T& b) {
-        T temp(etl::move(a));
-        a = etl::move(b);
-        b = etl::move(temp);
-    }
     template <class Iterator1, class Iterator2> constexpr void
     swap_element(Iterator1 first, Iterator1 last, Iterator2 dest) {
         for (; first != last && dest != nullptr; ++first, ++dest) etl::swap(*first, *dest);
@@ -277,6 +272,13 @@ namespace Project::etl {
         else return etl::min(etl::min(val1, val2), vals...);
     }
 
+    /// returns the sum of all arguments
+    template <class T, class... Ts> constexpr auto
+    sum(const T& val, const Ts&... vals) {
+        if constexpr (sizeof...(vals) == 0) return val;
+        else return val + etl::sum(vals...);
+    }
+
     /// returns the largest element in a range
     template <class Iterator> constexpr auto
     max_element(Iterator first, Iterator last) {
@@ -303,9 +305,26 @@ namespace Project::etl {
         return etl::min_element(etl::begin(cont), etl::end(cont));
     }
 
+    /// returns the sum of all elements in a range
+    template <class Iterator> constexpr auto
+    sum_element(Iterator first, Iterator last) {
+        using T = remove_reference_t<decltype(*first)>;
+        using R = conditional_t<is_arithmetic_v<T>, conditional_t<is_floating_point_v<T>, double, long>, T>;
+        using S = conditional_t<is_unsigned_v<R>, add_unsigned_t<R>, R>;
+        
+        if (first == last) return S{};
+        S res = *first;
+        for (; first != last; ++first) res += *first;
+        return res;
+    }
+    template <class Container> constexpr auto
+    sum_element(const Container& cont) {
+        return etl::sum_element(etl::begin(cont), etl::end(cont));
+    }
+
     /// clamps a value between a pair of boundary values
-    template <class T> constexpr T
-    clamp(const T& x, const T& lo, const T& hi) {
+    template <class T, class U, class V> constexpr auto
+    clamp(const T& x, const U& lo, const V& hi) {
         auto low = etl::min(lo, hi);
         auto high = etl::max(lo, hi);
         return x > high ? high : x < low ? low : x;

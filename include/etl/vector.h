@@ -67,6 +67,8 @@ namespace Project::etl {
 
         /// move assignment
         Vector& operator=(Vector&& other) noexcept {
+            if (this == &other) return *this;
+            delete [] buf;
             buf = etl::move(other.buf);
             nItems = etl::move(other.nItems);
             other.buf = nullptr;
@@ -170,11 +172,11 @@ namespace Project::etl {
     };
 
     /// create vector with variadic template function, type is deduced
-    template <typename T, typename... U> Vector<enable_if_t<(is_same_v<T, U> && ...), T>>
-    vector(const T& t, const U&...u) { return Vector<T>{t, u...}; }
+    template <typename T, typename... U> auto
+    vector(const T& t, const U&...u) { return Vector<T>{t, static_cast<T>(u)...}; }
 
     /// create empty vector
-    template <typename T> Vector<T> constexpr
+    template <typename T> constexpr auto
     vector() { return Vector<T>{}; }
 
     /// type traits

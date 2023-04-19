@@ -272,6 +272,10 @@ namespace Project::etl {
         etl::swap(s1, s2);
     }
 
+    /// sum specialization
+    template <size_t N> constexpr auto
+    sum_element(const String<N>&) = delete;
+
     /// type traits
     template <size_t N> struct is_string<String<N>> : true_type {};
     template <size_t N> struct is_string<const String<N>> : true_type {};

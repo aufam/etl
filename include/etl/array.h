@@ -54,7 +54,7 @@ namespace Project::etl {
         { return start < stop ? etl::iter(&operator[](start), &operator[](stop), step) : etl::iter(begin(), begin(), step); }
 
         /// slice operator
-        constexpr Iter<const_iterator>operator()(int start, int stop, int step = 1) const
+        constexpr Iter<const_iterator> operator()(int start, int stop, int step = 1) const
         { return start < stop ? etl::iter(&operator[](start), &operator[](stop), step) : etl::iter(begin(), begin(), step); }
 
         template <class Container>
@@ -64,11 +64,15 @@ namespace Project::etl {
         constexpr bool operator!=(const Container& other) const { return !operator==(other); }
     };
 
-    /// create array with variadic template function, array size is deduced
-    template <typename T, typename... U> constexpr Array<enable_if_t<(is_same_v<T, U> && ...), T>, 1 + sizeof...(U)>
-    array(const T& t, const U&... u) { return Array<T, 1 + sizeof...(U)> { t, u... }; }
+    /// create array with variadic template function, array type and size are implicitly specified
+    template <typename T, typename... U> constexpr auto
+    array(const T& t, const U&... u) { return Array<T, 1 + sizeof...(U)> { t, static_cast<T>(u)... }; }
 
-    /// create array with default constructed T 
+    /// create array with variadic template function, array type is explicitly specified, array size is implicitly specified
+    template <typename R, typename T, typename... U> constexpr auto
+    array(const T& t, const U&... u) { return Array<R, 1 + sizeof...(U)> { static_cast<R>(t), static_cast<R>(u)... }; }
+
+    /// create array with default constructed T, array type and size are explicitly specified
     template <typename T, size_t N> constexpr auto
     array() { return Array<T, N> {}; }
 

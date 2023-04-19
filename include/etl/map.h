@@ -58,6 +58,8 @@ namespace Project::etl {
 
         /// move assignment
         Map& operator=(Map&& other) noexcept {
+            if (this == &other) return *this;
+            delete [] this->buf;
             this->buf = etl::move(other.buf);
             this->nItems = etl::move(other.nItems);
             other.buf = nullptr;
