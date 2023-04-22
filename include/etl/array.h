@@ -64,13 +64,9 @@ namespace Project::etl {
         constexpr bool operator!=(const Container& other) const { return !operator==(other); }
     };
 
-    /// create array with variadic template function, array type and size are implicitly specified
-    template <typename T, typename... U> constexpr auto
-    array(const T& t, const U&... u) { return Array<T, 1 + sizeof...(U)> { t, static_cast<T>(u)... }; }
-
-    /// create array with variadic template function, array type is explicitly specified, array size is implicitly specified
-    template <typename R, typename T, typename... U> constexpr auto
-    array(const T& t, const U&... u) { return Array<R, 1 + sizeof...(U)> { static_cast<R>(t), static_cast<R>(u)... }; }
+    /// create array with variadic template function, array type can be explicitly or implicitly specified, array size is implicitly specified
+    template <typename T = void, typename U, typename... Us, typename R = conditional_t<is_void_v<T>, U, T>> constexpr auto
+    array(const U& val, const Us&... vals) { return Array<R, 1 + sizeof...(Us)> { static_cast<R>(val), static_cast<R>(vals)... }; }
 
     /// create array with default constructed T, array type and size are explicitly specified
     template <typename T, size_t N> constexpr auto
@@ -81,8 +77,8 @@ namespace Project::etl {
     array_cast(U* a) { return *reinterpret_cast<conditional_t<is_const_v<U>, const Array<T, N>*, Array<T, N>*>>(a); }
 
     /// cast reference from any type
-    template <typename T = void, typename U, typename V = conditional_t<is_void_v<T>, remove_extent_t<U>, T>> constexpr auto&
-    array_cast(U& a) { return etl::array_cast<V, sizeof(U) / sizeof(V)>(&a); }
+    template <typename T = void, typename U, typename R = conditional_t<is_void_v<T>, remove_extent_t<U>, T>> constexpr auto&
+    array_cast(U& a) { return etl::array_cast<R, sizeof(U) / sizeof(R)>(&a); }
 
     /// get functions
     template <int i, typename T, size_t N> constexpr T&
