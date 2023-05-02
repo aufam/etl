@@ -1,18 +1,24 @@
 #include "gtest/gtest.h"
 #include "etl/array.h"
 #include "etl/bit.h"
+#include "etl/string.h"
 #include "etl/keywords.h"
 
 using namespace Project::etl;
+using namespace Project::etl::literals;
 
-TEST(Array, Empty) {
-    val a = array<int, 5>();
-    foreach(a, lambda (auto& item) { EXPECT_EQ(item, 0); });
-}
+TEST(Array, Declaration) {
+    val a = array(0, 1, 2);                 // using variadic function
+    val b = array<int>(0.0, 1.0f, '\02');   // implicitly cast to the desired type
+    val c = array<int, 3>({0, 1, 2});       // from initializer list
+    val d = array<int, 3>();                // initialize to default value
 
-TEST(Array, TypeExplicitAndSizeDeduction) {
-    val a = array<int>(0.0, 1u, 2ul, 3.f, 4, 5, 6, 7, 8);
-    for (val [x, y] in enumerate(a)) EXPECT_EQ(x, y);
+    val x = {0, 1, 2};
+    val y = {0, 0, 0};
+    EXPECT_EQ(a, x);
+    EXPECT_EQ(b, x);
+    EXPECT_EQ(c, x);
+    EXPECT_EQ(d, y);
 }
 
 TEST(Array, StructureBinding) {
@@ -23,11 +29,13 @@ TEST(Array, StructureBinding) {
 }
 
 TEST(Array, Indexing) {
-    constexpr val a = array(1, 2, 3);
+    val constexpr a = array(1, 2, 3);
     EXPECT_EQ(a[-1], 3); // last item
     EXPECT_EQ(a[-2], 2);
     EXPECT_EQ(a[-3], 1);
     EXPECT_EQ(get<-1>(a), 3);
+    EXPECT_EQ(get<-2>(a), 2);
+    EXPECT_EQ(get<-3>(a), 1);
 }
 
 TEST(Array, Swap) {
@@ -42,37 +50,30 @@ TEST(Array, Swap) {
     EXPECT_EQ(a[2], 6);
 }
 
-TEST(Array, Move) {
-    var a = array(1, 2, 3);
-    var b = move(a);
-    EXPECT_EQ(b[0], 1);
-    EXPECT_EQ(b[1], 2);
-    EXPECT_EQ(b[2], 3);
-}
-
 TEST(Array, Cast) {
     int a[] = {10, 1, 2, 3, 4, 5};
 
-    // cast from different kind of array
+    // cast from a different kind of array
     var &b = array_cast(a);
-    EXPECT_TRUE(compare_all(b, a));
+    EXPECT_EQ(b, a);
     EXPECT_EQ(&b[0], &a[0]); // a and b share the same address
     EXPECT_EQ(len(b), len(a));
     b[0] = 0;
-    EXPECT_EQ(b, array(0, 1, 2, 3, 4, 5));
+    EXPECT_EQ(b, range(6));
 
-    // cast to other type
+    // cast to another type
     val &c = array_cast<float>(b);
     EXPECT_EQ((size_t)&a[0], (size_t)&c[0]);
     EXPECT_EQ(len(a), len(c));
-    for (val [x, y] in zip(a, c)) EXPECT_EQ(x, bit_cast<int>(y));
+    for (var [x, y] in zip(a, c)) EXPECT_EQ(x, bit_cast<int>(y));
 
-    // cast from pointer
+    // cast from a pointer
     val &d = array_cast<int, 5>(&a[1]);
     EXPECT_EQ(&a[1], &d[0]);
     EXPECT_EQ(d, array(1, 2, 3, 4, 5));
     EXPECT_EQ(len(d), 5);
 
+    // cast from another type
     val e = triple(1, 0.1, 2);
     val &f = array_cast<int>(e);
     EXPECT_EQ((size_t)&e, (size_t)&f);
@@ -81,12 +82,13 @@ TEST(Array, Cast) {
 
 TEST(Array, Slice) {
     val a = array(0, 1, 2, 3, 4);
-    val b = a(1, 3);
 
-    EXPECT_EQ(b[0], 1);
-    EXPECT_EQ(b[1], 2);
+    val b = a(1, 3); // creates iter object
+    EXPECT_TRUE(compare_all(b, range(1, 3)));
 
-    val& c = get<1, 3>(a);
-    EXPECT_EQ(b[0], c[0]);
-    EXPECT_EQ(b[1], c[1]);
+    val c = get<1, 3>(a); // creates new array
+    EXPECT_EQ(c, range(1, 3));
+
+    val &d = get<1, 3>(a); // creates reference to specific index
+    EXPECT_EQ(d, range(1, 3));
 }

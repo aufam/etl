@@ -46,7 +46,7 @@ namespace Project::etl {
 
     private:
         template <size_t... i>
-        constexpr decltype(auto) invoke(index_sequence<i...>, Args... args) const { return fn(get<i>(context)..., args...); }
+        constexpr decltype(auto) invoke(index_sequence<i...>, Args... args) const { return fn(etl::get<i>(context)..., args...); }
     };
 
     /// function class specialization for Context = void

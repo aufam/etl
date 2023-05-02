@@ -210,7 +210,7 @@ namespace Project::etl {
         auto split(const char* separator = " ") { return SplitString<M>(str, separator); }
     };
 
-    /// create string, size can be implicitly or explicitly specified
+    /// create string from string literal, size can be implicitly or explicitly specified
     template <size_t n = 0, size_t M, size_t N = (n > 0 ? n : M)> constexpr auto
     string(const char (&text)[M]) { return String<N> { text }; }
 

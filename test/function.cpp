@@ -1,5 +1,5 @@
-#include "gtest/gtest.h"
 #include "etl/function.h"
+#include "gtest/gtest.h"
 #include "etl/keywords.h"
 
 using namespace Project::etl;

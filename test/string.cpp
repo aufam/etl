@@ -1,26 +1,30 @@
-#include "gtest/gtest.h"
 #include "etl/string.h"
+#include "gtest/gtest.h"
 #include "etl/keywords.h"
 
 using namespace Project::etl;
 using namespace Project::etl::literals;
 
-constexpr auto xxx = String("test");
+TEST(String, Declaration) {
+    val a = string("123");      // size is implicitly specified
+    EXPECT_EQ(a, "123");
+    EXPECT_EQ(a.size(), 4);
 
-TEST(String, Empty) {
-    val s = string();
-    EXPECT_EQ(s.len(), 0);
-    EXPECT_EQ(s.rem(), s.size() - 1);
-}
+    val b = string<3>("123");   // size is explicitly specified
+    EXPECT_EQ(b, "12");
+    EXPECT_EQ(b.size(), 3);
 
-TEST(String, CStyleFormatter) {
-    var s = string("Test %d", 123);
-    EXPECT_EQ(s, "Test 123");
-    EXPECT_EQ(s.len(), 8);
-    EXPECT_EQ(s.rem(), s.size() - 1 - 8);
+    val c = string("%s", a.begin());  // from char pointer, size is ETL_STRING_DEFAULT_SIZE if not specified
+    EXPECT_EQ(c, "123");
+    EXPECT_EQ(c.size(), ETL_STRING_DEFAULT_SIZE);
 
-    s("pi ~= %d/%d", 22, 7);
-    EXPECT_EQ(s, "pi ~= 22/7");
+    val d = string("%d%d%d", 1, 2, 3);  // formatted string, size is ETL_STRING_DEFAULT_SIZE if not specified
+    EXPECT_EQ(d, "123");
+    EXPECT_EQ(d.size(), ETL_STRING_DEFAULT_SIZE);
+
+    val e = string();  // empty string, size is ETL_STRING_DEFAULT_SIZE if not specified
+    EXPECT_EQ(e, "");
+    EXPECT_EQ(e.size(), ETL_STRING_DEFAULT_SIZE);
 }
 
 TEST(String, IterateThrough) {
@@ -69,7 +73,7 @@ TEST(String, Append) {
 TEST(String, IsContaining) {
     var s = string("Test %d%d%d", 1, 2, 3);
     EXPECT_TRUE(s.isContaining("123"));
-    EXPECT_TRUE(!s.isContaining("321"));
+    EXPECT_FALSE(s.isContaining("321"));
 }
 
 TEST(String, SplitString) {
@@ -77,8 +81,8 @@ TEST(String, SplitString) {
     EXPECT_STREQ(ss[0], "Test");
     EXPECT_STREQ(ss[1], "123");
     EXPECT_STREQ(ss[2], "abc");
-    EXPECT_EQ(ss[3], nullptr);
-    EXPECT_EQ(ss[4], nullptr);
+    EXPECT_EQ(ss[3], null);
+    EXPECT_EQ(ss[4], null);
     EXPECT_EQ(len(ss), 3);
 
     var s = string("Test 123");
@@ -138,16 +142,16 @@ TEST(String, Swap) {
 
 TEST(String, Cast) {
     char a[] = "123456";
-    val& b = string_cast(a); // string size is automatically deduced
-    val& c = string_cast<8>(a + 1); // string size has to be explicitly specified
+    val& b = string_cast(a); // cast from reference, string size is automatically deduced
+    val& c = string_cast<8>(a + 1); // cast from pointer, string size has to be explicitly specified
     EXPECT_EQ(b, "123456");
     EXPECT_EQ(c, "23456");
     EXPECT_EQ(&b[0], &a[0]);
     EXPECT_EQ(&c[0], &a[1]);
 
     const char d[] = "abcde";
-    val& e = string_cast(d); // string size is automatically deduced
-    val& f = string_cast<8>(d + 2); // string size has to be explicitly specified
+    val &e = string_cast(d); // cast from const reference, string size is automatically deduced
+    val &f = string_cast<8>(d + 2); // cast from const pointer, string size has to be explicitly specified
     EXPECT_EQ(e, "abcde");
     EXPECT_EQ(&e[0], &d[0]);
     EXPECT_EQ(&f[0], &d[2]);

@@ -2,7 +2,6 @@
 #define ETL_REF_H
 
 #include "etl/utility.h"
-#include <memory>
 
 namespace Project::etl {
 

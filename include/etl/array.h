@@ -68,6 +68,10 @@ namespace Project::etl {
     template <typename T = void, typename U, typename... Us, typename R = conditional_t<is_void_v<T>, U, T>> constexpr auto
     array(const U& val, const Us&... vals) { return Array<R, 1 + sizeof...(Us)> { static_cast<R>(val), static_cast<R>(vals)... }; }
 
+    /// create array from initializer list
+    template <typename T, size_t N> constexpr Array<T, N>
+    array(std::initializer_list<T> items) { Array<T, N> res; etl::copy(items.begin(), items.end(), res.begin()); return res; }
+
     /// create array with default constructed T, array type and size are explicitly specified
     template <typename T, size_t N> constexpr auto
     array() { return Array<T, N> {}; }

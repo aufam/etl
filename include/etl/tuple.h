@@ -1,7 +1,7 @@
 #ifndef ETL_TUPLE_H
 #define ETL_TUPLE_H
 
-#include "etl/utility.h"
+#include "etl/utility_basic.h"
 
 namespace Project::etl {
     /// contains the actual value for one item in the tuple.
@@ -24,7 +24,7 @@ namespace Project::etl {
 
     /// create tuple with variadic template function
     template <typename... Items> constexpr auto
-    tuple(const Items&... items) { return Tuple<Items...>{items...}; }
+    tuple(const Items&... items) { return Tuple<Items...> { items... }; }
 
     /// len specifier
     template <typename... T> constexpr size_t
@@ -53,6 +53,118 @@ namespace Project::etl {
         return etl::tuple_slice(t, etl::make_range_sequence<Start, End>());
     }
 
+    /// pair of values with possible different types
+    template <typename X, typename Y = X>
+    struct Pair {
+        X x; Y y;
+        constexpr bool operator==(const Pair& other) const { return x == other.x && y == other.y; }
+        constexpr bool operator!=(const Pair& other) const { return !operator==(other); }
+    };
+
+    /// create pair, types are deduced
+    template <typename X, typename Y> constexpr auto
+    pair(const X& x, const Y& y) { return Pair<X, Y>{x, y}; }
+
+    /// create empty pair
+    template <typename X, typename Y = X> constexpr auto
+    pair() { return Pair<X, Y>{}; }
+
+    /// type traits
+    template <typename T> struct is_pair : false_type {};
+    template <typename X, typename Y> struct is_pair<Pair<X, Y>> : true_type {};
+    template <typename X, typename Y> struct is_pair<const Pair<X, Y>> : true_type {};
+    template <typename X, typename Y> struct is_pair<volatile Pair<X, Y>> : true_type {};
+    template <typename X, typename Y> struct is_pair<const volatile Pair<X, Y>> : true_type {};
+    template <typename T> inline constexpr bool is_pair_v = is_pair<T>::value;
+
+    /// get specifier
+    template <size_t i, typename X, typename Y> constexpr auto&
+    get(Pair<X, Y>& p) {
+        static_assert(i < 2, "index has to be less than 2");
+        if constexpr (i == 0) return p.x;
+        else return p.y;
+    }
+    template <size_t i, typename X, typename Y> constexpr auto&&
+    get(Pair<X, Y>&& p) {
+        static_assert(i < 2, "index has to be less than 2");
+        if constexpr (i == 0) return p.x;
+        else return p.y;
+    }
+    template <size_t i, typename X, typename Y> constexpr auto&
+    get(const Pair<X, Y>& p) {
+        static_assert(i < 2, "index has to be less than 2");
+        if constexpr (i == 0) return p.x;
+        else return p.y;
+    }
+    template <size_t i, typename X, typename Y> constexpr auto&&
+    get(const Pair<X, Y>&& p) {
+        static_assert(i < 2, "index has to be less than 2");
+        if constexpr (i == 0) return p.x;
+        else return p.y;
+    }
+
+    /// len specifier
+    template <typename X, typename Y> constexpr size_t
+    len(const Pair<X, Y>&) { return 2; }
+
+    /// triple of values with possible different types
+    template <class X, class Y = X, class Z = Y>
+    struct Triple {
+        X x; Y y; Z z;
+        constexpr bool operator==(const Triple& other) const { return x == other.x && y == other.y && z == other.z; }
+        constexpr bool operator!=(const Triple& other) const { return !operator==(other); }
+    };
+
+    /// create triple, types are deduced
+    template <class X, class Y, class Z> constexpr auto
+    triple(const X& x, const Y& y, const Z& z) { return Triple<X, Y, Z>{x, y, z}; }
+
+    /// create empty triple
+    template <class X, class Y = X, class Z = Y> constexpr auto
+    triple() { return Triple<X, Y, Z>{}; }
+
+    /// type traits
+    template <typename T> struct is_triple : false_type {};
+    template <typename X, typename Y, typename Z> struct is_triple<Triple<X, Y, Z>> : true_type {};
+    template <typename X, typename Y, typename Z> struct is_triple<const Triple<X, Y, Z>> : true_type {};
+    template <typename X, typename Y, typename Z> struct is_triple<volatile Triple<X, Y, Z>> : true_type {};
+    template <typename X, typename Y, typename Z> struct is_triple<const volatile Triple<X, Y, Z>> : true_type {};
+    template <typename T> inline constexpr bool is_triple_v = is_triple<T>::value;
+
+    /// get specifier
+    template <size_t i, class X, class Y, class Z> constexpr auto&
+    get(Triple<X, Y, Z>& p) {
+        static_assert(i < 3, "index has to be less than 3");
+        if constexpr (i == 0) return p.x;
+        if constexpr (i == 1) return p.y;
+        else return p.z;
+    }
+    template <size_t i, class X, class Y, class Z> constexpr auto&&
+    get(Triple<X, Y, Z>&& p) {
+        static_assert(i < 3, "index has to be less than 3");
+        if constexpr (i == 0) return p.x;
+        if constexpr (i == 1) return p.y;
+        else return p.z;
+    }
+    template <size_t i, class X, class Y, class Z> constexpr auto&
+    get(const Triple<X, Y, Z>& p) {
+        static_assert(i < 3, "index has to be less than 3");
+        if constexpr (i == 0) return p.x;
+        if constexpr (i == 1) return p.y;
+        else return p.z;
+    }
+    template <size_t i, class X, class Y, class Z> constexpr auto&&
+    get(const Triple<X, Y, Z>&& p) {
+        static_assert(i < 3, "index has to be less than 3");
+        if constexpr (i == 0) return p.x;
+        if constexpr (i == 1) return p.y;
+        else return p.z;
+    }
+
+    /// len specifier
+    template <typename X, typename Y, typename Z> constexpr size_t
+    len(const Triple<X, Y, Z>&) { return 3; }
+
     /// type_traits
     template <typename T> struct is_tuple : false_type {};
     template <typename... T> struct is_tuple<Tuple<T...>> : true_type {};
@@ -77,7 +189,7 @@ namespace Project::etl {
         else return etl::get<i>(t) == etl::get<i>(u) && etl::tuple_eq<T, U, i + 1, N>(t, u);
     }
 
-    /// compare operator
+    /// compare operators
     template <typename... T, typename... U> constexpr bool
     operator==(const Tuple<T...>& t, const Tuple<U...>& u) {
         static_assert(sizeof...(T) == sizeof...(U), "tuple objects can only be compared if they have equal sizes.");

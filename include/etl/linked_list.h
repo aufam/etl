@@ -32,6 +32,11 @@ namespace Project::etl {
         template <class ...Ts>
         LinkedList(T firstItem, Ts... items) : head(nullptr) { construct_(firstItem, items...); }
 
+        /// construct from initializer list
+        LinkedList(std::initializer_list<T> items) : head(nullptr) {
+            for (auto& item : items) push(item);
+        }
+
         /// copy constructor
         LinkedList(const LinkedList& l) : head(nullptr) {
             for (auto& item : l) push(item);
@@ -178,17 +183,32 @@ namespace Project::etl {
     };
 
     /// create linked list with variadic template function, type is deduced
-    template <typename T, typename... U> LinkedList<enable_if_t<(is_same_v<T, U> && ...), T>>
-    list(const T& t, const U&...u) { return LinkedList<T>{t, u...}; }
+    template <typename T = void, typename U, typename... Us, typename R = conditional_t<is_void_v<T>, U, T>> auto
+    list(const U& val, const Us&... vals) { return LinkedList<R> { static_cast<R>(val), static_cast<R>(vals)... }; }
+
+    /// create linked list from initializer list
+    template <typename T> auto
+    list(std::initializer_list<T> items) { return LinkedList<T>(items); }
 
     /// empty linked list
     template <typename T> auto 
     list() { return LinkedList<T> {}; }
 
-    /// iter specialization
+    /// iter specialization for linked list
     template <typename T> auto
-    iter(const LinkedList<T>& l, int step = 1) 
-    { return Iter(step >= 0 ? etl::begin(l) : l.tail(), step >= 0 ? etl::end(l) : etl::begin(l) - 1, step); }
+    iter(LinkedList<T>& l, int step = 1) { return Iter(step >= 0 ? l.begin() : l.tail(), l.end(), step); }
+
+    /// iter specialization for linked list
+    template <typename T> auto
+    iter(const LinkedList<T>& l, int step = 1) { return Iter(step >= 0 ? l.begin() : l.tail(), l.end(), step); }
+
+    /// reversed specialization for linked list
+    template <typename T> auto
+    reversed(LinkedList<T>& l) { return etl::iter(l, -1); }
+
+    /// reversed specialization for linked list
+    template <typename T> auto
+    reversed(const LinkedList<T>& l) { return etl::iter(l, -1); }
 
     template <class T>
     struct LinkedList<T>::Node {
@@ -304,7 +324,7 @@ namespace Project::etl {
             return res;
         }
 
-        size_t operator-(iterator other) {
+        size_t operator-(iterator other) const {
             size_t i = 0;
             if (node == nullptr) {
                 for (; other; ++other, ++i);

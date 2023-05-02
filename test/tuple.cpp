@@ -1,11 +1,23 @@
-#include "gtest/gtest.h"
 #include "etl/tuple.h"
+#include "gtest/gtest.h"
 #include "etl/keywords.h"
 
 using namespace Project::etl;
 
-TEST(Tuple, Tuple) {
-    Tuple<float, int, double> t = {0.1f, 2, 0.3};
+TEST(Tuple, Declaration) {
+    val a = tuple(0.1f, 2, 0.3); // types are implicitly specified
+    EXPECT_EQ(get<0>(a), 0.1f);
+    EXPECT_EQ(get<1>(a), 2);
+    EXPECT_EQ(get<2>(a), 0.3);
+
+    val b = tuple<int, float, double>(0.1f, 2, 0.3); // types are explicitly specified
+    EXPECT_EQ(get<0>(b), 0);
+    EXPECT_EQ(get<1>(b), 2.0f);
+    EXPECT_EQ(get<2>(b), 0.3);
+}
+
+TEST(Tuple, Modification) {
+    var t = tuple(0.1f, 2, 0.3);
     get<0>(t) = 0.5f;
     get<1>(t) = 5;
     get<2>(t) = 0.5;
@@ -14,14 +26,6 @@ TEST(Tuple, Tuple) {
     EXPECT_EQ(get<1>(t), 5);
     EXPECT_EQ(get<2>(t), 0.5);
     EXPECT_EQ(len(t), 3);
-}
-
-TEST(Tuple, TypeDeduced) {
-    val a = tuple(0.1f, 2, 0.3);
-    EXPECT_EQ(get<0>(a), 0.1f);
-    EXPECT_EQ(get<1>(a), 2);
-    EXPECT_EQ(get<2>(a), 0.3);
-    EXPECT_EQ(len(a), 3);
 }
 
 TEST(Tuple, StructureBinding) {

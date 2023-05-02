@@ -1,9 +1,9 @@
-#include "gtest/gtest.h"
 #include "etl/array.h"
 #include "etl/vector.h"
 #include "etl/linked_list.h"
-#include "etl/algorithm.h"
 #include "etl/function.h"
+#include "etl/bit.h"
+#include "gtest/gtest.h"
 #include "etl/keywords.h"
 
 using namespace Project::etl;
@@ -20,7 +20,6 @@ TEST(Utility, Iter) {
     EXPECT_EQ(next(i), 2);
     EXPECT_EQ(next(i), 1);
 
-
     val v = vector(4, 5, 6);
     var j = iter(v, -1);
     EXPECT_EQ(next(j), 6);
@@ -31,7 +30,6 @@ TEST(Utility, Iter) {
     EXPECT_EQ(next(j), 6);
     EXPECT_EQ(next(j), 5);
     EXPECT_EQ(next(j), 4);
-
 
     val l = list(7, 8, 9);
     var k = iter(l);
@@ -45,60 +43,57 @@ TEST(Utility, Iter) {
     EXPECT_EQ(next(k), 7);
 }
 
+TEST(Utility, range) {
+    var a = vector<int>();
+    for (val i in range(3))
+        a.append(i);
+
+    EXPECT_EQ(a, array(0, 1, 2));
+
+    var b = vector<int>();
+    for (val i in range(3, 0, -1)) 
+        b.append(i);
+
+    EXPECT_EQ(b, array(3, 2, 1));
+}
+
 TEST(Utility, enumerate) {
     var p = array(10, 11, 12);
-    var i = 0; // loop guard
     for (val [x, y] in enumerate(p, 10)) {
         EXPECT_EQ(x, y);
         y -= 10;
-        if (i++ == 5) break;
     }
-    EXPECT_TRUE(compare_all(p, array(0, 1, 2)));
+    EXPECT_EQ(p, array(0, 1, 2));
 }
 
 TEST(Utility, zip) {
     var p = vector(2, 4, 6, 8);
-    constexpr val q = array(1, 2, 3);
-    int i = 0; // loop guard
+    val constexpr q = array(1, 2, 3);
+    
     for (var [x, y] in zip(p, q)) {
         EXPECT_EQ(x / y, 2);
         x = y;
-        if (i++ == 5) break;
-    }
-    i = 0;
-    for (val [x, y] in zip(p, q)) {
-        EXPECT_EQ(x, y);
-        if (i++ == 5) break;
     }
 
-    constexpr val a = array(1, 2, 3);
-    constexpr val b = array(2, 4, 6);
-    constexpr val f = [](const decltype(a)& a, const decltype(b)& b) {
-        var [res, i] = pair(0, 0);
-        for (val [x, y] in zip(a, b)) {
+    for (val [x, y] in zip(p, q))
+        EXPECT_EQ(x, y);
+    
+    EXPECT_EQ(p, array(1, 2, 3, 8));
+
+    val constexpr a = array(1, 2, 3);
+    val constexpr b = array(2, 4, 6);
+    val constexpr f = lambda (val a, val b) {
+        var res = 0;
+        for (val [x, y] in zip(a, b))
             res += x * y;
-            if (i++ == 5) break; // loop guard
-        }
         return res;
     };
-    constexpr val g = f(a,b);
+    val constexpr g = f(a,b);
     EXPECT_EQ(g, 28);
 }
 
-TEST(Utility, range) {
-    var q = vector<int>();
-    int j = 0; // loop guard
-    for (auto i in range(3)) {
-        q.append(i);
-        if (j++ == 5) break;
-    }
-    EXPECT_TRUE(compare_all(q, array(0, 1, 2)));
-    EXPECT_EQ(q, array(0, 1, 2));
-    EXPECT_EQ(q.len(), 3);
-}
-
 TEST(Utility, Next) {
-    var a = range(0, 3, 1); // start = 0, end = 3, increment = 1
+    var a = range(3);
     EXPECT_EQ(next(a), 0);
     EXPECT_EQ(next(a), 1);
     EXPECT_EQ(next(a), 2);
@@ -107,14 +102,57 @@ TEST(Utility, Next) {
 }
 
 TEST(Utility, Generator) {
+    // a generator is any object that has operator()
     var num = array(0, 1);
-    val fib = Function<int(), decltype(num)&>( [](auto num) {
-        int temp = num[1];
+    val fib = [&num] {
+        val temp = num[1];
         num[1] += num[0];
         num[0] = temp;
         return temp;
-    }, num);
+    };
 
-    const int fibonacci_sequence[10] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55 };
+    val fibonacci_sequence = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55 };
     EXPECT_TRUE(all_of(fibonacci_sequence, fib));
+}
+
+TEST(Utility, Transform) {
+    val a = array(1, 2, 3);
+    val b = a | transform(lambda (val item) { return item * item; });
+    EXPECT_TRUE(all_of(array(1, 4, 9), b));
+
+    val v = vector(1, 2, 3);
+    val c = v | transform(lambda (val item) { return item * item; });
+    EXPECT_TRUE(all_of(array(1, 4, 9), c));
+
+    val l = list(1, 2, 3);
+    val d = l | transform(lambda (val item) { return item * item; });
+    EXPECT_TRUE(all_of(array(1, 4, 9), d));
+
+    val r = range(1, 4);
+    val e = r | transform(lambda (val item) { return item * item; });
+    EXPECT_TRUE(all_of(array(1, 4, 9), e));
+}
+
+TEST(Utility, Filter) {
+    val a = array(1, 2, 3, 4, 5, 6);
+    val x = a | filter(lambda (val item) { return is_even(item); });
+    EXPECT_TRUE(all_of(array(2, 4, 6), x));
+
+    val b = vector(1, 2, 3, 4, 5, 6);
+    val y = b | filter(lambda (val item) { return is_even(item); });
+    EXPECT_TRUE(all_of(array(2, 4, 6), y));
+
+    val c = list(1, 2, 3, 4, 5, 6);
+    val z = c | filter(lambda (val item) { return is_even(item); });
+    EXPECT_TRUE(all_of(array(2, 4, 6), z));
+
+    val d = range(1, 7);
+    val r = d | filter(lambda (val item) { return is_even(item); });
+    EXPECT_TRUE(all_of(array(2, 4, 6), r));
+
+    var s = 2;
+    for (val i in array(1,2,3,4,5,6) | filter(lambda (val item) { return is_even(item); })) {
+        EXPECT_EQ(s, i);
+        s += 2;
+    }
 }

@@ -1,312 +1,314 @@
 #ifndef ETL_ALGORITHM_H
 #define ETL_ALGORITHM_H
 
-#include "etl/type_traits.h"
 #include "etl/utility.h"
 
 namespace Project::etl {
     /// finds the first element satisfying specific criteria
-    template <class Iterator, class T> constexpr auto
+    template <typename Iterator, typename T> constexpr auto
     find(Iterator first, Iterator last, const T& value) {
         for (; first != last; ++first) if (*first == value) return first;
         return last;
     }
-    template <class Container, class T> constexpr auto
-    find(const Container& cont, const T& value) {
+    template <typename Container, typename T> constexpr auto
+    find(Container&& cont, const T& value) {
         return etl::find(etl::begin(cont), etl::end(cont), value);
     }
-    template <class Iterator, class UnaryPredicate> constexpr auto
+    template <typename Iterator, typename UnaryPredicate> constexpr auto
     find_if(Iterator first, Iterator last, UnaryPredicate fn) {
         for (; first != last; ++first) if (fn(*first)) return first;
         return last;
     }
-    template <class Container, class UnaryPredicate> constexpr auto
-    find_if(Container& cont, UnaryPredicate fn) {
+    template <typename Container, typename UnaryPredicate> constexpr auto
+    find_if(Container&& cont, UnaryPredicate fn) {
         return etl::find_if(etl::begin(cont), etl::end(cont), fn);
     }
-    template <class Iterator, class UnaryPredicate> constexpr auto
+    template <typename Iterator, typename UnaryPredicate> constexpr auto
     find_if_not(Iterator first, Iterator last, UnaryPredicate fn) {
         for (; first != last; ++first) if (!fn(*first)) return first;
         return last;
     }
-    template <class Container, class UnaryPredicate> constexpr auto
-    find_if_not(Container& cont, UnaryPredicate fn) {
+    template <typename Container, typename UnaryPredicate> constexpr auto
+    find_if_not(Container&& cont, UnaryPredicate fn) {
         return etl::find_if_not(etl::begin(cont), etl::end(cont), fn);
     }
 
     /// checks if a predicate is true for all, any or none of the elements in a range
-    template <class Iterator, class T> constexpr bool
+    template <typename Iterator, typename T> constexpr bool
     all(Iterator first, Iterator last, const T& value) {
         for (; first != last; ++first) if (*first != value) return false;
         return true;
     }
-    template <class Container, class T> constexpr bool
-    all(const Container& cont, const T& value) {
+    template <typename Container, typename T> constexpr bool
+    all(Container&& cont, const T& value) {
         return etl::all(etl::begin(cont), etl::end(cont), value);
     }
-    template <class Iterator, class T> constexpr bool
+    template <typename Iterator, typename T> constexpr bool
     any(Iterator first, Iterator last, const T& value) {
         for (; first != last; ++first) if (*first == value) return true;
         return false;
     }
-    template <class Container, class T> constexpr bool
-    any(const Container& cont, const T& value) {
+    template <typename Container, typename T> constexpr bool
+    any(Container&& cont, const T& value) {
         return etl::any(etl::begin(cont), etl::end(cont), value);
     }
-    template <class Iterator, class T> constexpr bool
+    template <typename Iterator, typename T> constexpr bool
     none(Iterator first, Iterator last, const T& value) {
         for (; first != last; ++first) if (*first == value) return false;
         return true;
     }
-    template <class Container, class T> constexpr bool
-    none(const Container& cont, const T& value) {
+    template <typename Container, typename T> constexpr bool
+    none(Container&& cont, const T& value) {
         return etl::none(etl::begin(cont), etl::end(cont), value);
     }
-    template <class Iterator, class UnaryPredicate> constexpr bool
+    template <typename Iterator, typename UnaryPredicate> constexpr bool
     all_if(Iterator first, Iterator last, UnaryPredicate fn) {
         return etl::find_if_not(first, last, fn) == last;
     }
-    template <class Container, class UnaryPredicate> constexpr bool
-    all_if(Container& cont, UnaryPredicate fn) {
+    template <typename Container, typename UnaryPredicate> constexpr bool
+    all_if(Container&& cont, UnaryPredicate fn) {
         return etl::all_if(etl::begin(cont), etl::end(cont), fn);
     }
-    template <class Iterator, class UnaryPredicate> constexpr bool
+    template <typename Iterator, typename UnaryPredicate> constexpr bool
     any_if(Iterator first, Iterator last, UnaryPredicate fn) {
         return etl::find_if(first, last, fn) != last;
     }
-    template <class Container, class UnaryPredicate> constexpr bool
-    any_if(Container& cont, UnaryPredicate fn) {
+    template <typename Container, typename UnaryPredicate> constexpr bool
+    any_if(Container&& cont, UnaryPredicate fn) {
         return etl::any_if(etl::begin(cont), etl::end(cont), fn);
     }
-    template <class Iterator, class UnaryPredicate> constexpr bool
+    template <typename Iterator, typename UnaryPredicate> constexpr bool
     none_if(Iterator first, Iterator last, UnaryPredicate fn) {
         return etl::find_if(first, last, fn) == last;
     }
-    template <class Container, class UnaryPredicate> constexpr bool
-    none_if(Container& cont, UnaryPredicate fn) {
+    template <typename Container, typename UnaryPredicate> constexpr bool
+    none_if(Container&& cont, UnaryPredicate fn) {
         return etl::none_if(etl::begin(cont), etl::end(cont), fn);
     }
 
     /// compare all, any or none of between a container and a generator
-    template <class Iterator, class Generator> constexpr bool
+    template <typename Iterator, typename Generator> constexpr bool
     all_of(Iterator first, Iterator last, Generator fn) {
         for (; first != last; ++first) if (*first != fn()) return false;
         return true;
     }
-    template <class Container, class Generator> constexpr bool
-    all_of(const Container& cont, Generator fn) {
+    template <typename Container, typename Generator> constexpr bool
+    all_of(Container&& cont, Generator fn) {
         return etl::all_of(etl::begin(cont), etl::end(cont), fn);
     }
-    template <class Iterator, class Generator> constexpr bool
+    template <typename Iterator, typename Generator> constexpr bool
     any_of(Iterator first, Iterator last, Generator fn) {
         for (; first != last; ++first) if (*first == fn()) return true;
         return false;
     }
-    template <class Container, class Generator> constexpr bool
-    any_of(const Container& cont, Generator fn) {
+    template <typename Container, typename Generator> constexpr bool
+    any_of(Container&& cont, Generator fn) {
         return etl::any_of(etl::begin(cont), etl::end(cont), fn);
     }
-    template <class Iterator, class Generator> constexpr bool
+    template <typename Iterator, typename Generator> constexpr bool
     none_of(Iterator first, Iterator last, Generator fn) {
         for (; first != last; ++first) if (*first == fn()) return false;
         return true;
     }
-    template <class Container, class Generator> constexpr bool
-    none_of(const Container& cont, Generator fn) {
+    template <typename Container, typename Generator> constexpr bool
+    none_of(Container&& cont, Generator fn) {
         return etl::none_of(etl::begin(cont), etl::end(cont), fn);
     }
 
     /// compare all, any or none of between two containers
-    template <class Container1, class Container2> constexpr bool
-    compare_all(const Container1& cont1, const Container2& cont2) {
-        if (etl::len(cont1) != etl::len(cont2)) return false;
+    template <typename Container1, typename Container2> constexpr bool
+    compare_all(Container1&& cont1, Container2&& cont2) {
+        if constexpr (has_len_v<remove_reference_t<Container1>> && has_len_v<remove_reference_t<Container2>>)
+            if (etl::len(cont1) != etl::len(cont2)) 
+                return false;
+
         for (auto [x, y] : etl::zip(cont1, cont2)) if (x != y) return false;
         return true;
     }
-    template <class Container1, class Container2> constexpr bool
-    compare_any(const Container1& cont1, const Container2& cont2) {
+    template <typename Container1, typename Container2> constexpr bool
+    compare_any(Container1&& cont1, Container2&& cont2) {
         for (auto [x, y] : etl::zip(cont1, cont2)) if (x == y) return true;
         return false;
     }
-    template <class Container1, class Container2> constexpr bool
-    compare_none(const Container1& cont1, const Container2& cont2) {
+    template <typename Container1, typename Container2> constexpr bool
+    compare_none(Container1&& cont1, Container2&& cont2) {
         for (auto [x, y] : etl::zip(cont1, cont2)) if (x == y) return false;
         return true;
     }
 
     /// applies function fn(item) to a range of elements
-    template <class Iterator, class UnaryFunction> constexpr auto
+    template <typename Iterator, typename UnaryFunction> constexpr auto
     foreach(Iterator first, Iterator last, UnaryFunction fn) {
         for (; first != last; ++first) fn(*first);
         return fn;
     }
-    template <class Container, class UnaryFunction> constexpr auto
-    foreach(Container& cont, UnaryFunction fn) {
+    template <typename Container, typename UnaryFunction> constexpr auto
+    foreach(Container&& cont, UnaryFunction fn) {
         return etl::foreach(etl::begin(cont), etl::end(cont), fn);
     }
 
     /// applies function fn(item, result) to a range of elements
-    template <class Iterator, class UnaryFunction, class R> constexpr auto
+    template <typename Iterator, typename UnaryFunction, typename R> constexpr auto
     fold(Iterator first, Iterator last, UnaryFunction fn, R& result) {
         for (; first != last; ++first) fn(*first, result);
         return fn;
     }
-    template <class Container, class UnaryFunction, class R> constexpr auto
-    fold(Container& cont, UnaryFunction fn, R& result) {
+    template <typename Container, typename UnaryFunction, typename R> constexpr auto
+    fold(Container&& cont, UnaryFunction fn, R& result) {
         return etl::fold(etl::begin(cont), etl::end(cont), fn, result);
     }
     
     /// copy-assigns the given value to every element in a range
-    template <class Iterator, class T> constexpr void
+    template <typename Iterator, typename T> constexpr void
     fill(Iterator first, Iterator last, const T& value) {
         for (; first != last; ++first) *first = value;
     }
-    template <class Container, class T> constexpr void
-    fill(Container& cont, const T& value) {
+    template <typename Container, typename T> constexpr void
+    fill(Container&& cont, const T& value) {
         for (auto& x : cont) x = value;
     }
     
     /// assigns the results of successive function calls to every element in a range
-    template <class Iterator, class Generator> constexpr void
+    template <typename Iterator, typename Generator> constexpr void
     generate(Iterator first, Iterator last, Generator fn) {
         for (; first != last; ++first) *first = fn();
     }
-    template <class Container, class Generator> constexpr void
-    generate(Container& cont, Generator fn) {
+    template <typename Container, typename Generator> constexpr void
+    generate(Container&& cont, Generator fn) {
         for (auto& x : cont) x = fn();
     }
 
     /// returns the number of elements satisfying specific criteria
-    template <class Iterator, class T> constexpr int
+    template <typename Iterator, typename T> constexpr int
     count(Iterator first, Iterator last, const T& value) {
         int res = 0;
         for (; first != last; ++first) if (*first == value) ++res;
         return res;
     }
-    template <class Container, class T> constexpr int
-    count(const Container& cont, const T& value) {
+    template <typename Container, typename T> constexpr int
+    count(Container&& cont, const T& value) {
         return etl::count(etl::begin(cont), etl::end(cont), value);
     }
-    template <class Iterator, class UnaryPredicate> constexpr int
+    template <typename Iterator, typename UnaryPredicate> constexpr int
     count_if(Iterator first, Iterator last, UnaryPredicate fn) {
         int res = 0;
         for (; first != last; ++first) if (fn(*first)) ++res;
         return res;
     }
-    template <class Container, class UnaryPredicate> constexpr int
-    count_if(Container& cont, UnaryPredicate fn) {
+    template <typename Container, typename UnaryPredicate> constexpr int
+    count_if(Container&& cont, UnaryPredicate fn) {
         return etl::count_if(etl::begin(cont), etl::end(cont), fn);
     }
 
     /// copies a range of elements to a new location
-    template <class Iterator, class IteratorDest> constexpr auto
+    template <typename Iterator, typename IteratorDest> constexpr auto
     copy(Iterator first, Iterator last, IteratorDest dest) {
         for (; first != last && dest != nullptr; ++first, ++dest) *dest = *first;
         return dest;
     }
-    template <class Container, class ContainerDest> constexpr void
-    copy(const Container& cont, ContainerDest& dest) {
-        for (auto [x, y] : etl::zip(cont, dest)) y = x;
+    template <typename Container, typename ContainerDest> constexpr auto
+    copy(Container&& cont, ContainerDest& dest) {
+        return copy(etl::begin(cont), etl::end(cont), etl::begin(dest));
     }
 
-    template <class Iterator, class IteratorDest, class UnaryPredicate> constexpr auto
+    template <typename Iterator, typename IteratorDest, typename UnaryPredicate> constexpr auto
     copy_if(Iterator first, Iterator last, IteratorDest dest, UnaryPredicate fn) {
         for (; first != last && dest != nullptr; ++first) if (fn(*first)) { *dest = *first; ++dest; }
         return dest;
     }
-    template <class Container, class ContainerDest, class UnaryPredicate> constexpr auto
-    copy_if(const Container& cont, ContainerDest& dest, UnaryPredicate fn) {
+    template <typename Container, typename ContainerDest, typename UnaryPredicate> constexpr auto
+    copy_if(Container&& cont, ContainerDest& dest, UnaryPredicate fn) {
         return etl::copy_if(etl::begin(cont), etl::end(cont), etl::begin(dest), fn);
     }
 
     /// moves a range of elements to a new location
-    template <class Iterator, class IteratorDest> constexpr auto
+    template <typename Iterator, typename IteratorDest> constexpr auto
     move(Iterator first, Iterator last, IteratorDest dest) {
         for (; first != last && dest != nullptr; ++first, ++dest) *dest = etl::move(*first);
         return dest;
     }
-    template <class Container, class ContainerDest> constexpr void
-    move(const Container& cont, ContainerDest& dest) {
+    template <typename Container, typename ContainerDest> constexpr void
+    move(Container&& cont, ContainerDest& dest) {
         for (auto [x, y] : etl::zip(cont, dest)) y = etl::move(x);
     }
 
     /// swap
-    template <class Iterator1, class Iterator2> constexpr void
+    template <typename Iterator1, typename Iterator2> constexpr void
     swap_element(Iterator1 first, Iterator1 last, Iterator2 dest) {
         for (; first != last && dest != nullptr; ++first, ++dest) etl::swap(*first, *dest);
     }
-    template <class Container1, class Container2> constexpr void
-    swap_element(Container1& cont1, Container2& cont2) {
+    template <typename Container1, typename Container2> constexpr void
+    swap_element(Container1&& cont1, Container2&& cont2) {
         for (auto [x, y] : etl::zip(cont1, cont2)) etl::swap(x, y);
     }
 
     /// replaces all values satisfying specific criteria with another value @{
-    template <class Iterator, class T> constexpr void
+    template <typename Iterator, typename T> constexpr void
     replace(Iterator first, Iterator last, const T& old, const T& value) {
         for (; first != last; ++first) if (*first == old) *first = value;
     }
-    template <class Container, class T> constexpr void
-    replace(Container& cont, const T& old, const T& value) {
+    template <typename Container, typename T> constexpr void
+    replace(Container&& cont, const T& old, const T& value) {
         etl::replace(etl::begin(cont), etl::end(cont), old, value);
     }
-    template <class Iterator, class UnaryPredicate, class T> void
+    template <typename Iterator, typename UnaryPredicate, typename T> void
     replace_if(Iterator first, Iterator last, UnaryPredicate fn, const T& value) {
         for (; first != last; ++first) if (fn(*first)) *first = value;
     }
-    template <class Container, class UnaryPredicate, class T> constexpr void
-    replace_if(Container& cont, UnaryPredicate fn, const T& value) {
+    template <typename Container, typename UnaryPredicate, typename T> constexpr void
+    replace_if(Container&& cont, UnaryPredicate fn, const T& value) {
         etl::replace_if(etl::begin(cont), etl::end(cont), fn, value);
     }
 
     /// returns the greater of the given values
-    template <class T1, class T2, class... Tn> constexpr auto
+    template <typename T1, typename T2, typename... Tn> constexpr auto
     max(const T1& val1, const T2& val2, const Tn&... vals) {
         if constexpr (sizeof...(vals) == 0) return val1 > val2 ? val1 : val2;
         else return etl::max(etl::max(val1, val2), vals...);
     }
 
     /// returns the smaller of the given values
-    template <class T1, class T2, class... Tn> constexpr auto
+    template <typename T1, typename T2, typename... Tn> constexpr auto
     min(const T1& val1, const T2& val2, const Tn&... vals) {
         if constexpr (sizeof...(vals) == 0) return val1 < val2 ? val1 : val2;
         else return etl::min(etl::min(val1, val2), vals...);
     }
 
     /// returns the sum of all arguments
-    template <class T, class... Ts> constexpr auto
+    template <typename T, typename... Ts> constexpr auto
     sum(const T& val, const Ts&... vals) {
         if constexpr (sizeof...(vals) == 0) return val;
         else return val + etl::sum(vals...);
     }
 
     /// returns the largest element in a range
-    template <class Iterator> constexpr auto
+    template <typename Iterator> constexpr auto
     max_element(Iterator first, Iterator last) {
         if (first == last) return *last;
         auto largest = first++;
         for (; first != last; ++first) if (*first > *largest) largest = first;
         return *largest;
     }
-    template <class Container> constexpr auto
-    max_element(const Container& cont) {
+    template <typename Container> constexpr auto
+    max_element(Container&& cont) {
         return etl::max_element(etl::begin(cont), etl::end(cont));
     }
 
     /// returns the smallest element in a range
-    template <class Iterator> constexpr auto
+    template <typename Iterator> constexpr auto
     min_element(Iterator first, Iterator last) {
         if (first == last) return *last;
         auto smallest = first++;
         for (; first != last; ++first) if (*first < *smallest) smallest = first;
         return *smallest;
     }
-    template <class Container> constexpr auto
-    min_element(const Container& cont) {
+    template <typename Container> constexpr auto
+    min_element(Container&& cont) {
         return etl::min_element(etl::begin(cont), etl::end(cont));
     }
 
     /// returns the sum of all elements in a range
-    template <class Iterator> constexpr auto
+    template <typename Iterator> constexpr auto
     sum_element(Iterator first, Iterator last) {
         using T = remove_reference_t<decltype(*first)>;
         using R = conditional_t<is_arithmetic_v<T>, conditional_t<is_floating_point_v<T>, double, long>, T>;
@@ -314,16 +316,16 @@ namespace Project::etl {
         
         if (first == last) return S{};
         S res = *first;
-        for (; first != last; ++first) res += *first;
+        for (++first; first != last; ++first) res += *first;
         return res;
     }
-    template <class Container> constexpr auto
-    sum_element(const Container& cont) {
+    template <typename Container> constexpr auto
+    sum_element(Container&& cont) {
         return etl::sum_element(etl::begin(cont), etl::end(cont));
     }
 
     /// clamps a value between a pair of boundary values
-    template <class T, class U, class V> constexpr auto
+    template <typename T, typename U, typename V> constexpr auto
     clamp(const T& x, const U& lo, const V& hi) {
         auto low = etl::min(lo, hi);
         auto high = etl::max(lo, hi);

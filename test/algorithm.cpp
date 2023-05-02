@@ -1,19 +1,21 @@
-#include "gtest/gtest.h"
 #include "etl/algorithm.h"
 #include "etl/array.h"
+#include "etl/function.h"
+#include "gtest/gtest.h"
+#include "etl/keywords.h"
 
 using namespace Project::etl;
 
 TEST(Algorithm, Find) {
-    const int a[3] = { 1, 2, 3};
+    val a = {1, 2, 3};
     EXPECT_EQ(*find(a, 3), 3);
-    EXPECT_EQ(*find_if(a, [](auto& item) { return item == 3; }), 3);
-    EXPECT_EQ(*find_if_not(a, [](auto& item) { return item != 3; }), 3);
+    EXPECT_EQ(*find_if(a, lambda (val &item) { return item == 3; }), 3);
+    EXPECT_EQ(*find_if_not(a, lambda (val &item) { return item != 3; }), 3);
 }
 
 TEST(Algorithm, AllAnyNone) {
-    auto check = [](const int& item) { return item == 3; };
-    const int a[3] = { 3, 3, 3};
+    val check = lambda (val item) { return item == 3; };
+    val a = {3, 3, 3};
     EXPECT_TRUE (all(a, 3));
     EXPECT_TRUE (any(a, 3));
     EXPECT_FALSE(none(a, 3));
@@ -21,7 +23,7 @@ TEST(Algorithm, AllAnyNone) {
     EXPECT_TRUE (any_if(a, check));
     EXPECT_FALSE(none_if(a, check));
 
-    const int b[3] = { 1, 2, 3};
+    val b = {1, 2, 3};
     EXPECT_FALSE(all(b, 3));
     EXPECT_TRUE (any(b, 3));
     EXPECT_FALSE(none(b, 3));
@@ -38,25 +40,27 @@ TEST(Algorithm, AllAnyNone) {
 }
 
 TEST(Algorithm, ForeachFold) {
-    const int a[4] = { 1, 2, 3, 4};
-    int res = 0;
-    fold(a, [](auto& item, auto& res) { res += item; }, res);
+    val a = {1, 2, 3, 4};
+    var res = 0;
+    
+    fold(a, lambda (val item, var &res) { res += item; }, res);
     EXPECT_EQ(res, 10);
+
     res = 1;
-    fold(a, [](auto& item, auto& res) { res *= item; }, res);
+    fold(a, lambda (val item, var &res) { res *= item; }, res);
     EXPECT_EQ(res, 24);
 
-    const int b[4] = { 4, 4, 4, 4};
-    foreach(b, [](auto& item) { EXPECT_EQ(item, 4); });
+    val b = {4, 4, 4, 4};
+    foreach(b, lambda (val item) { EXPECT_EQ(item, 4); });
 }
 
 TEST(Algorithm, FillGenerate) {
-    constexpr auto makeArray = [](int val) {
-        Array<int, 3> res = {};
-        fill(res, val);
+    val constexpr makeArray = lambda (int item) {
+        var res = array<int, 3>();
+        fill(res, item);
         return res;
     };
-    const auto a = makeArray(3);
+    val a = makeArray(3);
     EXPECT_TRUE(all(a, 3));
 
     int b[3];
@@ -65,7 +69,42 @@ TEST(Algorithm, FillGenerate) {
 }
 
 TEST(Algorithm, Count) {
-    constexpr int a[4] = { 1, 1, 1, 4};
+    val a = {1, 1, 1, 4};
     EXPECT_EQ(count(a, 1), 3);
-    EXPECT_EQ(count_if(a, [](auto& item) { return item == 1; }), 3);
+    EXPECT_EQ(count_if(a, lambda (val &item) { return item == 1; }), 3);
+}
+
+TEST(Algorithm, CopyReplace) {
+    var a = array<int, 3>();
+    val b = {0, 1, 2};
+    val c = {10, 1, 2};
+    val d = {10, 20, 20};
+
+    copy(range(3), a);
+    EXPECT_EQ(a, b);
+
+    fill(a, 0);
+    copy_if(range(10), a, lambda (val item) { return item < 3; });
+    EXPECT_EQ(a, b);
+
+    replace(a, 0, 10);
+    EXPECT_EQ(a, c);
+
+    replace_if(a, lambda (val item) { return item < 10; }, 20);
+    EXPECT_EQ(a, d);
+}
+
+TEST(Algorithm, MaxMinSumClamp) {
+    val a = {1, 2, 3};
+    EXPECT_EQ(min_element(a), 1);
+    EXPECT_EQ(max_element(a), 3);
+    EXPECT_EQ(sum_element(a), 6);
+
+    EXPECT_EQ(min(1, 2, 3), 1);
+    EXPECT_EQ(max(1, 2, 3), 3);
+    EXPECT_EQ(sum(1, 2, 3), 6);
+
+    EXPECT_EQ(clamp(2, 1, 3), 2);
+    EXPECT_EQ(clamp(0, 1, 3), 1);
+    EXPECT_EQ(clamp(4, 1, 3), 3);
 }

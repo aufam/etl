@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <initializer_list>
 
 namespace Project::etl {
 
@@ -276,7 +277,7 @@ namespace Project::etl {
     struct is_functor {
         template <typename U> static auto test(U* p) -> decltype(&U::operator(), void(), true_type());
         template <typename U> static auto test(...) -> false_type;
-        static constexpr bool value = decltype(test<T>(nullptr))::value;
+        static constexpr bool value = decltype(test<remove_reference_t<T>>(nullptr))::value;
     };
     template <typename T> inline constexpr bool is_functor_v = is_functor<T>::value;
 
@@ -321,6 +322,32 @@ namespace Project::etl {
     using make_index_sequence = typename make_index_sequence_helper<size_t, 0, N>::type;
 
     template <typename... T> using index_sequence_for = make_index_sequence<sizeof...(T)>;
+
+    /// has_begin_end
+    template <typename T>
+    struct has_begin_end {
+        template <typename U> static auto test(U* ptr) -> decltype(ptr->begin() && ptr->end(), void(), true_type());
+        template <typename U> static auto test(...) -> false_type;
+        static constexpr bool value = decltype(test<remove_reference_t<T>>(nullptr))::value;
+    };
+    template <typename T> struct has_begin_end<std::initializer_list<T>> : true_type {};
+    template <typename T> struct has_begin_end<const std::initializer_list<T>> : true_type {};
+    template <typename T> struct has_begin_end<T[]> : true_type {};
+    template <typename T, size_t N> struct has_begin_end<T[N]> : true_type {};
+    template <typename T> inline constexpr bool has_begin_end_v = has_begin_end<T>::value;
+    
+    /// has_len
+    template <typename T>
+    struct has_len {
+        template <typename U> static auto test(U* ptr) -> decltype(ptr->len(), void(), true_type());
+        template <typename U> static auto test(...) -> false_type;
+        static constexpr bool value = decltype(test<remove_reference_t<T>>(nullptr))::value;
+    };
+    template <typename T> struct has_len<std::initializer_list<T>> : true_type {};
+    template <typename T> struct has_len<const std::initializer_list<T>> : true_type {};
+    template <typename T> struct has_len<T[]> : true_type {};
+    template <typename T, size_t N> struct has_len<T[N]> : true_type {};
+    template <typename T> inline constexpr bool has_len_v = has_len<T>::value;
 }
 
 #endif //ETL_TYPE_TRAITS_H
