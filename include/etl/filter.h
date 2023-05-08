@@ -11,9 +11,7 @@ namespace Project::etl {
         UnaryPredicate fn;
 
     public:
-        constexpr Filter(Sequence seq, UnaryPredicate fn) : sequence(seq), fn(fn) {
-            operator++();
-        }
+        constexpr Filter(Sequence seq, UnaryPredicate fn) : sequence(seq), fn(fn) {}
 
         constexpr Filter begin() const { return *this; }
         constexpr Filter end()   const { return *this; }

@@ -15,30 +15,6 @@ namespace Project::etl {
 
         Vector(T* buffer, size_t nItems, size_t capacity) : buf(buffer), nItems(nItems), capacity(capacity) {}
 
-        T* copy_alloc_(size_t newCapacity) const {
-            auto temp = new T[newCapacity];
-            etl::copy(begin(), end(), temp);
-            return temp;
-        }
-
-        void reset_(T* ptr = nullptr, size_t n = 0, size_t cap = 0) {
-            buf = ptr;
-            nItems = n;
-            capacity = cap;
-        }
-
-        void reset_delete_(T* ptr = nullptr, size_t n = 0, size_t cap = 0) {
-            delete [] buf;
-            reset_(ptr, n, cap);
-        }
-
-        bool is_valid_index_(int& index) const {
-            if (nItems == 0) return false;
-            if (index < 0) index = int(nItems) + index; // allowing negative index
-            if (index < 0 || size_t(index) >= nItems) return false; // out of range
-            return true;
-        }
-
     public:
         typedef T value_type;
         typedef T* iterator;
@@ -82,6 +58,7 @@ namespace Project::etl {
             return *this;
         }
 
+        /// destructor
         virtual ~Vector() noexcept { reset_delete_(); }
 
         [[nodiscard]] size_t len() const { return nItems; }     ///< returns the number of items
@@ -101,15 +78,11 @@ namespace Project::etl {
 
         /// get i-th item by dereference
         /// @warning it will throw error null dereference if index is not valid
-        reference operator[](int index) {
-            return is_valid_index_(index) ? buf[index] : *static_cast<iterator>(nullptr);
-        }
+        reference operator[](int i) { return is_valid_index_(i) ? buf[i] : *static_cast<iterator>(nullptr); }
 
         /// get i-th item by dereference
         /// @warning it will throw error null dereference if index is not valid
-        const_reference operator[](int index) const {
-            return is_valid_index_(index) ? buf[index] : *static_cast<iterator>(nullptr);
-        }
+        const_reference operator[](int i) const { return is_valid_index_(i) ? buf[i] : *static_cast<iterator>(nullptr); }
 
         /// return true if buf is not null
         explicit operator bool() { return buf != nullptr; }
@@ -215,8 +188,11 @@ namespace Project::etl {
                 reset_delete_();
                 return true;
             }
+            
             auto newBuf = (iterator) std::realloc(buf, newCapacity);
-            if (newBuf == nullptr) return false;
+            if (newBuf == nullptr) 
+                return false;
+
             buf = newBuf; 
             nItems = etl::min(nItems, newCapacity);
             capacity = newCapacity;
@@ -243,6 +219,31 @@ namespace Project::etl {
 
         template <class Container>
         bool operator!=(const Container& other) const { return !operator==(other); }
+    
+    protected:
+        iterator copy_alloc_(size_t newCapacity) const {
+            auto temp = new T[newCapacity];
+            etl::copy(begin(), end(), temp);
+            return temp;
+        }
+
+        void reset_(iterator ptr = nullptr, size_t n = 0, size_t cap = 0) {
+            buf = ptr;
+            nItems = n;
+            capacity = cap;
+        }
+
+        void reset_delete_(iterator ptr = nullptr, size_t n = 0, size_t cap = 0) {
+            delete[] buf;
+            reset_(ptr, n, cap);
+        }
+
+        bool is_valid_index_(int& index) const {
+            if (nItems == 0) return false;
+            if (index < 0) index = int(nItems) + index; // allowing negative index
+            if (index < 0 || size_t(index) >= nItems) return false; // out of range
+            return true;
+        }
     };
 
     /// create vector with variadic template function, the type can be implicitly or explicitly specified

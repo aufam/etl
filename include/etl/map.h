@@ -10,26 +10,6 @@ namespace Project::etl {
     class Map : public Vector<Pair<K, V>> {
         Map(Pair<K, V>* buffer, size_t nItems, size_t capacity) : Vector<Pair<K, V>>(buffer, nItems, capacity) {}
 
-        V* get_value_ptr_(const K& key) {
-            V* res = nullptr;
-            for (auto &[x, y]: *this) if (x == key) res = &y;
-            return res;
-        }
-
-        const V* get_value_ptr_(const K& key) const {
-            const V* res = nullptr;
-            for (auto &[x, y]: *this) if (x == key) res = &y;
-            return res;
-        }
-
-        void append_force_(const K& key, const V& value) {
-            auto newCapacity = this->nItems + 1;
-            if (this->capacity < newCapacity);
-                this->reserve(newCapacity);
-            this->buf[this->nItems] = etl::pair<K, V>(key, value);
-            ++this->nItems;
-        }
-
     public:
         typedef K Key;
         typedef V Value;
@@ -42,7 +22,11 @@ namespace Project::etl {
 
         /// construct from initializer list
         Map(std::initializer_list<Pair<K, V>> items) : Map(new Pair<K, V>[items.size()], 0, items.size()) {
-            for (auto item : items) append(item);
+            for (auto item : items) {
+                auto vp = get_value_ptr_(item.x);
+                if (vp) *vp = item.y;
+                else this->buf[this->nItems++] = item;
+            }
         }
 
         /// copy constructor
@@ -70,8 +54,6 @@ namespace Project::etl {
             return *this;
         }
 
-        ~Map() { this->reset_delete_(); }
-
         /// check if a key is in this map
         bool has(const K& key) const { return static_cast<bool>(get_value_ptr_(key)); }
 
@@ -95,8 +77,8 @@ namespace Project::etl {
         const V& operator[](const K& key) const {
             auto res = get_value_ptr_(key);
             if (res) return *res;
-            static const auto def = Value{};
-            return def;
+            static const auto v = Value{};
+            return v;
         }
  
         /// add a key-value pair to the map
@@ -130,10 +112,31 @@ namespace Project::etl {
             }
             return this->remove_at(index);
         }
+    
+    private:
+        V* get_value_ptr_(const K& key) {
+            V* res = nullptr;
+            for (auto &[x, y]: *this) if (x == key) res = &y;
+            return res;
+        }
+
+        const V* get_value_ptr_(const K& key) const {
+            const V* res = nullptr;
+            for (auto &[x, y]: *this) if (x == key) res = &y;
+            return res;
+        }
+
+        void append_force_(const K& key, const V& value) {
+            auto newCapacity = this->nItems + 1;
+            if (this->capacity < newCapacity);
+                this->reserve(newCapacity);
+            this->buf[this->nItems] = etl::pair<K, V>(key, value);
+            ++this->nItems;
+        }
     };
 
     /// create map using variadic function, type is implicitly specified
-    template <typename K, typename V, typename... Ks, typename... Vs> 
+    template <typename K, typename V, typename... Ks, typename... Vs>
     enable_if_t<(is_same_v<K, Ks> && ...) && (is_same_v<V, Vs> && ...), Map<K, V>>
     map(const Pair<K, V>& item, const Pair<Ks, Vs>&... items) { return Map<K, V> { item, items... }; }
 

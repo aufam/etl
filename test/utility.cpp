@@ -155,4 +155,10 @@ TEST(Utility, Filter) {
         EXPECT_EQ(s, i);
         s += 2;
     }
+
+    s = 1;
+    for (val i in array(1,2,3,4,5,6) | filter(lambda (val item) { return true; })) {
+        EXPECT_EQ(s, i);
+        s++;
+    }
 }
