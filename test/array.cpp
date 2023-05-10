@@ -92,3 +92,12 @@ TEST(Array, Slice) {
     val &d = get<1, 3>(a); // creates reference to specific index
     EXPECT_EQ(d, range(1, 3));
 }
+
+TEST(Array, ByteConversion) {
+    uint64_t const a = 0x1122334455667788ul;
+    val b = byte_array_cast_le(a);
+    EXPECT_EQ(b, array<uint8_t>(0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11));
+
+    val c = byte_array_cast_be(a);
+    EXPECT_EQ(c, array<uint8_t>(0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88));
+}

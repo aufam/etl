@@ -84,6 +84,28 @@ namespace Project::etl {
     template <typename T = void, typename U, typename R = conditional_t<is_void_v<T>, remove_extent_t<U>, T>> constexpr auto&
     array_cast(U& a) { return etl::array_cast<R, sizeof(U) / sizeof(R)>(&a); }
 
+    /// cast any type to byte array
+    template <typename T, bool IsLittleEndian> auto
+    byte_array_cast(const T& value) { 
+        etl::Array<uint8_t, sizeof(T)> res;
+        if constexpr (IsLittleEndian) {
+            memcpy(res.data(), &value, sizeof(T));
+        } else {
+            auto bytes = reinterpret_cast<const uint8_t*>(&value);
+            for (size_t i = 0; i < sizeof(T); ++i)
+                res[i] = bytes[sizeof(T) - 1 - i];
+        }
+        return res;
+    } 
+
+    /// cast any type to byte array, little endian
+    template <typename T> auto
+    byte_array_cast_le(const T& value) { return byte_array_cast<T, true>(value); }
+
+    /// cast any type to byte array, big endian
+    template <typename T> auto
+    byte_array_cast_be(const T& value) { return byte_array_cast<T, false>(value); }
+
     /// get functions
     template <int i, typename T, size_t N> constexpr T&
     get(Array<T, N>& arr) { return array_traits<T, N>::ref(arr.buf, i); }
