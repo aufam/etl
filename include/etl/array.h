@@ -2,6 +2,7 @@
 #define ETL_ARRAY_H
 
 #include "etl/algorithm.h"
+#include <array>
 
 namespace Project::etl {
 
@@ -103,15 +104,47 @@ namespace Project::etl {
     template <int Start, int End, typename T, size_t N> constexpr auto&
     get(Array<T, N>& arr) { static_assert(End > Start); return etl::array_cast<T, End - Start>(&arr[Start]); }
 
+    /// get function for traditional array
+    template <int i, typename T, size_t N> constexpr T&
+    get(T(&arr)[N]) { return array_traits<T, N>::ref(arr, i); }
+
+    template <int i, typename T, size_t N> constexpr T&&
+    get(T(&&arr)[N]) { return etl::move(etl::get<i>(arr)); }
+
+    template <int Start, int End, typename T, size_t N> constexpr auto&
+    get(T(&arr)[N]) { static_assert(End > Start); return etl::array_cast<T, End - Start>(&etl::get<Start>(arr)); }
+
+    /// forward specialization for traditional array
+    template <typename T, size_t N> constexpr Array<T, N>&&
+    forward(remove_reference_t<T[N]>& a) { return static_cast<Array<T, N>&&>(a); }
+
+    template <typename T, size_t N> constexpr Array<T, N>&&
+    forward(remove_reference_t<T[N]>&& a) {
+        static_assert(! is_lvalue_reference_v<T[N]>, "Invalid rvalue to lvalue conversion");
+        return static_cast<Array<T, N>&&>(a);
+    }
+
     /// swap specialization, avoid creating large temporary variable 
-    template <typename T, typename U> enable_if_t<is_same_v<remove_extent_t<T>, remove_extent_t<U>>>
+    template <typename T, typename U> constexpr enable_if_t<is_same_v<remove_extent_t<T>, remove_extent_t<U>>>
     swap(T& a, U& b) { etl::swap_element(a, b); }
+
+    /// invoke callable f with array elements as arguments
+    template <typename F, typename T> constexpr decltype(auto)
+    apply(F&& f, T&& a) { 
+        static_assert(is_array_v<remove_reference_t<T>>);
+        return apply_helper_(etl::forward<F>(f), etl::forward<T>(a), make_index_sequence<extent_v<remove_reference_t<T>>>{}); 
+    }
 
     /// type traits
     template <typename T, size_t N> struct is_array<Array<T, N>> : true_type {};
     template <typename T, size_t N> struct is_array<const Array<T, N>> : true_type {};
     template <typename T, size_t N> struct is_array<volatile Array<T, N>> : true_type {};
     template <typename T, size_t N> struct is_array<const volatile Array<T, N>> : true_type {};
+
+    template <typename T, size_t N> struct extent<Array<T, N>> : extent<T[N]> {};
+    template <typename T, size_t N> struct extent<const Array<T, N>> : extent<T[N]> {};
+    template <typename T, size_t N> struct extent<volatile Array<T, N>> : extent<T[N]> {};
+    template <typename T, size_t N> struct extent<const volatile Array<T, N>> : extent<T[N]> {};
 
     template <typename T, size_t N> struct remove_extent<Array<T, N>> { typedef T type; };
     template <typename T, size_t N> struct remove_extent<const Array<T, N>> { typedef T type; };

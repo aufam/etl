@@ -281,6 +281,13 @@ namespace Project::etl {
     };
     template <typename T> inline constexpr bool is_functor_v = is_functor<T>::value;
 
+    /// extent
+    template <typename T, size_t N = 0> struct extent : integral_constant<size_t, 0> {};
+    template <typename T, size_t N> struct extent<T[], N> : integral_constant<size_t, extent<T, N - 1>::value> {};
+    template <typename T, size_t I> struct extent<T[I], 0> : integral_constant<size_t, I> {};
+    template <typename T, size_t I, size_t N> struct extent<T[I], N> : extent<T, N - 1> {};
+    template <typename T, size_t N = 0> inline constexpr size_t extent_v = extent<T, N>::value;
+
     /// remove_extent
     template <typename T> struct remove_extent { typedef T type; };
     template <typename T> struct remove_extent<T[]> { typedef T type; };

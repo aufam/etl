@@ -138,14 +138,6 @@ TEST(Utility, Filter) {
     val x = a | filter(lambda (val item) { return is_even(item); });
     EXPECT_TRUE(all_of(array(2, 4, 6), x));
 
-    val b = vector(1, 2, 3, 4, 5, 6);
-    val y = b | filter(lambda (val item) { return is_even(item); });
-    EXPECT_TRUE(all_of(array(2, 4, 6), y));
-
-    val c = list(1, 2, 3, 4, 5, 6);
-    val z = c | filter(lambda (val item) { return is_even(item); });
-    EXPECT_TRUE(all_of(array(2, 4, 6), z));
-
     val d = range(1, 7);
     val r = d | filter(lambda (val item) { return is_even(item); });
     EXPECT_TRUE(all_of(array(2, 4, 6), r));
@@ -161,4 +153,14 @@ TEST(Utility, Filter) {
         EXPECT_EQ(s, i);
         s++;
     }
+}
+
+TEST(Utility, FilterDynamic) {
+    val b = vector(1, 2, 3, 4, 5, 6);
+    val y = b | filter(lambda (val item) { return is_even(item); });
+    EXPECT_TRUE(all_of(array(2, 4, 6), y));
+
+    val c = list(1, 2, 3, 4, 5, 6);
+    val z = c | filter(lambda (val item) { return is_even(item); });
+    EXPECT_TRUE(all_of(array(2, 4, 6), z));
 }

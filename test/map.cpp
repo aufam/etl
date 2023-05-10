@@ -57,4 +57,17 @@ TEST(Map, Dynamic) {
     EXPECT_EQ(m["three"], 4);
 }
 
+TEST(Map, util) {
+    var m = Map<const char*, int>();
+    m["one"] = 1;
+    m["two"] = 2;
+    EXPECT_EQ(m["one"], 1);
+    EXPECT_EQ(m["two"], 2);
+
+    var b = Vector({1, 2, 3, 4, 5, 6});
+    var y = b | filter(lambda (val item) { return item % 2 == 0; });
+    EXPECT_EQ(y(), 2);
+    EXPECT_EQ(y(), 4);
+    EXPECT_EQ(y(), 6);
+}
 

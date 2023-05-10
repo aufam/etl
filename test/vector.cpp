@@ -1,4 +1,5 @@
 #include "etl/vector.h"
+#include "etl/string.h"
 #include "gtest/gtest.h"
 #include "etl/keywords.h"
 
@@ -105,8 +106,6 @@ TEST(Vector, Insert) {
     b.insert(-1, 3);
     EXPECT_EQ(b, range(5));
 }
-
-#include "etl/string.h"
 
 TEST(Vector, String) {
     var a = vector<String<8>>("123", "456");
