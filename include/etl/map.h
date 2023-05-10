@@ -128,7 +128,7 @@ namespace Project::etl {
 
         void append_force_(const K& key, const V& value) {
             auto newCapacity = this->nItems + 1;
-            if (this->capacity < newCapacity);
+            if (this->capacity < newCapacity)
                 this->reserve(newCapacity);
             this->buf[this->nItems] = etl::pair<K, V>(key, value);
             ++this->nItems;
