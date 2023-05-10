@@ -2,7 +2,6 @@
 #define ETL_ARRAY_H
 
 #include "etl/algorithm.h"
-#include <array>
 
 namespace Project::etl {
 
