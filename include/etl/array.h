@@ -106,6 +106,29 @@ namespace Project::etl {
     template <typename T> auto
     byte_array_cast_be(const T& value) { return byte_array_cast<T, false>(value); }
 
+    /// cast from byte array to any type 
+    template <typename R, bool IsLittleEndian, typename T> 
+    enable_if_t<is_array_v<T> && is_same_v<remove_extent_t<T>, uint8_t> && is_same_size_v<R, T>, R>
+    byte_array_cast_back(const T& arr) { 
+        R res;
+        if constexpr (IsLittleEndian) {
+            memcpy(&res, &arr, sizeof(R));
+        } else {
+            auto bytes = reinterpret_cast<uint8_t*>(&res);
+            for (size_t i = 0; i < sizeof(T); ++i)
+                bytes[i] = arr[sizeof(T) - 1 - i];
+        }
+        return res;
+    } 
+
+    /// cast any type to byte array, little endian
+    template <typename R, typename T> R
+    byte_array_cast_back_le(const T& value) { return byte_array_cast_back<R, true>(value); }
+
+    /// cast any type to byte array, big endian
+    template <typename R, typename T> R
+    byte_array_cast_back_be(const T& value) { return byte_array_cast_back<R, false>(value); }
+
     /// get functions
     template <int i, typename T, size_t N> constexpr T&
     get(Array<T, N>& arr) { return array_traits<T, N>::ref(arr.buf, i); }

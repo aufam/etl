@@ -100,4 +100,10 @@ TEST(Array, ByteConversion) {
 
     val c = byte_array_cast_be(a);
     EXPECT_EQ(c, array<uint8_t>(0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88));
+
+    val d = byte_array_cast_back_le<uint64_t>(b);
+    EXPECT_EQ(d, a);
+
+    val e = byte_array_cast_back_be<uint64_t>(c);
+    EXPECT_EQ(e, a);
 }
