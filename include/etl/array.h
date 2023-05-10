@@ -121,11 +121,11 @@ namespace Project::etl {
         return res;
     } 
 
-    /// cast any type to byte array, little endian
+    /// cast from byte array to any type, little endian
     template <typename R, typename T> R
     byte_array_cast_back_le(const T& value) { return byte_array_cast_back<R, true>(value); }
 
-    /// cast any type to byte array, big endian
+    /// cast from byte array to any type, big endian
     template <typename R, typename T> R
     byte_array_cast_back_be(const T& value) { return byte_array_cast_back<R, false>(value); }
 
