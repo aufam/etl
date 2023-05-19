@@ -199,8 +199,11 @@ namespace Project::etl {
             return true;
         }
 
-        /// shrink size to fit the number of items
+        /// shrink the capacity to fit the number of items
         bool shrink() { return reserve(nItems); }
+
+        /// expand the number of items to fit the capacity
+        void expand() { nItems = capacity; }
 
         /// slice operator
         Iter<iterator> operator()(int start, int stop, int step = 1) { 
@@ -260,7 +263,7 @@ namespace Project::etl {
 
     /// create empty vector and set the capacity
     template <typename T> auto
-    vector_reserve(size_t capacity) { auto v = vector<T>(); v.reserve(capacity); return etl::move(v); }
+    vector_reserve(size_t capacity) { auto v = vector<T>(); v.reserve(capacity); return v; }
 
     /// type traits
     template <typename T> struct is_vector : false_type {};

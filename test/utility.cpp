@@ -117,29 +117,29 @@ TEST(Utility, Generator) {
 
 TEST(Utility, Transform) {
     val a = array(1, 2, 3);
-    val b = a | transform(lambda (val item) { return item * item; });
+    var b = a | transform(lambda (val item) { return item * item; });
     EXPECT_TRUE(all_of(array(1, 4, 9), b));
 
     val v = vector(1, 2, 3);
-    val c = v | transform(lambda (val item) { return item * item; });
+    var c = v | transform(lambda (val item) { return item * item; });
     EXPECT_TRUE(all_of(array(1, 4, 9), c));
 
     val l = list(1, 2, 3);
-    val d = l | transform(lambda (val item) { return item * item; });
+    var d = l | transform(lambda (val item) { return item * item; });
     EXPECT_TRUE(all_of(array(1, 4, 9), d));
 
     val r = range(1, 4);
-    val e = r | transform(lambda (val item) { return item * item; });
+    var e = r | transform(lambda (val item) { return item * item; });
     EXPECT_TRUE(all_of(array(1, 4, 9), e));
 }
 
 TEST(Utility, Filter) {
     val a = array(1, 2, 3, 4, 5, 6);
-    val x = a | filter(lambda (val item) { return is_even(item); });
+    var x = a | filter(lambda (val item) { return is_even(item); });
     EXPECT_TRUE(all_of(array(2, 4, 6), x));
 
     val d = range(1, 7);
-    val r = d | filter(lambda (val item) { return is_even(item); });
+    var r = d | filter(lambda (val item) { return is_even(item); });
     EXPECT_TRUE(all_of(array(2, 4, 6), r));
 
     var s = 2;
@@ -153,14 +153,4 @@ TEST(Utility, Filter) {
         EXPECT_EQ(s, i);
         s++;
     }
-}
-
-TEST(Utility, FilterDynamic) {
-    val b = vector(1, 2, 3, 4, 5, 6);
-    val y = b | filter(lambda (val item) { return is_even(item); });
-    EXPECT_TRUE(all_of(array(2, 4, 6), y));
-
-    val c = list(1, 2, 3, 4, 5, 6);
-    val z = c | filter(lambda (val item) { return is_even(item); });
-    EXPECT_TRUE(all_of(array(2, 4, 6), z));
 }

@@ -158,26 +158,9 @@ namespace Project::etl {
     template <int Start, int End, typename T, size_t N> constexpr auto&
     get(T(&arr)[N]) { static_assert(End > Start); return etl::array_cast<T, End - Start>(&etl::get<Start>(arr)); }
 
-    /// forward specialization for traditional array
-    template <typename T, size_t N> constexpr Array<T, N>&&
-    forward(remove_reference_t<T[N]>& a) { return static_cast<Array<T, N>&&>(a); }
-
-    template <typename T, size_t N> constexpr Array<T, N>&&
-    forward(remove_reference_t<T[N]>&& a) {
-        static_assert(! is_lvalue_reference_v<T[N]>, "Invalid rvalue to lvalue conversion");
-        return static_cast<Array<T, N>&&>(a);
-    }
-
     /// swap specialization, avoid creating large temporary variable 
     template <typename T, typename U> constexpr enable_if_t<is_same_v<remove_extent_t<T>, remove_extent_t<U>>>
     swap(T& a, U& b) { etl::swap_element(a, b); }
-
-    /// invoke callable f with array elements as arguments
-    template <typename F, typename T> constexpr decltype(auto)
-    apply(F&& f, T&& a) { 
-        static_assert(is_array_v<remove_reference_t<T>>);
-        return apply_helper_(etl::forward<F>(f), etl::forward<T>(a), make_index_sequence<extent_v<remove_reference_t<T>>>{}); 
-    }
 
     /// type traits
     template <typename T, size_t N> struct is_array<Array<T, N>> : true_type {};

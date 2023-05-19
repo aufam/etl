@@ -225,17 +225,24 @@ namespace Project::etl {
     template <typename X1, typename Y1, typename Z1, typename X2, typename Y2, typename Z2> constexpr bool
     operator!=(const Triple<X1, Y1, Z1>& t, const Tuple<X2, Y2, Z2>& p) { return !operator==(t, p); }
 
+    /// apply a function that takes tuple as the argument
     template <typename F, typename T, size_t... i> constexpr decltype(auto)
-    apply_helper_(F&& fn, T&& t, index_sequence<i...>) { return etl::forward<F>(fn)(etl::get<i>(etl::forward<T>(t))...); }
+    apply_helper_(F&& fn, T&& t, index_sequence<i...>) { return fn(etl::get<i>(t)...); }
 
     template <typename F, typename... T> constexpr decltype(auto)
-    apply(F&& fn, Tuple<T...>&& t) { return apply_helper_(etl::forward<F>(fn), etl::forward<Tuple<T...>>(t), index_sequence_for<T...>{}); }
+    apply(F&& fn, Tuple<T...>&& t) { 
+        return apply_helper_(etl::forward<F>(fn), etl::forward<Tuple<T...>>(t), index_sequence_for<T...>{}); 
+    }
     
     template <typename F, typename X, typename Y> constexpr decltype(auto)
-    apply(F&& fn, Pair<X, Y>&& t) { return apply_helper_(etl::forward<F>(fn), etl::forward<Pair<X, Y>>(t), make_index_sequence<2>{}); }
+    apply(F&& fn, Pair<X, Y>&& t) { 
+        return apply_helper_(etl::forward<F>(fn), etl::forward<Pair<X, Y>>(t), make_index_sequence<2>{}); 
+    }
 
     template <typename F, typename X, typename Y, typename Z> constexpr decltype(auto)
-    apply(F&& fn, Triple<X, Y, Z>&& t) { return apply_helper_(etl::forward<F>(fn), etl::forward<Triple<X, Y, Z>>(t), make_index_sequence<3>{}); }
+    apply(F&& fn, Triple<X, Y, Z>&& t) { 
+        return apply_helper_(etl::forward<F>(fn), etl::forward<Triple<X, Y, Z>>(t), make_index_sequence<3>{}); 
+    }
 }
 
 // some specializations to enable structure binding

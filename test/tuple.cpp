@@ -58,25 +58,9 @@ TEST(Tuple, Slice) {
     EXPECT_EQ(get<1>(b), 1);
 }
 
-template <uint32_t port, uint32_t pin, uint32_t mode>
-struct GPIO {
-    GPIO() {
-        std::cout << "Construct GPIO " << port << ", pin " << pin << ", mode " << mode << '\n';
-    }
-    void write(bool state) {
-        std::cout << "write GPIO " << port << ", pin " << pin << ", mode " << mode << ", " << state << '\n';
-    }
-};
-
-TEST(Tuple, GPIO) {
-
-    // val a = array(1, 2, 3);
-    // apply([](auto... n) {
-    //     ((std::cout << n), ..., (std::cout << '\n'));
-    // }, array(1, 3, 4));
-
+TEST(Tuple, Apply) {
     apply([](auto... n) {
-        ((std::cout << n), ..., (std::cout << '\n'));
-    }, tuple(1, 2.03));
+        ((std::cout << n), ...);
+    }, tuple(1, 2, 3));
 }
 
