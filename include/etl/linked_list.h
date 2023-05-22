@@ -26,19 +26,19 @@ namespace Project::etl {
 
     public:
         /// empty constructor
-        constexpr LinkedList() : head(nullptr) {}
+        constexpr LinkedList() : head((Node*)nullptr) {}
 
         /// variadic template function constructor
         template <class ...Ts>
-        LinkedList(T firstItem, Ts... items) : head(nullptr) { construct_(firstItem, items...); }
+        LinkedList(T firstItem, Ts... items) : head((Node*)nullptr) { construct_(firstItem, items...); }
 
         /// construct from initializer list
-        LinkedList(std::initializer_list<T> items) : head(nullptr) {
+        LinkedList(std::initializer_list<T> items) : head((Node*)nullptr) {
             for (auto& item : items) push(item);
         }
 
         /// copy constructor
-        LinkedList(const LinkedList& l) : head(nullptr) {
+        LinkedList(const LinkedList& l) : head((Node*)nullptr) {
             for (auto& item : l) push(item);
         }
 
@@ -65,18 +65,18 @@ namespace Project::etl {
 
         iterator data()  { return head; }
         iterator begin() { return head; }
-        iterator end()   { return {nullptr }; }
+        iterator end()   { return { (Node*)nullptr }; }
         iterator tail()  { return head + (len() - 1); }
 
         const_iterator data()  const { return head; }
         const_iterator begin() const { return head; }
-        const_iterator end()   const { return {nullptr }; }
+        const_iterator end()   const { return { (Node*)nullptr }; }
         const_iterator tail()  const { return head + (len() - 1); }
 
         /// @retval number of item
         size_t len() const {
             size_t res = 0;
-            for (const auto& _ : *this) res++;
+            for (const auto& _ [[maybe_unused]] : *this) res++;
             return res;
         }
 
