@@ -44,6 +44,9 @@ namespace Project::etl {
         explicit constexpr operator bool() const { return fn; }
         explicit constexpr operator Fn() const { return fn; }
 
+        constexpr bool operator==(const Function& other) { return fn == other.fn && context == other.context; }
+        constexpr bool operator!=(const Function& other) { return !operator==(other); }
+
     private:
         template <size_t... i>
         constexpr decltype(auto) invoke(index_sequence<i...>, Args... args) const { return fn(etl::get<i>(context)..., args...); }
@@ -84,6 +87,9 @@ namespace Project::etl {
 
         explicit constexpr operator bool() const { return fn; }
         explicit constexpr operator Fn() const { return fn; }
+
+        constexpr bool operator==(const Function& other) { return fn == other.fn; }
+        constexpr bool operator!=(const Function& other) { return !operator==(other); }
     };
 
     /// function class specialization for Context = void*
@@ -125,6 +131,9 @@ namespace Project::etl {
 
         explicit constexpr operator bool() const { return fn; }
         explicit constexpr operator Fn() const { return fn; }
+        
+        constexpr bool operator==(const Function& other) { return fn == other.fn && context == other.context; }
+        constexpr bool operator!=(const Function& other) { return !operator==(other); }
     };
 
     /// create function without context

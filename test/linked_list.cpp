@@ -42,7 +42,7 @@ TEST(LinkedList, Pop) {
     EXPECT_EQ(len(a), 0);
 
     a << 0 << 100 << 2 << 3 << 4;
-    a.pop(item, 1);
+    a.popAt(item, 1);
     EXPECT_EQ(item, 100);
 }
 
