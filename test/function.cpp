@@ -25,7 +25,7 @@ TEST(Function, NoContext) {
     /// ```C++
     /// std::function<int(int)> square = [](int i){ return i *= i; };
     /// ```
-    val square = function(+lambda (int i) { return i * i; });
+    val square = function<int(int)>(lambda (val i) { return i * i; });
     EXPECT_EQ(square(2), 4);
     EXPECT_TRUE(is_functor_v<decltype(square)>);
 }
@@ -36,9 +36,23 @@ TEST(Function, ContextWithArgs) {
     /// ```C++
     /// std::function<void(int)> iMultiplyBy = [&i](int c){ i *= c; };
     /// ```
-    val iMultiplyBy = Function<void(int), int&>(+lambda (int& i, int c) { i *= c; }, i);
+    val iMultiplyBy = Function<void(int), int&>(lambda (var i, val c) { i *= c; }, i);
 
     iMultiplyBy(10);
     EXPECT_EQ(i, 20);
     EXPECT_TRUE(is_functor_v<decltype(iMultiplyBy)>);
+}
+
+TEST(Function, Empty) {
+    var f = function<int(int)>(); // empty function
+    EXPECT_FALSE(f);
+
+    f = lambda (int i) { return 2 * i; };
+    EXPECT_TRUE(f);
+    EXPECT_EQ(f(2), 4);
+
+    int p = 10;
+    f = function<int(int)>(lambda (int* ctx, int i) { *ctx += i; return *ctx; }, &p);
+    EXPECT_EQ(f(2), p);
+    EXPECT_EQ(p, 12);
 }

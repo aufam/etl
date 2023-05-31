@@ -17,7 +17,15 @@ namespace Project::etl {
         Fn fn;                   ///< function pointer
         mutable Context context; ///< alternative of capture list in a lambda expression
         
-        constexpr Function(Fn fn, C... context) : fn(fn), context{context...} {}
+        /// construct from a functor (capture-less lambda expression, function pointer, or other invokable object)
+        template <typename Functor>
+        constexpr Function(Functor&& fn, C... context) 
+        : fn(static_cast<Fn>(etl::forward<Functor>(fn)))
+        , context{context...} {}
+
+        /// assign from a functor (capture-less lambda expression, function pointer, or other invokable object)
+        template <typename Functor>
+        Function& operator=(Functor&& f) { fn = static_cast<Fn>(etl::forward<Functor>(f)); return *this; }
 
         /// copy constructor
         constexpr Function(const Function& other) = default;
@@ -38,10 +46,13 @@ namespace Project::etl {
             return *this;
         }
 
-        Function& operator=(Fn function) { fn = function; return *this; }
+        /// invoke operator
         constexpr R operator()(Args... args) const { return fn ? invoke(index_sequence_for<C...>{}, args...) : R(); }
 
+        /// return true if fn is not null
         explicit constexpr operator bool() const { return fn; }
+
+        /// cast to function pointer
         explicit constexpr operator Fn() const { return fn; }
 
         constexpr bool operator==(const Function& other) { return fn == other.fn && context == other.context; }
@@ -59,10 +70,19 @@ namespace Project::etl {
         typedef R (* Fn)(Args...);
         typedef void Context;
 
-        Fn fn;     ///< function pointer, default null
+        Fn fn; ///< function pointer, default null
         
-        /// default constructor
-        constexpr Function(Fn fn = nullptr) : fn(fn) {}
+        /// empty constructor
+        constexpr Function() : fn(nullptr) {}
+
+
+        /// construct from a functor (capture-less lambda expression, function pointer, or other invokable object)
+        template <typename Functor>
+        constexpr Function(Functor&& fn) : fn(static_cast<Fn>(etl::forward<Functor>(fn))) {}
+
+        /// assign from a functor (capture-less lambda expression, function pointer, or other invokable object)
+        template <typename Functor>
+        Function& operator=(Functor&& f) { fn = static_cast<Fn>(etl::forward<Functor>(f)); return *this; }
 
         /// copy constructor
         constexpr Function(const Function& other) = default;
@@ -82,10 +102,13 @@ namespace Project::etl {
             return *this;
         }
 
-        constexpr Function& operator=(Fn function) { fn = function; return *this; }
+        /// invoke operator
         constexpr R operator()(Args... args) const { return fn ? fn(args...) : R(); }
 
+        /// return true if fn is not null
         explicit constexpr operator bool() const { return fn; }
+
+        /// cast to function pointer
         explicit constexpr operator Fn() const { return fn; }
 
         constexpr bool operator==(const Function& other) { return fn == other.fn; }
@@ -102,8 +125,24 @@ namespace Project::etl {
         Fn fn;           ///< function pointer, default null
         Context context; ///< alternative of capture list, default null
     
-        /// default constructor
-        constexpr Function(Fn fn = nullptr, Context context = nullptr) : fn(fn), context(context) {}
+        /// empty constructor
+        constexpr Function() : fn(nullptr), context(nullptr) {}
+
+        /// construct from a functor (capture-less lambda expression, function pointer, or other invokable object)
+        template <typename Functor, typename Ctx>
+        Function(Functor&& f, Ctx* ctx) : fn(nullptr), context(reinterpret_cast<Context>(ctx)) {
+            auto pf = static_cast<R (*)(Ctx*, Args...)>(etl::forward<Functor>(f));
+            fn = reinterpret_cast<Fn>(pf); 
+        }
+
+        /// assign from a functor (capture-less lambda expression, function pointer, or other invokable object)
+        template <typename Functor>
+        Function& operator=(Functor&& f) { 
+            auto pf = static_cast<R (*)(Args...)>(etl::forward<Functor>(f));
+            fn = wrapperFunc;
+            context = reinterpret_cast<Context>(pf);
+            return *this; 
+        }
 
         /// copy constructor
         constexpr Function(const Function& other) = default;
@@ -126,19 +165,40 @@ namespace Project::etl {
             return *this;
         }
 
-        Function& operator=(Fn function) { fn = function; return *this; }
+        /// invoke operator
         constexpr R operator()(Args... args) const { return fn ? fn(context, args...) : R(); }
 
+        /// return true if fn is not null
         explicit constexpr operator bool() const { return fn; }
+
+        /// cast to function pointer
         explicit constexpr operator Fn() const { return fn; }
         
         constexpr bool operator==(const Function& other) { return fn == other.fn && context == other.context; }
         constexpr bool operator!=(const Function& other) { return !operator==(other); }
+
+    private:
+        static R wrapperFunc(Context f, Args... args) {
+            auto pf = reinterpret_cast<R (*)(Args...)>(f);
+            return f ? pf(args...) : R();
+        }
     };
 
-    /// create function without context
-    template <typename Fn> auto
-    function(Fn* fn = nullptr) { return Function<Fn>(fn); }
+    /// create empty function, function and context are null
+    template <typename T> constexpr auto
+    function() { return Function<T, void*>(); }
+
+    /// create function with no context
+    template <typename T, typename Fn> auto
+    function(Fn&& fn) { return Function<T>(etl::forward<Fn>(fn)); }
+     
+    /// create function with context
+    template <typename T, typename Context, typename Fn> auto
+    function(Fn&& fn, Context* ctx) { return Function<T, void*>(etl::forward<Fn>(fn), ctx); }
+    
+    /// create function from function pointer with no context
+    template <typename R, typename... Args> constexpr auto
+    function(R (*fn)(Args...)) { return Function<R(Args...)>(fn); }
 
     /// create function with context
     template <typename ...C, typename R> auto
