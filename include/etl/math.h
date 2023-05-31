@@ -105,7 +105,7 @@ namespace Project::etl {
 
     template <typename T> constexpr T
     moving_avg_fast(T&& value, T&& next, size_t N) { 
-        return etl::low_pass_fast(etl::forward<T>(value), etl::forward<T>(sample), 2.f / (static_cast<float>(N) + 1.f)); 
+        return etl::low_pass_fast(etl::forward<T>(value), etl::forward<T>(next), 2.f / (static_cast<float>(N) + 1.f)); 
     }
 }
 
