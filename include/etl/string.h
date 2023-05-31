@@ -192,19 +192,28 @@ namespace Project::etl {
         bool operator>(const char* other)  const { return compare(other) > 0; }
         bool operator<(const char* other)  const { return compare(other) < 0; }
 
-        template <size_t M>
-        bool isContaining(const String<M>& other, size_t n) const {
-            for (auto &ch : *this) if (strncmp(other.data(), &ch, n) == 0) return true;
-            return false;
-        }
-        bool isContaining(const char* other, size_t n) const {
-            for (auto &ch : *this) if (strncmp(other, &ch, n) == 0) return true;
-            return false;
+        /* find a substring inside this string */
+        size_t find(const char* substring, size_t n) const {
+            size_t i = 0;
+            for (auto &ch : *this) {
+                if (strncmp(substring, &ch, n) == 0) break;
+                i++;
+            }
+            return i;
         }
 
+        size_t find(const char* substring) const { return find(substring, strlen(substring)); }
+
         template <size_t M>
-        bool isContaining(const String<M>& other) const { return isContaining(other, other.len()); }
-        bool isContaining(const char* other) const { return isContaining(other, strlen(other)); }
+        size_t find(const String<M>& substring) const { return find(substring, substring.len()); }
+
+        /* check if a substring is inside this string */
+        bool isContaining(const char* substring, size_t n) { return find(substring, n) < len(); }
+
+        bool isContaining(const char* substring) { return find(substring) < len(); }
+
+        template <size_t M>
+        bool isContaining(const String<M>& substring) { return find(substring) < len(); }
 
         template <size_t M = ETL_SHORT_STRING_DEFAULT_SIZE>
         auto split(const char* separator = " ") { return SplitString<M>(str, separator); }

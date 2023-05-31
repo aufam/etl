@@ -74,6 +74,9 @@ TEST(String, IsContaining) {
     var s = string("Test %d%d%d", 1, 2, 3);
     EXPECT_TRUE(s.isContaining("123"));
     EXPECT_FALSE(s.isContaining("321"));
+
+    EXPECT_EQ(s.find("Test "), 0);
+    EXPECT_EQ(s.find("123"), 5);
 }
 
 TEST(String, SplitString) {
