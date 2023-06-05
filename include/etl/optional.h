@@ -3,10 +3,22 @@
 
 #include "etl/utility_basic.h"
 
+namespace Project::etl::detail {
+    /// optional helper to check all arguments are not null
+    template <typename Arg, typename... Args> constexpr bool
+    optional_check(Arg arg, Args... args) {
+        if constexpr (sizeof...(Args) == 0)
+            return arg;
+        else 
+            return arg && optional_check(args...);
+    }
+}
+
 namespace Project::etl {
 
+    /// provide a way to represent an optional value that may or may not be present
     template <typename T>
-    class optional {
+    class Optional {
         bool initialized;
         T value;
 
@@ -19,64 +31,40 @@ namespace Project::etl {
         typedef T&& rval_reference;
 
         /// empty constructor
-        constexpr optional() : initialized(false), value() {}
-
-        /// construct from None type
-        constexpr optional(None_t) : initialized(false), value() {}
+        constexpr Optional() : initialized(false), value() {}
 
         /// copy construct from original type
-        constexpr optional(const_reference value) : optional(true, value) {}
+        constexpr explicit Optional(const_reference value) : Optional(bool(etl::addressof(value)), value) {}
 
         /// move construct from original type
-        constexpr optional(rval_reference value) : optional(true, etl::move(value)) {}
+        constexpr explicit Optional(rval_reference value) : Optional(bool(etl::addressof(value)), etl::move(value)) {}
 
-        /// copy construct from another optional<T>
-        optional(const optional&) = default;
+        /// copy construct from another Optional<T>
+        Optional(const Optional&) = default;
 
-        /// move construct from another optional<T>
-        optional(optional&&) = default;
-
-        /// copy construct from another convertible optional<U>
-        template <typename U> explicit
-        constexpr optional(const optional<U>& other) : optional(other.initialized, static_cast<T>(other.value)) {}
-
-        /// move construct from another convertible optional<U>
-        template <typename U> explicit
-        constexpr optional(optional<U>&& other) : optional(other.initialized, static_cast<T>(etl::move(other.value))) {}
-
-        /// move/copy construct from another convertible type
-        template <typename... Args> explicit
-        constexpr optional(Args&&... args) : optional(true, T(etl::forward<Args>(args)...)) {}
+        /// move construct from another Optional<T>
+        Optional(Optional&&) = default;
 
         /// copy assign from original type
-        constexpr optional& operator=(const_reference other) { return assign(bool(etl::addressof(other)), other); }
+        constexpr Optional& operator=(const_reference other) { return assign(bool(etl::addressof(other)), other); }
 
         /// move assign from original type
-        constexpr optional& operator=(rval_reference other) { return assign(bool(etl::addressof(other)), etl::move(other)); }
+        constexpr Optional& operator=(rval_reference other) { return assign(bool(etl::addressof(other)), etl::move(other)); }
 
-        /// copy assign from another optional<T>
-        optional& operator=(const optional&) = default;
+        /// copy assign from another Optional<T>
+        Optional& operator=(const Optional&) = default;
 
-        /// move assign from another optional<T>
-        optional& operator=(optional&&) = default;
-
-        /// copy assign from another convertible optional<U>
-        template <typename U>
-        constexpr optional& operator=(const optional<U>& other) { return assign(other.initialized, static_cast<T>(other.value)); }
-
-        /// move assign from another convertible optional<U>
-        template <typename U>
-        constexpr optional& operator=(optional<U>&& other) { return assign(other.initialized, static_cast<T>(etl::move(other))); }
+        /// move assign from another Optional<T>
+        Optional& operator=(Optional&&) = default;
 
         /// move/copy assign from another convertible type U
         template <typename U>
-        constexpr optional& operator=(U&& other) { return assign(bool(etl::addressof(other)), T(etl::forward<U>(other))); }
+        constexpr Optional& operator=(U&& other) { return assign(bool(etl::addressof(other)), T(etl::forward<U>(other))); }
 
         /// assign none type
-        constexpr optional& operator=(None_t) { initialized = false; return *this; }
+        constexpr Optional& operator=(None_t) { initialized = false; return *this; }
         
         /// check if the value is valid
-        constexpr bool is_initialized() const { return initialized; }
         constexpr explicit operator bool() const { return initialized; }
 
         /// arrow operator
@@ -84,34 +72,63 @@ namespace Project::etl {
         constexpr pointer operator->() { return &value; }
 
         /// dereference operator
-        constexpr const_reference operator*() const& { return value; }
-        constexpr reference operator*() & { return value; }
+        constexpr const_reference operator*() const { return initialized ? value : *static_cast<const_pointer>(nullptr); }
+        constexpr reference operator*() { return initialized ? value : *static_cast<pointer>(nullptr); }
 
         /// return value if initialized or return other
         constexpr const_reference get_value_or(const_reference other) const { return initialized ? value : other; }
         constexpr reference get_value_or(reference other) { return initialized ? value : other; }
 
     private:
+
         /// default copy constructor helper
-        constexpr optional(bool cond, const_reference value) : initialized(cond), value(value) {}
+        constexpr Optional(bool cond, const_reference value) : initialized(cond), value(cond ? value : type()) {}
 
         /// default move constructor helper
-        constexpr optional(bool cond, rval_reference value) : initialized(cond), value(etl::move(value)) {}
+        constexpr Optional(bool cond, rval_reference value) : initialized(cond), value(cond ? etl::move(value) : type()) {}
 
         /// copy assign helper
-        constexpr optional& assign(bool cond, const_reference other) {
+        constexpr Optional& assign(bool cond, const_reference other) {
             initialized = cond;
             if (initialized) value = other;
             return *this;
         }
 
         /// move assign helper
-        constexpr optional& assign(bool cond, rval_reference other) {
+        constexpr Optional& assign(bool cond, rval_reference other) {
             initialized = cond;
             if (initialized) value = etl::move(other);
             return *this;
         }
     };
+
+    /// create empty optional object
+    template <typename T> constexpr auto
+    optional() { return Optional<T>(); }
+
+    /// create optional with variadic template function, the type can be explicitly or implicitly specified
+    template < typename T = void, 
+               typename Arg, typename... Args, 
+               typename R = conditional_t<is_void_v<T>, remove_const_volatile_ref_t<Arg>, T> > constexpr auto
+    optional(Arg&& arg, Args&&... args) { 
+        using Arg_ = remove_const_volatile_ref_t<Arg>;
+
+        if constexpr (sizeof...(Args) == 0 && is_same_v<None_t, Arg_>)
+            return Optional<R>();
+
+        // Arg is R
+        else if constexpr (sizeof...(Args) == 0 && is_same_v<R, Arg_>)
+            return Optional<R>(etl::forward<Arg_>(arg));
+
+        // Args are the arguments of constructor R
+        else {
+            // each argument address can't be null
+            if (detail::optional_check(&arg, &args...))
+                return Optional<R>(R(etl::forward<Arg_>(arg), etl::forward<remove_const_volatile_ref_t<Args>>(args)...));
+            else
+                return Optional<R>();
+        }
+    }
 }
 
 #endif // ETL_OPTIONAL_H

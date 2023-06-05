@@ -41,6 +41,15 @@ namespace Project::etl {
     template <typename T> struct remove_reference<T&&>  { typedef T type; };
     template <typename T> using remove_reference_t = typename remove_reference<T>::type;
 
+    /// add_rvalue_reference
+    template <typename T> struct add_rvalue_reference      { typedef T&& type; };
+    template <typename T> struct add_rvalue_reference<T&>  { typedef T& type; };
+    template <typename T> struct add_rvalue_reference<T&&> { typedef T&& type; };
+    template <typename T> using add_rvalue_reference_t = typename add_rvalue_reference<T>::type;
+
+    /// declval
+    template <typename T> add_rvalue_reference_t<T> declval() noexcept;
+
     /// is_pointer
     template <typename T> struct is_pointer     : false_type {};
     template <typename T> struct is_pointer<T*> : true_type {};
@@ -355,6 +364,15 @@ namespace Project::etl {
     template <typename T> struct has_len<T[]> : true_type {};
     template <typename T, size_t N> struct has_len<T[N]> : true_type {};
     template <typename T> inline constexpr bool has_len_v = has_len<T>::value;
+
+    /// is_destructible
+    template <typename T>
+    struct is_destructible {
+        template <typename U> static auto test(U* p) -> decltype(etl::declval<U>().~U(), void(), true_type());
+        template <typename U> static auto test(...) -> false_type;
+        static constexpr bool value = decltype(test<remove_reference_t<T>>(nullptr))::value;
+    };
+    template <typename T> inline constexpr bool is_destructible_v = is_destructible<T>::value;
 }
 
 #endif //ETL_TYPE_TRAITS_H
