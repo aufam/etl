@@ -203,7 +203,7 @@ namespace Project::etl {
         template <size_t M> bool
         operator!=(const String<M>& other) const { return !operator==(other); }
 
-        operator!=(const char* other) const { return !operator==(other); }
+        bool operator!=(const char* other) const { return !operator==(other); }
 
         /* find a substring inside this string */
         size_t find(const char* substring, size_t n) const {
