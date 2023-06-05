@@ -96,11 +96,11 @@ namespace Project::etl {
         constexpr reference front() { return str[0]; }
         constexpr reference back()  { auto l = len(); return str[l ? l - 1 : 0]; }
 
-        [[nodiscard]] constexpr const_iterator data()   const { return str; }
-        [[nodiscard]] constexpr const_iterator begin()  const { return str; }
-        [[nodiscard]] constexpr const_iterator end()    const { return str + len(); }
-        [[nodiscard]] constexpr const_reference front() const { return str[0]; }
-        [[nodiscard]] constexpr const_reference back()  const { auto l = len(); return str[l ? l - 1 : 0]; }
+        constexpr const_iterator data()   const { return str; }
+        constexpr const_iterator begin()  const { return str; }
+        constexpr const_iterator end()    const { return str + len(); }
+        constexpr const_reference front() const { return str[0]; }
+        constexpr const_reference back()  const { auto l = len(); return str[l ? l - 1 : 0]; }
 
         constexpr reference operator[](int i) {
             if (i < 0) i = len() + i;
@@ -158,7 +158,9 @@ namespace Project::etl {
 
         template <size_t M>
         constexpr String &operator<<(const String<M>& other)  { *this += other; return *this; }
+
         constexpr String &operator<<(const char* other)       { *this += other; return *this; }
+        
         constexpr String &operator<<(char ch)                 { *this += ch; return *this; }
 
         /// C-style formatter
@@ -174,23 +176,34 @@ namespace Project::etl {
         /* compare functions */
         template <size_t M> int
         compare(const String<M>& other)           const { return strncmp(str, other.data(), N); }
+        
         template <size_t M> int
         compare(const String<M>& other, size_t n) const { return strncmp(str, other.data(), n); }
 
         int compare(const char* other, size_t n)  const { return strncmp(str, other, n); }
+        
         int compare(const char* other)            const { return strncmp(str, other, N); }
 
         /* compare operators */
         template <size_t M> bool
         operator==(const String<M>& other) const { return compare(other) == 0; }
+        
         template <size_t M> bool
         operator>(const String<M>& other)  const { return compare(other) > 0; }
+        
         template <size_t M> bool
         operator<(const String<M>& other)  const { return compare(other) < 0; }
 
         bool operator==(const char* other) const { return compare(other) == 0; }
+        
         bool operator>(const char* other)  const { return compare(other) > 0; }
+        
         bool operator<(const char* other)  const { return compare(other) < 0; }
+
+        template <size_t M> bool
+        operator!=(const String<M>& other) const { return !operator==(other); }
+
+        operator!=(const char* other) const { return !operator==(other); }
 
         /* find a substring inside this string */
         size_t find(const char* substring, size_t n) const {
@@ -252,6 +265,14 @@ namespace Project::etl {
         return res;
     }
 
+    /// overload
+    template <size_t N> constexpr bool
+    operator==(const char* x, const String<N>& y) { return y == x; }
+
+    /// overload
+    template <size_t N> constexpr bool
+    operator!=(const char* x, const String<N>& y) { return y != x; }
+
     /// cast reference from any pointer
     template <size_t N, typename T> constexpr auto&
     string_cast(T* text) { return *reinterpret_cast<conditional_t<is_const_v<T>, const String<N>*, String<N>*>>(text); }
@@ -277,9 +298,7 @@ namespace Project::etl {
 
     /// swap_element specialization
     template <size_t N, size_t M> constexpr void
-    swap_element(String<N>& s1, String<M>& s2) {
-        etl::swap(s1, s2);
-    }
+    swap_element(String<N>& s1, String<M>& s2) { etl::swap(s1, s2); }
 
     /// sum specialization
     template <size_t N> constexpr auto
