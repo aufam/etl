@@ -2,6 +2,7 @@
 #define ETL_ALL_H
 
 #include "etl/algorithm.h"
+#include "etl/any.h"
 #include "etl/array.h"
 #include "etl/bit.h"
 #include "etl/complex.h"
