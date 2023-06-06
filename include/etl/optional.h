@@ -6,11 +6,11 @@
 namespace Project::etl::detail {
     /// optional helper to check all arguments are not null
     template <typename Arg, typename... Args> constexpr bool
-    optional_check(Arg arg, Args... args) {
+    optional_check_arguments(Arg arg, Args... args) {
         if constexpr (sizeof...(Args) == 0)
             return arg;
         else 
-            return arg && optional_check(args...);
+            return arg && optional_check_arguments(args...);
     }
 }
 
@@ -19,7 +19,7 @@ namespace Project::etl {
     /// provide a way to represent an optional value that may or may not be present
     template <typename T>
     class Optional {
-        bool initialized;
+        bool valid;
         T value;
 
     public:
@@ -31,7 +31,7 @@ namespace Project::etl {
         typedef T&& rval_reference;
 
         /// empty constructor
-        constexpr Optional() : initialized(false), value() {}
+        constexpr Optional() : valid(false), value() {}
 
         /// copy construct from original type
         constexpr explicit Optional(const_reference value) : Optional(bool(etl::addressof(value)), value) {}
@@ -62,42 +62,46 @@ namespace Project::etl {
         constexpr Optional& operator=(U&& other) { return assign(bool(etl::addressof(other)), T(etl::forward<U>(other))); }
 
         /// assign none type
-        constexpr Optional& operator=(None_t) { initialized = false; return *this; }
+        constexpr Optional& operator=(None_t) { valid = false; return *this; }
         
         /// check if the value is valid
-        constexpr explicit operator bool() const { return initialized; }
+        constexpr explicit operator bool() const { return valid; }
 
         /// arrow operator
         constexpr const_pointer operator->() const { return &value; }
         constexpr pointer operator->() { return &value; }
 
         /// dereference operator
-        constexpr const_reference operator*() const { return initialized ? value : *static_cast<const_pointer>(nullptr); }
-        constexpr reference operator*() { return initialized ? value : *static_cast<pointer>(nullptr); }
+        constexpr const_reference operator*() const { return valid ? value : *static_cast<const_pointer>(nullptr); }
+        constexpr reference operator*() { return valid ? value : *static_cast<pointer>(nullptr); }
 
-        /// return value if initialized or return other
-        constexpr const_reference get_value_or(const_reference other) const { return initialized ? value : other; }
-        constexpr reference get_value_or(reference other) { return initialized ? value : other; }
+        /// get pointer
+        constexpr const_pointer get() const { return &value; }
+        constexpr pointer get() { return &value; }
+
+        /// return value if valid or return other
+        constexpr const_reference get_value_or(const_reference other) const { return valid ? value : other; }
+        constexpr reference get_value_or(reference other) { return valid ? value : other; }
 
     private:
 
         /// default copy constructor helper
-        constexpr Optional(bool cond, const_reference value) : initialized(cond), value(cond ? value : type()) {}
+        constexpr Optional(bool cond, const_reference value) : valid(cond), value(cond ? value : type()) {}
 
         /// default move constructor helper
-        constexpr Optional(bool cond, rval_reference value) : initialized(cond), value(cond ? etl::move(value) : type()) {}
+        constexpr Optional(bool cond, rval_reference value) : valid(cond), value(cond ? etl::move(value) : type()) {}
 
         /// copy assign helper
         constexpr Optional& assign(bool cond, const_reference other) {
-            initialized = cond;
-            if (initialized) value = other;
+            valid = cond;
+            if (valid) value = other;
             return *this;
         }
 
         /// move assign helper
         constexpr Optional& assign(bool cond, rval_reference other) {
-            initialized = cond;
-            if (initialized) value = etl::move(other);
+            valid = cond;
+            if (valid) value = etl::move(other);
             return *this;
         }
     };
@@ -123,7 +127,7 @@ namespace Project::etl {
         // Args are the arguments of constructor R
         else {
             // each argument address can't be null
-            if (detail::optional_check(&arg, &args...))
+            if (detail::optional_check_arguments(&arg, &args...))
                 return Optional<R>(R(etl::forward<Arg_>(arg), etl::forward<remove_const_volatile_ref_t<Args>>(args)...));
             else
                 return Optional<R>();

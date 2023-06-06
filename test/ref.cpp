@@ -1,18 +1,20 @@
 #include "etl/ref.h"
 #include "gtest/gtest.h"
+#include "etl/keywords.h"
 
 using namespace Project::etl;
 
 TEST(Ref, Ref) {
-    struct Struct {
-        int a, b;
-        constexpr explicit Struct(int a = 10, int b = 11) : a(a), b(b) {}
-    };
-    constexpr ConstRef<Struct> s = nullptr;
-    constexpr ConstRef<Struct> d = Struct{12, 13};
+    struct Struct { int a, b; };
 
-    EXPECT_EQ(s->a, 10);
-    EXPECT_EQ(s->b, 11);
-    EXPECT_EQ(d->a, 12);
-    EXPECT_EQ(d->b, 13);
+    val c = Struct { 12, 13 };
+
+    val a = ref<Struct>();
+    val b = ref_const(c);
+    val s = a.get_value_or(Struct{10, 11});
+
+    EXPECT_EQ(s.a, 10);
+    EXPECT_EQ(s.b, 11);
+    EXPECT_EQ(b->a, 12);
+    EXPECT_EQ(b->b, 13);
 }

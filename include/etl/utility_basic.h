@@ -102,7 +102,7 @@ namespace Project::etl {
     addressof(T& x) { return &x; }
 
     /// constant rvalue reference does not have an address
-    template<class T> const T* 
+    template<class T> void
     addressof(const T&&) = delete;
 
     /// none typw
