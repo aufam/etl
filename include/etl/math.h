@@ -48,10 +48,6 @@ namespace Project::etl {
     template <typename T> constexpr enable_if_t<is_unsigned_v<T>, T>
     absolute(T value) { return value; }
 
-    /// computes quotient (x) and remainder (y) of integer division a/b
-    template <typename T> constexpr enable_if_t<is_integral<T>::value, Pair<T>>
-    division(T a, T b) { return { a / b, a % b }; }
-
     /// Phase angle struct
     struct Phase {
         static constexpr float pi2_ = 2.f * M_PI;
