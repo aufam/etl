@@ -6,11 +6,14 @@
 
 namespace Project::etl::detail {
     
-    template <typename R, typename T, typename U> using safe_arithmetic_operation_return_t = conditional_t
-        <!is_void_v<R>, R, conditional_t
-            <is_floating_point_v<T> || is_floating_point_v<U>, long double, conditional_t
-                <is_unsigned_integral_v<T> && is_unsigned_integral_v<U>, unsigned long long, long long>
-            >
+    /// This type trait will return long long if T and U are integrals but of different signedness; otherwise, it will return their common type
+    template <typename T, typename U> using safe_arithmetic_operation_return_t = conditional_t
+        <is_unsigned_integral_v<T> ^ is_unsigned_integral_v<U>, conditional_t
+            <is_floating_point_v<T> ^ is_floating_point_v<U>, 
+                common_type_t<T, U>,
+                long long
+            >, 
+            common_type_t<T, U>
         >;
 
     template <typename T>
@@ -88,118 +91,149 @@ namespace Project::etl {
             return x != y;
     }
 
+#pragma GCC diagnostic pop
+
+    /// type safe numeric casting
+    template <typename R, typename T> enable_if_t<is_arithmetic_v<R> && is_arithmetic_v<T>, R>
+    safe_cast(T x) {
+        if constexpr (is_integral_v<R> && is_floating_point_v<T>)
+            return static_cast<R>(std::round(x));
+        else
+            return static_cast<R>(x);
+    }
+
+    /// type safe numeric casting
+    template <typename R, typename T> enable_if_t<is_arithmetic_v<R> && is_arithmetic_v<T>, R>
+    safe_cast_floor(T x) {
+        if constexpr (is_integral_v<R> && is_floating_point_v<T>)
+            return static_cast<R>(std::floor(x));
+        else
+            return static_cast<R>(x);
+    }
+
+    /// type safe numeric casting
+    template <typename R, typename T> enable_if_t<is_arithmetic_v<R> && is_arithmetic_v<T>, R>
+    safe_cast_trunc(T x) {
+        if constexpr (is_integral_v<R> && is_floating_point_v<T>)
+            return static_cast<R>(std::trunc(x));
+        else
+            return static_cast<R>(x);
+    }
+
     /// type safe addition
     template <typename ReturnType = void, typename T, typename U,
-              typename R = detail::safe_arithmetic_operation_return_t<ReturnType, T, U>
-             > enable_if_t<is_arithmetic_v<T> && is_arithmetic_v<U>, R>
-    safe_add(T x, U y) { return static_cast<R>(x) + static_cast<R>(y); }
+              typename R = detail::safe_arithmetic_operation_return_t<T, U>,
+              typename RR = conditional_t<is_void_v<ReturnType>, R, ReturnType>> 
+    enable_if_t<is_arithmetic_v<T> && is_arithmetic_v<U>, RR>
+    safe_add(T x, U y) { return etl::safe_cast<RR>(etl::safe_cast<R>(x) + etl::safe_cast<R>(y)); }
 
     /// type safe substraction
     template <typename ReturnType = void, typename T, typename U,
-              typename R = detail::safe_arithmetic_operation_return_t<ReturnType, T, U>
-             > enable_if_t<is_arithmetic_v<T> && is_arithmetic_v<U>, R>
-    safe_sub(T x, U y) { return static_cast<R>(x) - static_cast<R>(y); }
+              typename R = detail::safe_arithmetic_operation_return_t<T, U>,
+              typename RR = conditional_t<is_void_v<ReturnType>, R, ReturnType>> 
+    enable_if_t<is_arithmetic_v<T> && is_arithmetic_v<U>, RR>
+    safe_sub(T x, U y) { return etl::safe_cast<RR>(etl::safe_cast<R>(x) - etl::safe_cast<R>(y)); }
     
     /// type safe multiplication
     template <typename ReturnType = void, typename T, typename U,
-              typename R = detail::safe_arithmetic_operation_return_t<ReturnType, T, U>
-             > enable_if_t<is_arithmetic_v<T> && is_arithmetic_v<U>, R>
-    safe_mul(T x, U y) { return static_cast<R>(x) * static_cast<R>(y); }
+              typename R = detail::safe_arithmetic_operation_return_t<T, U>,
+              typename RR = conditional_t<is_void_v<ReturnType>, R, ReturnType>> 
+    enable_if_t<is_arithmetic_v<T> && is_arithmetic_v<U>, RR>
+    safe_mul(T x, U y) { return etl::safe_cast<RR>(etl::safe_cast<R>(x) * etl::safe_cast<R>(y)); }
 
     /// type safe division
-    /// @note if R is integral, the return type is of Optional<R> and is valid if y is not 0  
+    /// @note if y is integral of 0, return 0  
     template <typename ReturnType = void, typename T, typename U,
-              typename R = detail::safe_arithmetic_operation_return_t<ReturnType, T, U>
-             > auto
-    safe_div(T x, U y, enable_if_t<is_arithmetic_v<T> && is_arithmetic_v<U>>* = nullptr) { 
-        if constexpr (is_integral_v<R> && (is_floating_point_v<T> || is_floating_point_v<U>)) {
-            auto res = static_cast<long double>(x) / static_cast<long double>(y);
-            bool valid = !(std::isnan(res) || std::isinf(res));
-            return valid ? etl::optional(static_cast<R>(res)) : etl::optional<R>();
-        }
-        else if constexpr (is_integral_v<R>)
-            return y == U(0) ? etl::optional<R>() : etl::optional(static_cast<R>(x) / static_cast<R>(y));
+              typename R = detail::safe_arithmetic_operation_return_t<T, U>,
+              typename RR = conditional_t<is_void_v<ReturnType>, R, ReturnType>> 
+    enable_if_t<is_arithmetic_v<T> && is_arithmetic_v<U>, RR>
+    safe_div(T x, U y) { 
+        if constexpr (is_integral_v<RR> && is_integral_v<U>)
+            return y == U(0) ? RR(0) : etl::safe_cast<RR>(etl::safe_cast<R>(x) / etl::safe_cast<R>(y));
         else
-            return static_cast<R>(x) / static_cast<R>(y); 
+            return etl::safe_cast<RR>(etl::safe_cast<common_type_t<R, RR>>(x) / etl::safe_cast<common_type_t<R, RR>>(y));
     }    
     
     /// type safe floor division, calculate the floor of x / y 
-    /// @note if R is integral, the return type is of Optional<R> and is valid if y is not 0  
+    /// @note if y is integral of 0, return 0  
     template <typename ReturnType = void, typename T, typename U,
-              typename R = detail::safe_arithmetic_operation_return_t<ReturnType, T, U>
-             > auto
-    safe_floordiv(T x, U y, enable_if_t<is_arithmetic_v<T> && is_arithmetic_v<U>>* = nullptr) { 
-        if constexpr (is_integral_v<R>)
-            return safe_div<R>(x, y);
+              typename R = detail::safe_arithmetic_operation_return_t<T, U>,
+              typename RR = conditional_t<is_void_v<ReturnType>, R, ReturnType>> 
+    enable_if_t<is_arithmetic_v<T> && is_arithmetic_v<U>, RR>
+    safe_floordiv(T x, U y) { 
+        if constexpr (is_integral_v<RR> && is_integral_v<U>)
+            return y == U(0) ? RR(0) : etl::safe_cast_floor<RR>(etl::safe_cast<R>(x) / etl::safe_cast<R>(y));
         else
-            return std::floor(static_cast<R>(x) / static_cast<R>(y)); 
+            return etl::safe_cast_floor<RR>(etl::safe_cast<common_type_t<R, RR>>(x) / etl::safe_cast<common_type_t<R, RR>>(y));
     }
 
     /// type safe true division
     /// @note return type has to be floating point
-    template <typename ReturnType = long double, typename T, typename U,
-              typename R = detail::safe_arithmetic_operation_return_t<ReturnType, T, U>
-             > enable_if_t<is_arithmetic_v<T> && is_arithmetic_v<U> && is_floating_point_v<R>, R>
-    safe_truediv(T x, U y) { return safe_div<R>(x, y); }
+    template <typename ReturnType = void, typename T, typename U,
+              typename R = detail::safe_arithmetic_operation_return_t<T, U>,
+              typename RR = conditional_t<is_void_v<ReturnType>, conditional_t<is_floating_point_v<R>, R, long double>, ReturnType>>
+    enable_if_t<is_arithmetic_v<T> && is_arithmetic_v<U> && is_floating_point_v<RR>, RR>
+    safe_truediv(T x, U y) { return etl::safe_div<RR>(x, y); }
 
     /// type safe modulo
-    /// @note if R is integral, the return type is of Optional<R> and is valid if y is not 0  
+    /// @note if y is integral of 0, return x
     template <typename ReturnType = void, typename T, typename U,
-              typename R = detail::safe_arithmetic_operation_return_t<ReturnType, T, U>
-             > auto
-    safe_mod(T x, U y, enable_if_t<is_arithmetic_v<T> && is_arithmetic_v<U>>* = nullptr) {
-        if constexpr (is_integral_v<R> && (is_floating_point_v<T> || is_floating_point_v<U>)) {
-            auto quo = std::trunc(static_cast<long double>(x) / static_cast<long double>(y));
-            auto rem = static_cast<long double>(x) - quo * static_cast<long double>(y);
+              typename R = detail::safe_arithmetic_operation_return_t<T, U>,
+              typename RR = conditional_t<is_void_v<ReturnType>, R, ReturnType>> 
+    enable_if_t<is_arithmetic_v<T> && is_arithmetic_v<U>, RR>
+    safe_mod(T x, U y) {
+        if constexpr (is_integral_v<RR> && (is_floating_point_v<T> || is_floating_point_v<U>)) {
+            auto quo = std::trunc(etl::safe_div(x, y));
+            auto rem = etl::safe_sub(x, etl::safe_mul(quo, y));
             bool valid = !(std::isnan(quo) || std::isinf(quo));
-            return valid ? etl::optional(static_cast<R>(rem)) : etl::optional<R>();
+            return valid ? etl::safe_cast<RR>(rem) : etl::safe_cast<RR>(x);
         }
-        else if constexpr (is_integral_v<R>) {
-            if (y == U(0)) return etl::optional<R>();
-            auto remainder = static_cast<R>(x) % static_cast<R>(y);
+        else if constexpr (is_integral_v<RR>) {
+            if (y == U(0)) return etl::safe_cast<RR>(x);
+            auto remainder = etl::safe_cast<RR>(x) % etl::safe_cast<RR>(y);
             if (remainder < 0) remainder += y;
-            return etl::optional(static_cast<R>(remainder));
+            return etl::safe_cast<RR>(remainder);
         } 
         else {
-            auto quotient = std::trunc(static_cast<R>(x) / static_cast<R>(y));
-            auto remainder = static_cast<R>(x) - quotient * static_cast<R>(y);
-            return remainder;
+            auto quo = std::trunc(etl::safe_div(x, y));
+            auto rem = etl::safe_sub(x, etl::safe_mul(quo, y));
+            return rem;
         }
     }
 
     /// type safe division and modulo
-    /// @note if R is integral, the return type is of Optional<R> and is valid if y is not 0
+    /// @note if y is integral of 0, return (0, x) 
     template <typename ReturnType = void, typename T, typename U,
-              typename R = detail::safe_arithmetic_operation_return_t<ReturnType, T, U>
-             > auto
-    safe_divmod(T x, U y, enable_if_t<is_arithmetic_v<T> && is_arithmetic_v<U>>* = nullptr) { 
-        if constexpr (is_integral_v<R> && (is_floating_point_v<T> || is_floating_point_v<U>)) {
-            detail::DivMod<R> res {};
-            auto quo = std::trunc(static_cast<long double>(x) / static_cast<long double>(y));
+              typename R = detail::safe_arithmetic_operation_return_t<T, U>,
+              typename RR = conditional_t<is_void_v<ReturnType>, R, ReturnType>> 
+    enable_if_t<is_arithmetic_v<T> && is_arithmetic_v<U>, detail::DivMod<RR>>
+    safe_divmod(T x, U y) { 
+        if constexpr (is_integral_v<RR> && (is_floating_point_v<T> || is_floating_point_v<U>)) {
+            detail::DivMod<RR> res {};
+            auto quo = std::trunc(etl::safe_div(x, y));
             bool valid = !(std::isnan(quo) || std::isinf(quo));
-            if (!valid) return etl::optional(res);
-
-            res.quo = static_cast<R>(quo);
-            res.rem = static_cast<R>(static_cast<long double>(x) - res.quo * static_cast<long double>(y));
-            return valid ? etl::optional(static_cast<R>(res)) : etl::optional<R>();
+            res.quo = valid ? etl::safe_cast<RR>(quo) : RR(0);
+            res.rem = valid ? etl::safe_div<RR>(x, etl::safe_mul(quo, y)) : etl::safe_cast<RR>(x);
+            return res;
         }
-        if constexpr (is_integral_v<R>) {
-            detail::DivMod<R> res {};
-            if (y == U(0)) return etl::optional(res);
+        if constexpr (is_integral_v<RR>) {
+            detail::DivMod<RR> res {};
+            res.quo = static_cast<RR>(0);
+            res.rem = static_cast<RR>(x);
+            if (y == U(0)) return res;
 
-            res.quo = static_cast<R>(x) / static_cast<R>(y);
-            res.rem = static_cast<R>(x) % static_cast<R>(y);
+            res.quo = static_cast<RR>(x) / static_cast<RR>(y);
+            res.rem = static_cast<RR>(x) % static_cast<RR>(y);
             if (res.rem < 0) res.rem += y;
-            return etl::optional(res);
+            return res;
         } 
         else {
-            detail::DivMod<R> res {};
-            res.quo = std::trunc(static_cast<R>(x) / static_cast<R>(y));
-            res.rem = static_cast<R>(x) - res.quo * static_cast<R>(y);
+            detail::DivMod<RR> res {};
+            res.quo = std::trunc(etl::safe_div(x, y));
+            res.rem = etl::safe_sub(x, etl::safe_mul(res.quo, y));
             return res;
         }
     }
-#pragma GCC diagnostic pop
 
 }
 

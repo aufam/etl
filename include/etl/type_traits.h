@@ -365,14 +365,18 @@ namespace Project::etl {
     template <typename T, size_t N> struct has_len<T[N]> : true_type {};
     template <typename T> inline constexpr bool has_len_v = has_len<T>::value;
 
-    /// is_destructible
-    template <typename T>
-    struct is_destructible {
-        template <typename U> static auto test(U* p) -> decltype(etl::declval<U>().~U(), void(), true_type());
-        template <typename U> static auto test(...) -> false_type;
-        static constexpr bool value = decltype(test<remove_reference_t<T>>(nullptr))::value;
+    /// common type
+    template <typename...> struct common_type {};
+    
+    template <typename T, typename U> 
+    struct common_type<T, U> { using type = remove_reference_t<decltype(true ? etl::declval<T>() : etl::declval<U>())>; };
+
+    template <typename T, typename... Ts> 
+    struct common_type<T, Ts...> {
+        using type = conditional_t<sizeof...(Ts) == 0, T, typename common_type<T, typename common_type<Ts...>::type>::type>;
     };
-    template <typename T> inline constexpr bool is_destructible_v = is_destructible<T>::value;
+
+    template <typename T, typename... Ts> using common_type_t = typename common_type<T, Ts...>::type;
 }
 
 #endif //ETL_TYPE_TRAITS_H
