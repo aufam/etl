@@ -183,7 +183,7 @@ namespace Project::etl {
     enable_if_t<is_arithmetic_v<T> && is_arithmetic_v<U>, RR>
     safe_mod(T x, U y) {
         if constexpr (is_integral_v<RR> && (is_floating_point_v<T> || is_floating_point_v<U>)) {
-            auto quo = std::trunc(etl::safe_div(x, y));
+            auto quo = std::trunc(etl::safe_truediv(x, y));
             auto rem = etl::safe_sub(x, etl::safe_mul(quo, y));
             bool valid = !(std::isnan(quo) || std::isinf(quo));
             return valid ? etl::safe_cast<RR>(rem) : etl::safe_cast<RR>(x);
@@ -195,7 +195,7 @@ namespace Project::etl {
             return etl::safe_cast<RR>(remainder);
         } 
         else {
-            auto quo = std::trunc(etl::safe_div(x, y));
+            auto quo = std::trunc(etl::safe_truediv(x, y));
             auto rem = etl::safe_sub(x, etl::safe_mul(quo, y));
             return rem;
         }
@@ -210,7 +210,7 @@ namespace Project::etl {
     safe_divmod(T x, U y) { 
         if constexpr (is_integral_v<RR> && (is_floating_point_v<T> || is_floating_point_v<U>)) {
             detail::DivMod<RR> res {};
-            auto quo = std::trunc(etl::safe_div(x, y));
+            auto quo = std::trunc(etl::safe_truediv(x, y));
             bool valid = !(std::isnan(quo) || std::isinf(quo));
             res.quo = valid ? etl::safe_cast<RR>(quo) : RR(0);
             res.rem = valid ? etl::safe_sub<RR>(x, etl::safe_mul(quo, y)) : etl::safe_cast<RR>(x);
@@ -229,7 +229,7 @@ namespace Project::etl {
         } 
         else {
             detail::DivMod<RR> res {};
-            res.quo = std::trunc(etl::safe_div(x, y));
+            res.quo = std::trunc(etl::safe_truediv(x, y));
             res.rem = etl::safe_sub(x, etl::safe_mul(res.quo, y));
             return res;
         }
