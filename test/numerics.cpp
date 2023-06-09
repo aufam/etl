@@ -36,8 +36,14 @@ TEST(Numeric, Compare) {
 
     EXPECT_FLOAT_EQ(safe_truediv(1, 5), 0.2);
 
-    auto [div, mod] = safe_divmod(17.5, 4);
-    EXPECT_FLOAT_EQ(div, 4.0);
-    EXPECT_FLOAT_EQ(mod, 1.5);
+    {   
+        auto [div, mod] = safe_divmod(17.5, 4);
+        EXPECT_FLOAT_EQ(div, 4.0);
+        EXPECT_FLOAT_EQ(mod, 1.5);
+    } {
+        auto [div, mod] = safe_divmod<int>(17.34 * 100, 100);
+        EXPECT_EQ(div, 17);
+        EXPECT_EQ(mod, 34);
+    }
 
 }

@@ -213,7 +213,7 @@ namespace Project::etl {
             auto quo = std::trunc(etl::safe_div(x, y));
             bool valid = !(std::isnan(quo) || std::isinf(quo));
             res.quo = valid ? etl::safe_cast<RR>(quo) : RR(0);
-            res.rem = valid ? etl::safe_div<RR>(x, etl::safe_mul(quo, y)) : etl::safe_cast<RR>(x);
+            res.rem = valid ? etl::safe_sub<RR>(x, etl::safe_mul(quo, y)) : etl::safe_cast<RR>(x);
             return res;
         }
         if constexpr (is_integral_v<RR>) {
