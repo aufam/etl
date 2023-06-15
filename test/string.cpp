@@ -159,3 +159,8 @@ TEST(String, Cast) {
     EXPECT_EQ(&e[0], &d[0]);
     EXPECT_EQ(&f[0], &d[2]);
 }
+
+TEST(String, Std) {
+    std::string s = "123456";
+    EXPECT_EQ(s, "123456");
+}

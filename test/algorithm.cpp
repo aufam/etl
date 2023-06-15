@@ -16,17 +16,11 @@ TEST(Algorithm, Find) {
 TEST(Algorithm, AllAnyNone) {
     val check = lambda (val item) { return item == 3; };
     val a = {3, 3, 3};
-    EXPECT_TRUE (all(a, 3));
-    EXPECT_TRUE (any(a, 3));
-    EXPECT_FALSE(none(a, 3));
     EXPECT_TRUE (all_if(a, check));
     EXPECT_TRUE (any_if(a, check));
     EXPECT_FALSE(none_if(a, check));
 
     val b = {1, 2, 3};
-    EXPECT_FALSE(all(b, 3));
-    EXPECT_TRUE (any(b, 3));
-    EXPECT_FALSE(none(b, 3));
     EXPECT_FALSE(all_if(b, check));
     EXPECT_TRUE (any_if(b, check));
     EXPECT_FALSE(none_if(b, check));
@@ -61,7 +55,7 @@ TEST(Algorithm, FillGenerate) {
         return res;
     };
     val a = makeArray(3);
-    EXPECT_TRUE(all(a, 3));
+    EXPECT_TRUE(all_if(a, lambda (val item) { return item == 3; }));
 
     int b[3];
     generate(b, range(3));

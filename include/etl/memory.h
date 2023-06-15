@@ -69,21 +69,6 @@ namespace Project::etl {
         T* ptr;
         size_t* cnt;
 
-        void delete_() {
-            if (ptr && cnt && --*cnt == 0) {
-                delete ptr;
-                ptr = nullptr;
-            } 
-        }
-        
-        void inc_() { 
-            if (ptr == nullptr) return;
-            if (cnt) ++*cnt; 
-            else cnt = new size_t(1);
-        }
-
-        void assign_(const shared_ptr& other) { ptr = other.ptr; cnt = other.cnt; } 
-
     public:
         /// empty constructor
         shared_ptr() noexcept : ptr{nullptr}, cnt{new size_t(0)} {}
@@ -100,30 +85,28 @@ namespace Project::etl {
         shared_ptr& operator=(const shared_ptr& other) noexcept {
             if (this == &other) return *this;
             delete_();
-            assign_(other);
+            ptr = other.ptr;
+            cnt = other.cnt;
             inc_();
             return *this;
         }
 
         /// move constructor
-        shared_ptr(shared_ptr&& other) noexcept : ptr{other.ptr}, cnt{other.cnt} { 
-            other.ptr = nullptr;
-            other.cnt = nullptr;
-        }
+        shared_ptr(shared_ptr&& other) noexcept 
+            : ptr{etl::exchange(other.ptr, nullptr)}
+            , cnt{etl::exchange(other.cnt, nullptr)} {}
 
         /// move assignment
         shared_ptr& operator=(shared_ptr&& other) noexcept {
             if (this == &other) return *this;
             delete_();
-            if (cnt && *cnt == 0) delete cnt;
-            assign_(other);
-            other.ptr = nullptr;
-            other.cnt = nullptr;
+            ptr = etl::exchange(other.ptr, nullptr);
+            cnt = etl::exchange(other.cnt, nullptr);
             return *this;
         }
 
         /// default constructor
-        ~shared_ptr() { delete_(); if (cnt && *cnt == 0) delete cnt; }
+        ~shared_ptr() { delete_(); }
 
         /// return true if the shared pointer is not null
         explicit operator bool() noexcept { return static_cast<bool>(ptr); }
@@ -147,20 +130,43 @@ namespace Project::etl {
         /// set new object pointer and delete the old one
         void reset(T* other = nullptr) noexcept { 
             delete_();
-            if (cnt && *cnt == 0) delete cnt;
-            assign_(shared_ptr(other));
+            ptr = other;
+            cnt = new size_t(1);
         }
 
-        /// release the ownership, the caller must handle the pointer
+        /// release the ownership
+        /// @return released pointer and reference count
+        /// @note if the reference count is zero, the caller must handle the released pointer
         [[nodiscard("return pointer has to be handled by the caller")]]
-        T* release() noexcept { 
-            T* res = ptr;
-            delete_();
-            return res; 
+        auto release() noexcept { 
+            struct Released { T* ptr; size_t count; };
+            if (cnt && --*cnt == 0) delete cnt;
+            size_t count_ = count();
+            cnt = nullptr;
+            return Released { etl::exchange(ptr, nullptr), count_ }; 
         }
 
         /// returns the number of shared pointers that share ownership of the managed object
         size_t count() const noexcept { return cnt ? *cnt : 0; }
+
+    private:
+        /// delete ptr helper
+        void delete_() {
+            if (ptr && cnt && --*cnt == 0) {
+                delete ptr;
+                ptr = nullptr;
+                delete cnt;
+                cnt = nullptr;
+            } 
+        }
+        
+        /// inc helper
+        void inc_() { 
+            if (ptr == nullptr) return;
+            if (cnt) ++*cnt; 
+            else cnt = new size_t(1);
+        }
+
     };
 
     /// create shared pointer object

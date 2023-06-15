@@ -16,7 +16,7 @@ TEST(Optional, Copy) {
     EXPECT_TRUE(a);
     EXPECT_EQ(*a, "test 1234");
 
-    a = None;
+    a = none;
     EXPECT_FALSE(a);
     EXPECT_EQ(a.get_value_or("None"), "None");
 

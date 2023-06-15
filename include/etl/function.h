@@ -28,10 +28,15 @@ namespace Project::etl {
         Function& operator=(Functor&& f) { fn = static_cast<Fn>(etl::forward<Functor>(f)); return *this; }
 
         /// copy constructor
-        constexpr Function(const Function& other) = default;
+        constexpr Function(const Function& other) : fn(other.fn), context(other.context) {}
 
         /// copy assignment
-        constexpr Function& operator=(const Function& other) = default;
+        constexpr Function& operator=(const Function& other) {
+            if (&other == this) return *this;
+            fn = other.fn;
+            context = other.context;
+            return *this;
+        }
 
         /// move constructor
         constexpr Function(Function&& other) : fn(etl::move(other.fn)), context(etl::move(other.context)) { 
@@ -84,20 +89,22 @@ namespace Project::etl {
         constexpr Function& operator=(Functor&& f) { fn = static_cast<Fn>(etl::forward<Functor>(f)); return *this; }
 
         /// copy constructor
-        constexpr Function(const Function& other) = default;
+        constexpr Function(const Function& other) : fn(other.fn) {}
 
         /// copy assignment
-        constexpr Function& operator=(const Function& other) = default;
+        constexpr Function& operator=(const Function& other) {
+            if (&other == this) return *this;
+            fn = other.fn;
+            return *this;
+        }
 
         /// move constructor
-        constexpr Function(Function&& other) : fn(etl::move(other.fn)) { 
-            other.fn = nullptr; 
-        }
+        constexpr Function(Function&& other) : fn(etl::exchange(other.fn, nullptr)) {}
         
         /// move assignment
         constexpr Function& operator=(Function&& other) {
-            fn = etl::move(other.fn);
-            other.fn = nullptr;
+            if (&other == this) return *this;
+            fn = etl::exchange(other.fn, nullptr);
             return *this;
         }
 
@@ -162,23 +169,26 @@ namespace Project::etl {
         }
 
         /// copy constructor
-        constexpr Function(const Function& other) = default;
+        constexpr Function(const Function& other) : fn(other.fn), context(other.context) {}
 
         /// copy assignment
-        constexpr Function& operator=(const Function& other) = default;
+        constexpr Function& operator=(const Function& other) {
+            if (&other == this) return *this;
+            fn = other.fn;
+            context = other.context;
+            return *this;
+        }
 
         /// move constructor
-        constexpr Function(Function&& other) : fn(etl::move(other.fn)), context(etl::move(other.context)) { 
-            other.fn = nullptr;
-            other.context = nullptr;
-        }
+        constexpr Function(Function&& other) 
+            : fn(etl::exchange(other.fn, nullptr))
+            , context(etl::exchange(other.context, nullptr)) {}
         
         /// move assignment
         constexpr Function& operator=(Function&& other) {
-            fn = etl::move(other.fn);
-            context = etl::move(other.context);
-            other.fn = nullptr;
-            other.context = nullptr;
+            if (&other == this) return *this;
+            fn = etl::exchange(other.fn, nullptr);
+            context = etl::exchange(other.context, nullptr);
             return *this;
         }
 

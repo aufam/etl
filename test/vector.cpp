@@ -18,7 +18,7 @@ TEST(Vector, Declaration) {
     EXPECT_NE(d, x);
 }
 
-TEST(Vector, append) {
+TEST(Vector, Append) {
     var a = vector(0, 1, 2);
     val b = vector(3, 4, 5);
 
@@ -29,7 +29,7 @@ TEST(Vector, append) {
     EXPECT_EQ(a, range(6));
 }
 
-TEST(Vector, remove) {
+TEST(Vector, Remove) {
     var a = vector(0, 1, 2, 3, 4, 5, 5);
     EXPECT_EQ(len(a), 7);
     EXPECT_EQ(a.back(), 5);
