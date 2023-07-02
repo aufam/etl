@@ -1,6 +1,7 @@
 #include "etl/any.h"
 #include "etl/string.h"
 #include "etl/vector.h"
+#include "etl/linked_list.h"
 #include "gtest/gtest.h"
 
 #include "etl/keywords.h"
@@ -40,4 +41,47 @@ TEST(Any, Dynamic) {
 
     // properly delete object
     a.detach<Vector<int>>();
+}
+
+TEST(Any, Vector) {
+    var v = vector<Any>();
+
+    Any a = 10;
+    v += move(a);
+
+    Any b = 20;
+    v += b;
+
+    EXPECT_FALSE(a);
+    EXPECT_TRUE(b);
+
+    EXPECT_EQ(v[0].as<int>(), 10);
+    EXPECT_EQ(v[1].as<int>(), 20);
+
+    v = vector<Any>(string<8>("test"), move(b));
+
+    EXPECT_FALSE(b);
+    EXPECT_EQ(v[0].as<String<8>>(), "test");
+    EXPECT_EQ(v[1].as<int>(), 20);
+}
+
+TEST(Any, LinkedList) {
+    var l = list<Any>();
+
+    Any a = 10;
+    Any b = 20;
+
+    l << move(a) << b;
+
+    EXPECT_FALSE(a);
+    EXPECT_TRUE(b);
+
+    EXPECT_EQ(l[0].as<int>(), 10);
+    EXPECT_EQ(l[1].as<int>(), 20);
+
+    l = list<Any>(string<8>("test"), move(b));
+
+    EXPECT_FALSE(b);
+    EXPECT_EQ(l[0].as<String<8>>(), "test");
+    EXPECT_EQ(l[1].as<int>(), 20);
 }

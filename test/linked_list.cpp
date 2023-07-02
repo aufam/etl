@@ -24,7 +24,7 @@ TEST(LinkedList, Push) {
     val a = list<int>();
     a << 1 << 3 << 4;
     a.push(2, 1);
-    a.pushFront(0);
+    a.push_front(0);
 
     EXPECT_EQ(a, range(5));
     EXPECT_EQ(len(a), 5);
@@ -42,7 +42,7 @@ TEST(LinkedList, Pop) {
     EXPECT_EQ(len(a), 0);
 
     a << 0 << 100 << 2 << 3 << 4;
-    a.popAt(item, 1);
+    a.pop_at(item, 1);
     EXPECT_EQ(item, 100);
 }
 
@@ -58,6 +58,10 @@ TEST(LinkedList, ForLoop) {
     //backward
     p = &res[4];
     for (var pItem = a.tail(); pItem; pItem--) EXPECT_EQ(*pItem, *p--);
+
+    //backward
+    p = &res[4];
+    for (val item in reversed(a)) EXPECT_EQ(item, *p--);
 
     EXPECT_EQ(a.len(), 5);
 }

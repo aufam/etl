@@ -46,10 +46,10 @@ namespace Project::etl {
         constexpr auto deref_helper_(index_sequence<i...>) { 
             // using R = Tuple<decltype(*etl::get<i>(sequences))...>; // TODO: somehow Tuple doesn't work
             static_assert (sizeof...(i) == 2 || sizeof...(i) == 3, "currently only support binary or ternary zip");
-            using R = etl::conditional_t<sizeof...(i) == 2, 
-                Pair<decltype(*etl::get<i>(sequences))...>, 
-                Triple<decltype(*etl::get<i>(sequences))...>>;
-            return R { *etl::get<i>(sequences)... }; 
+            if constexpr (sizeof...(i) == 2)
+                return Pair<decltype(*etl::get<i>(sequences))...> { *etl::get<i>(sequences)... };
+            else 
+                return Triple<decltype(*etl::get<i>(sequences))...> { *etl::get<i>(sequences)... };
         }
 
         template <size_t... i>

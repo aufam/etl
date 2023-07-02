@@ -6,46 +6,39 @@
 namespace Project::etl {
 
     /// doubly linked list. every item will be allocated to heap
-    template <class T>
-    struct LinkedList {
-        struct iterator; ///< modify increment, decrement, bool operator, and dereference of Node*
+    template <typename T>
+    class LinkedList {
+        struct Node; ///< contains the item and pointer to next and prev items
+
+    public:
+        class iterator;
         typedef T value_type;
         typedef T& reference;
         typedef const T& const_reference;
         typedef const iterator const_iterator;
 
-    private:
-        struct Node; ///< contains the item and pointer to next and prev items
-        mutable iterator head;
-
-        template <class ...Ts>
-        void construct_(T firstItem, Ts... items) {
-            push(firstItem);
-            if constexpr (sizeof...(Ts) > 0) construct_(items...);
-        }
-
-    public:
         /// empty constructor
-        constexpr LinkedList() : head((Node*)nullptr) {}
+        constexpr LinkedList() {}
 
         /// variadic template function constructor
-        template <class ...Ts>
-        LinkedList(T firstItem, Ts... items) : head((Node*)nullptr) { construct_(firstItem, items...); }
+        template <typename U, typename ...Us>
+        explicit LinkedList(U&& item, Us&&... items) { 
+            push(etl::forward<U>(item));
+            ((push(etl::forward<Us>(items))), ...);
+        }
 
         /// construct from initializer list
-        LinkedList(std::initializer_list<T> items) : head((Node*)nullptr) {
+        LinkedList(std::initializer_list<T> items) {
             for (auto& item : items) push(item);
         }
 
         /// copy constructor
-        LinkedList(const LinkedList& l) : head((Node*)nullptr) {
+        LinkedList(const LinkedList& l) {
             for (auto& item : l) push(item);
         }
 
         /// move constructor
-        LinkedList(LinkedList&& l) noexcept : head(etl::move(l.head)) {
-            l.head = (Node*) nullptr;
-        }
+        LinkedList(LinkedList&& l) noexcept : head(etl::exchange(l.head, iterator())) {}
 
         /// copy assignment
         LinkedList& operator=(const LinkedList& other) {
@@ -56,27 +49,26 @@ namespace Project::etl {
         /// move assignment
         LinkedList& operator=(LinkedList&& other) noexcept {
             clear();
-            head = etl::move(other.head);
-            other.head = (Node*) nullptr;
+            head = etl::exchange(other.head, iterator());
             return *this;
         }
 
-        virtual ~LinkedList() { clear(); }
+        ~LinkedList() { clear(); }
 
         iterator data()  { return head; }
         iterator begin() { return head; }
-        iterator end()   { return { (Node*)nullptr }; }
+        iterator end()   { return iterator(); }
         iterator tail()  { return head + (len() - 1); }
 
         const_iterator data()  const { return head; }
         const_iterator begin() const { return head; }
-        const_iterator end()   const { return { (Node*)nullptr }; }
+        const_iterator end()   const { return iterator(); }
         const_iterator tail()  const { return head + (len() - 1); }
 
         /// @retval number of items
         size_t len() const {
             size_t res = 0;
-            for (const auto& _ [[maybe_unused]] : *this) res++;
+            for (auto& _ [[maybe_unused]] : *this) res++;
             return res;
         }
 
@@ -106,7 +98,7 @@ namespace Project::etl {
             auto p = i >= 0 ? head + i : tail() + (i + 1);
             if (p) return *p;
             T dummy = {};
-            i >= 0 ? pushBack(dummy) : pushFront(dummy);
+            i >= 0 ? push_back(dummy) : push_front(dummy);
             return i >= 0 ? back() : front();
         }
 
@@ -117,11 +109,11 @@ namespace Project::etl {
             auto p = i >= 0 ? head + i : tail() + (i + 1);
             if (p) return *p;
             T dummy = {};
-            i >= 0 ? pushBack(dummy) : pushFront(dummy);
+            i >= 0 ? push_back(dummy) : push_front(dummy);
             return i >= 0 ? back() : front();
         }
 
-        explicit operator bool() const { return (bool) head; }
+        explicit operator bool() const { return bool(head); }
 
         /// slice operator
         Iter<iterator> operator()(int start, int stop, int step = 1) { 
@@ -138,7 +130,8 @@ namespace Project::etl {
         }
 
         /// push operator
-        const LinkedList& operator<<(const_reference item) const { push(item); return *this; }
+        template <typename U>
+        const LinkedList& operator<<(U&& item) const { push(etl::forward<U>(item)); return *this; }
 
         /// pop operator
         const LinkedList& operator>>(reference item) const { pop(item); return *this; }
@@ -152,8 +145,9 @@ namespace Project::etl {
         bool operator!=(const Container& other) const { return !operator==(other); }
 
         /// push an item at the back of the list
-        int push(const_reference item) const {
-            auto node = iterator(item); // create new node
+        template <typename U>
+        int push(U&& item) const {
+            auto node = make_iterator(etl::forward<U>(item)); // create new node
             if (!node) 
                 return 0; 
 
@@ -166,13 +160,14 @@ namespace Project::etl {
         }
 
         /// push an item to the list at a specific position
-        int push(const_reference item, size_t pos) const {
-            auto node = iterator(item); // create new node
+        template <typename U>
+        int push(U&& item, size_t pos) const {
+            auto node = make_iterator(etl::forward<U>(item)); // create new node
             if (!node) 
                 return 0;
 
             if (pos == 0) {
-                head.insertPrev(node);  // if pos is 0, insert the new node at the beginning
+                head.insert_prev(node);  // if pos is 0, insert the new node at the beginning
                 head = node;
                 return 1;
             }
@@ -185,16 +180,18 @@ namespace Project::etl {
         }
 
         /// push an item at the back
-        int pushBack(const_reference item)  const { return push(item); }
+        template <typename U>
+        int push_back(U&& item)  const { return push(etl::forward<U>(item)); }
 
         /// push an item at the front
-        int pushFront(const_reference item) const { return push(item, 0); }
+        template <typename U>
+        int push_front(U&& item) const { return push(etl::forward<U>(item), 0); }
 
         /// removes an item from the list at a specific position and retrieves its value
-        int popAt(reference item, size_t pos) const {
+        int pop_at(reference item, size_t pos) const {
             auto node = head + pos;
             if (node) 
-                item = *node;
+                item = etl::move(*node);
             
             if (pos == 0 && head) 
                 head = head.next();
@@ -203,7 +200,7 @@ namespace Project::etl {
         }
 
         /// removes an item from the list at a specific position
-        int popAt(size_t pos) const { 
+        int pop_at(size_t pos) const { 
             auto node = head + pos;
             if (pos == 0 && head) 
                 head = head.next();
@@ -212,27 +209,34 @@ namespace Project::etl {
          }
 
         /// removes the first item from the list and retrieves its value
-        int pop(reference item) const { return popAt(item, 0); }
+        int pop(reference item) const { return pop_at(item, 0); }
 
         /// removes the first item from the list
-        int pop() const { return popAt(0); }
+        int pop() const { return pop_at(0); }
 
         /// removes the first item from the list
-        int popBack() const { return popAt(len() - 1); }
+        int pop_back() const { return pop_at(len() - 1); }
 
         /// removes the first item from the list
-        int popFront() const { return popAt(0); }
+        int pop_front() const { return pop_at(0); }
         
         /// removes the first item from the list
-        int popBack(T& item)  const { return popAt(item, len() - 1); }
+        int pop_back(T& item)  const { return pop_at(item, len() - 1); }
 
         /// removes the first item from the list
-        int popFront(T& item) const { return popAt(item, 0); }
+        int pop_front(T& item) const { return pop_at(item, 0); }
+
+    private:
+        mutable iterator head;
+
+        /// make iterator
+        template <typename U> static auto
+        make_iterator(U&& item) { return iterator(new Node(etl::forward<U>(item))); }
     };
 
-    /// create linked list with variadic template function, type is deduced
-    template <typename T = void, typename U, typename... Us, typename R = conditional_t<is_void_v<T>, U, T>> auto
-    list(const U& val, const Us&... vals) { return LinkedList<R> { static_cast<R>(val), static_cast<R>(vals)... }; }
+    /// create linked list with variadic template function, the type can be implicitly or explicitly specified
+    template <typename T = void, typename U, typename... Us, typename R = conditional_t<is_void_v<T>, decay_t<U>, T>> auto
+    list(U&& val, Us&&... vals) { return LinkedList<R> { R(etl::forward<U>(val)), R(etl::forward<Us>(vals))... }; }
 
     /// create linked list from initializer list
     template <typename T> auto
@@ -258,91 +262,64 @@ namespace Project::etl {
     template <typename T> auto
     reversed(const LinkedList<T>& l) { return etl::iter(l, -1); }
 
-    template <class T>
+    template <typename T>
     struct LinkedList<T>::Node {
         T item;
         mutable Node* next = nullptr;
         mutable Node* prev = nullptr;
+        
         explicit Node(const T& item) : item(item) {}
+        explicit Node(T&& item) : item(etl::move(item)) {}
     };
 
-    template <class T>
-    struct LinkedList<T>::iterator {
+    template <typename T>
+    class LinkedList<T>::iterator {
         Node* node;
+        friend class LinkedList<T>;
 
         /// construct from pointer of node
         iterator(Node* node) : node(node) {}
-        
-        /// construct from pointer of node
-        explicit iterator(const T& item) : node(new Node(item)) {}
 
-        T* item() { return node ? &node->item : nullptr; }
-        iterator next() { return { node ? node->next : nullptr }; }
-        iterator prev() { return { node ? node->prev : nullptr }; }
+    public:
+        /// empty constructor
+        iterator() : node(nullptr) {}
 
-        const T* item() const { return node ? &node->item : nullptr; }
-        const iterator next() const { return { node ? node->next : nullptr }; }
-        const iterator prev() const { return { node ? node->prev : nullptr }; }
-        
-        /// insert another iterator to the next/prev position of this iterator
-        /// @param other other iterator
-        /// @param nextOrPref false: insert to next (default), true: insert to prev
-        /// @return 0: fail, 1: success
-        /// @note other node and this node can't be null. other node's next and other node's prev have to be null
-        int insert(iterator other, bool nextOrPref = false) const {
-            if (!node || !other || other.next() || other.prev()) 
-                return 0; // check requirements
+        /// copy constructor 
+        iterator(const iterator& other) : node(other.node) {}
 
-            auto nx = next().node;
-            auto pv = prev().node;
+        /// move constructor
+        iterator(iterator&& other) : node(etl::exchange(other.node, nullptr)) {}
 
-            // insert next
-            if (!nextOrPref) {
-                other.node->prev = node;
-                node->next = other.node;
-                other.node->next = nx;
-                if (nx) nx->prev = other.node;
-                return 1;
-            }
-
-            // insert prev
-            other.node->prev = pv;
-            if (pv) pv->next = other.node;
-            other.node->next = node;
-            node->prev = other.node;
-            return 1;
+        /// copy assignment
+        iterator& operator=(const iterator& other) { 
+            if (this == &other) return *this;
+            node = other.node; 
+            return *this;
         }
 
-        /// insert other iterator to the prev position of this iterator
-        int insertPrev(iterator other) const { return insert(other, true); }
-
-        /// detach this iterator from its next and prev iterator
-        /// @retval 1: success, 0: already detached or this node = null
-        int detach() {
-            auto nx = next().node;
-            auto pv = prev().node;
-            if (nx) nx->prev = pv;
-            if (pv) pv->next = nx;
-            return nx || pv;
-        }
-
-        /// detach and delete this iterator
-        int erase() {
-            int res = detach();
-            delete node;
-            node = nullptr;
-            return res;
-        }
-
-        /// get i-th item by dereference
-        /// @warning make sure node + i is not null
-        T& operator[](int i) const {
-            auto it = (*this) + i;
-            return *it;
+        /// move assignment
+        iterator& operator=(iterator&& other) { 
+            if (this == &other) return *this;
+            node = etl::exchange(other.node, nullptr); 
+            return *this;
         }
 
         /// return true if the node is not null
         explicit operator bool() const { return node != nullptr; }
+
+        /// get i-th item by dereference
+        /// @warning make sure node + i is not null
+        T& operator[](int i) {
+            auto it = (*this) + i;
+            return *it;
+        }
+
+        /// get i-th item by dereference
+        /// @warning make sure node + i is not null
+        const T& operator[](int i) const {
+            auto it = (*this) + i;
+            return *it;
+        }
 
         /// arrow operator to access the item's member
         T* operator->() { return item(); }
@@ -362,6 +339,9 @@ namespace Project::etl {
 
         bool operator==(iterator other) const { return node == other.node; }
         bool operator!=(iterator other) const { return node != other.node; }
+
+        bool operator==(std::nullptr_t) const { return node == nullptr; }
+        bool operator!=(std::nullptr_t) const { return node != nullptr; }
 
         /* arithmetic operators */
 
@@ -418,6 +398,65 @@ namespace Project::etl {
             }
             for (auto p = *this; p && p != other; --p, ++i);
             return i;
+        }
+
+    private:
+        T* item() { return node ? &node->item : nullptr; }
+        iterator next() { return { node ? node->next : nullptr }; }
+        iterator prev() { return { node ? node->prev : nullptr }; }
+
+        const T* item() const { return node ? &node->item : nullptr; }
+        const iterator next() const { return { node ? node->next : nullptr }; }
+        const iterator prev() const { return { node ? node->prev : nullptr }; }
+        
+        /// insert another iterator to the next/prev position of this iterator
+        /// @param other other iterator
+        /// @param nextOrPref false: insert to next (default), true: insert to prev
+        /// @return 0: fail, 1: success
+        /// @note other node and this node can't be null. other node's next and other node's prev have to be null
+        int insert(iterator other, bool nextOrPref = false) const {
+            if (!node || !other || other.next() || other.prev()) 
+                return 0; // check requirements
+
+            auto nx = next().node;
+            auto pv = prev().node;
+
+            // insert next
+            if (!nextOrPref) {
+                other.node->prev = node;
+                node->next = other.node;
+                other.node->next = nx;
+                if (nx) nx->prev = other.node;
+                return 1;
+            }
+
+            // insert prev
+            other.node->prev = pv;
+            if (pv) pv->next = other.node;
+            other.node->next = node;
+            node->prev = other.node;
+            return 1;
+        }
+
+        /// insert other iterator to the prev position of this iterator
+        int insert_prev(iterator other) const { return insert(other, true); }
+
+        /// detach this iterator from its next and prev iterator
+        /// @retval 1: success, 0: already detached or this node = null
+        int detach() {
+            auto nx = next().node;
+            auto pv = prev().node;
+            if (nx) nx->prev = pv;
+            if (pv) pv->next = nx;
+            return nx || pv;
+        }
+
+        /// detach and delete this iterator
+        int erase() {
+            int res = detach();
+            delete node;
+            node = nullptr;
+            return res;
         }
     };
 

@@ -66,8 +66,8 @@ namespace Project::etl {
     };
 
     /// create array with variadic template function, array type can be explicitly or implicitly specified, array size is implicitly specified
-    template <typename T = void, typename U, typename... Us, typename R = conditional_t<is_void_v<T>, U, T>> constexpr auto
-    array(const U& val, const Us&... vals) { return Array<R, 1 + sizeof...(Us)> { static_cast<R>(val), static_cast<R>(vals)... }; }
+    template <typename T = void, typename U, typename... Us, typename R = conditional_t<is_void_v<T>, decay_t<U>, T>> constexpr auto
+    array(U&& val, Us&&... vals) { return Array<R, 1 + sizeof...(Us)> { static_cast<R>(etl::forward<U>(val)), static_cast<R>(etl::forward<Us>(vals))... }; }
 
     /// create array from initializer list
     template <typename T, size_t N> constexpr Array<T, N>

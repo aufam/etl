@@ -318,7 +318,7 @@ namespace Project::etl {
     template <typename T>
     struct decay {
         typedef remove_reference_t<T> U;
-        typedef conditional_t<etl::is_true_array_v<U>, remove_extent_t<U>*, remove_const_volatile_t<U>> type;
+        typedef conditional_t<is_true_array_v<U>, remove_extent_t<U>*, remove_const_volatile_t<U>> type;
     };
     template <typename T> using decay_t = typename decay<T>::type;
 
@@ -388,6 +388,17 @@ namespace Project::etl {
     };
 
     template <typename T, typename... Ts> using common_type_t = typename common_type<T, Ts...>::type;
+
+    /// is_convertible
+    template <typename T, typename U>
+    struct is_convertible {
+        static void test(U);
+        template <typename V> static auto check(int) -> decltype(test(etl::declval<V>()), void(), true_type());
+        template <typename V> static auto check(...) -> false_type;
+        static constexpr bool value = decltype(check<T>(0))::value;
+    };
+    template <typename T, typename U> inline constexpr bool is_convertible_v = is_convertible<T, U>::value;
+
 }
 
 #endif //ETL_TYPE_TRAITS_H

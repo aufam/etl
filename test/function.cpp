@@ -1,4 +1,5 @@
 #include "etl/function.h"
+#include "etl/array.h"
 #include "etl/linked_list.h"
 #include "gtest/gtest.h"
 #include "etl/keywords.h"
@@ -76,20 +77,45 @@ TEST(Function, Compare) {
     EXPECT_FALSE(h == g);
 }
 
+TEST(Function, Array) {
+    char text1[] = "test";
+    char text2[] = "123";
+
+    val arr = array(
+        function<void()>(lambda (char* test) {
+            std::cout << test << '\n';
+        }, text1),
+        function<void()>(lambda (char* test) {
+            std::cout << test << '\n';
+        }, text2)
+    );
+
+    for (var f in arr)
+        f();
+    
+    EXPECT_EQ(arr[0].context, text1);
+    EXPECT_EQ(arr[1].context, text2);
+}
+
 TEST(Function, LinkedList) {
+    char text1[] = "test";
+    char text2[] = "123";
+    
     var l = list<Function<void(), void*>>();
 
-    char text[] = "test";
     var f1 = function<void()>(lambda (char* test) {
         std::cout << test << '\n';
-    }, text);
+    }, text1);
+
+    var f2 = function<void()>(lambda (char* test) {
+        std::cout << test << '\n';
+    }, text2);
     
-    l.push(f1);
+    l << f1 << f2;
 
     for (var f in l)
         f();
     
-    
-    EXPECT_EQ(l.begin()->fn, f1.fn);
-    EXPECT_EQ(l.begin()->context, f1.context);
+    EXPECT_EQ(l[0], f1);
+    EXPECT_EQ(l[1], f2);
 }

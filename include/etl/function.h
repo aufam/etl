@@ -19,13 +19,15 @@ namespace Project::etl {
         
         /// construct from a functor (capture-less lambda expression, function pointer, or other invokable object)
         template <typename Functor>
-        constexpr Function(Functor&& fn, C... context) 
+        constexpr Function(Functor&& fn, C... context, disable_if_t<is_same_v<decay_t<Functor>, Function>>* = 0) 
         : fn(static_cast<Fn>(etl::forward<Functor>(fn)))
         , context{context...} {}
 
         /// assign from a functor (capture-less lambda expression, function pointer, or other invokable object)
         template <typename Functor>
-        Function& operator=(Functor&& f) { fn = static_cast<Fn>(etl::forward<Functor>(f)); return *this; }
+        disable_if_t<is_same_v<decay_t<Functor>, Function>, Function&> operator=(Functor&& f) { 
+            fn = static_cast<Fn>(etl::forward<Functor>(f)); return *this; 
+        }
 
         /// copy constructor
         constexpr Function(const Function& other) : fn(other.fn), context(other.context) {}
@@ -82,11 +84,14 @@ namespace Project::etl {
 
         /// construct from a functor (capture-less lambda expression, function pointer, or other invokable object)
         template <typename Functor>
-        constexpr Function(Functor&& fn) : fn(static_cast<Fn>(etl::forward<Functor>(fn))) {}
+        constexpr Function(Functor&& fn, disable_if_t<is_same_v<decay_t<Functor>, Function>>* = 0) 
+        : fn(static_cast<Fn>(etl::forward<Functor>(fn))) {}
 
         /// assign from a functor (capture-less lambda expression, function pointer, or other invokable object)
         template <typename Functor>
-        constexpr Function& operator=(Functor&& f) { fn = static_cast<Fn>(etl::forward<Functor>(f)); return *this; }
+        constexpr disable_if_t<is_same_v<decay_t<Functor>, Function>, Function&> operator=(Functor&& f) { 
+            fn = static_cast<Fn>(etl::forward<Functor>(f)); return *this; 
+        }
 
         /// copy constructor
         constexpr Function(const Function& other) : fn(other.fn) {}
@@ -146,14 +151,15 @@ namespace Project::etl {
 
         /// construct from a functor (capture-less lambda expression, function pointer, or other invokable object)
         template <typename Functor, typename Ctx>
-        Function(Functor&& f, Ctx* ctx) : fn(nullptr), context(reinterpret_cast<Context>(ctx)) {
+        Function(Functor&& f, Ctx* ctx, disable_if_t<is_same_v<decay_t<Functor>, Function>>* = 0) 
+        : fn(nullptr), context(reinterpret_cast<Context>(ctx)) {
             auto pf = static_cast<R (*)(Ctx*, Args...)>(etl::forward<Functor>(f));
             fn = reinterpret_cast<Fn>(pf); 
         }
 
         /// construct from a functor (capture-less lambda expression, function pointer, or other invokable object)
         template <typename Functor>
-        Function(Functor&& f) : fn(nullptr), context(nullptr) {
+        Function(Functor&& f, disable_if_t<is_same_v<decay_t<Functor>, Function>>* = 0) : fn(nullptr), context(nullptr) {
             auto pf = static_cast<R (*)(Args...)>(etl::forward<Functor>(f));
             fn = wrapperFunc;
             context = reinterpret_cast<Context>(pf);
@@ -161,7 +167,7 @@ namespace Project::etl {
 
         /// assign from a functor (capture-less lambda expression, function pointer, or other invokable object)
         template <typename Functor>
-        Function& operator=(Functor&& f) { 
+        disable_if_t<is_same_v<decay_t<Functor>, Function>, Function&> operator=(Functor&& f) { 
             auto pf = static_cast<R (*)(Args...)>(etl::forward<Functor>(f));
             fn = wrapperFunc;
             context = reinterpret_cast<Context>(pf);
@@ -209,7 +215,7 @@ namespace Project::etl {
 
         template <typename Functor>
         constexpr bool operator==(Functor&& other) const { 
-            if constexpr (etl::is_same_v<etl::decay_t<Functor>, Function<R(Args...), void*>>)
+            if constexpr (etl::is_same_v<etl::decay_t<Functor>, Function>)
                 return fn == other.fn && context == other.context;
             else 
                 return operator==(Function(etl::forward<Functor>(other)));

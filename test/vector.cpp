@@ -74,9 +74,22 @@ TEST(Vector, Swap) {
 TEST(Vector, Move) {
     var a = vector(0, 1, 2);
     var b = move(a);
+
+    EXPECT_FALSE(a);
     EXPECT_EQ(b[0], 0);
     EXPECT_EQ(b[1], 1);
     EXPECT_EQ(b[2], 2);
+
+    a = vector(3, 4, 5);
+    b += move(a);
+
+    EXPECT_FALSE(a);
+    EXPECT_EQ(b[0], 0);
+    EXPECT_EQ(b[1], 1);
+    EXPECT_EQ(b[2], 2);
+    EXPECT_EQ(b[3], 3);
+    EXPECT_EQ(b[4], 4);
+    EXPECT_EQ(b[5], 5);
 }
 
 TEST(Vector, Reserve) {
