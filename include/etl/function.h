@@ -19,7 +19,7 @@ namespace Project::etl {
         
         /// construct from a functor (capture-less lambda expression, function pointer, or other invokable object)
         template <typename Functor>
-        constexpr Function(Functor&& fn, C... context, disable_if_t<is_same_v<decay_t<Functor>, Function>>* = 0) 
+        constexpr Function(Functor&& fn, C... context, disable_if_t<is_same_v<decay_t<Functor>, Function>, None>* = 0) 
         : fn(static_cast<Fn>(etl::forward<Functor>(fn)))
         , context{context...} {}
 
@@ -84,7 +84,7 @@ namespace Project::etl {
 
         /// construct from a functor (capture-less lambda expression, function pointer, or other invokable object)
         template <typename Functor>
-        constexpr Function(Functor&& fn, disable_if_t<is_same_v<decay_t<Functor>, Function>>* = 0) 
+        constexpr Function(Functor&& fn, disable_if_t<is_same_v<decay_t<Functor>, Function>, None>* = 0) 
         : fn(static_cast<Fn>(etl::forward<Functor>(fn))) {}
 
         /// assign from a functor (capture-less lambda expression, function pointer, or other invokable object)
@@ -151,7 +151,7 @@ namespace Project::etl {
 
         /// construct from a functor (capture-less lambda expression, function pointer, or other invokable object)
         template <typename Functor, typename Ctx>
-        Function(Functor&& f, Ctx* ctx, disable_if_t<is_same_v<decay_t<Functor>, Function>>* = 0) 
+        Function(Functor&& f, Ctx* ctx, disable_if_t<is_same_v<decay_t<Functor>, Function>, None>* = 0) 
         : fn(nullptr), context(reinterpret_cast<Context>(ctx)) {
             auto pf = static_cast<R (*)(Ctx*, Args...)>(etl::forward<Functor>(f));
             fn = reinterpret_cast<Fn>(pf); 
@@ -159,7 +159,7 @@ namespace Project::etl {
 
         /// construct from a functor (capture-less lambda expression, function pointer, or other invokable object)
         template <typename Functor>
-        Function(Functor&& f, disable_if_t<is_same_v<decay_t<Functor>, Function>>* = 0) : fn(nullptr), context(nullptr) {
+        Function(Functor&& f, disable_if_t<is_same_v<decay_t<Functor>, Function>, None>* = 0) : fn(nullptr), context(nullptr) {
             auto pf = static_cast<R (*)(Args...)>(etl::forward<Functor>(f));
             fn = wrapperFunc;
             context = reinterpret_cast<Context>(pf);
