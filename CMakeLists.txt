@@ -14,7 +14,7 @@ add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME} INTERFACE
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include> )
-target_compile_options(${PROJECT_NAME} INTERFACE -Wno-literal-suffix)
+target_compile_options(${PROJECT_NAME} INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wno-literal-suffix>)
 
 # install target
 install(TARGETS ${PROJECT_NAME}
