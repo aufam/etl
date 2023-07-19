@@ -9,12 +9,26 @@ project(etl VERSION ${ETL_VERSION})
 option(BUILD_TESTS "Build unit tests using Google Test" OFF)
 option(BUILD_DOCS "Build docs using Doxygen" OFF)
 
+# some messages
+message("ETL_VERSION : ${ETL_VERSION}")
+message("BUILD_TESTS : ${BUILD_TESTS}")
+message("BUILD_DOCS  : ${BUILD_DOCS}")
+
 # build library
 add_library(${PROJECT_NAME} INTERFACE)
+
 target_include_directories(${PROJECT_NAME} INTERFACE
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include> )
-target_compile_options(${PROJECT_NAME} INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wno-literal-suffix>)
+        $<INSTALL_INTERFACE:include>)
+
+target_compile_options(${PROJECT_NAME} INTERFACE 
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-literal-suffix>)
+
+target_compile_definitions(${PROJECT_NAME} INTERFACE 
+        -DETL_VERSION="${PROJECT_VERSION}"
+        -DETL_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}
+        -DETL_VERSION_MINOR=${PROJECT_VERSION_MINOR}
+        -DETL_VERSION_PATCH=${PROJECT_VERSION_PATCH})
 
 # install target
 install(TARGETS ${PROJECT_NAME}
