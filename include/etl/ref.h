@@ -54,6 +54,12 @@ namespace Project::etl {
     template <typename T> constexpr auto
     ref_const(const T& value) { return Ref<const T>(value); }
 
+    template <typename T> constexpr auto
+    ref(T* value) { return Ref<T>(value); }
+
+    template <typename T> constexpr auto
+    ref_const(const T* value) { return Ref<const T>(value); }
+
     template <typename T> void ref(const T&&) = delete;
 
     template <typename T> void ref_const(const T&&) = delete;
