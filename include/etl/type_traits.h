@@ -1,6 +1,10 @@
 #ifndef ETL_TYPE_TRAITS_H
 #define ETL_TYPE_TRAITS_H
 
+#if __cplusplus < 201703L
+#error "Your code must be compiled with C++17 or later."
+#endif
+
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
