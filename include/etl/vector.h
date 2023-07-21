@@ -79,7 +79,7 @@ namespace Project::etl {
         const_reference back()  const { return buf[nItems - 1]; }
 
         /// get i-th item by dereference
-        /// @warning it will throw error null dereference if index is not valid
+        /// @warning it will be error null dereference if index is not valid
         reference operator[](int i) { return is_valid_index_(i) ? buf[i] : *static_cast<iterator>(nullptr); }
         const_reference operator[](int i) const { return is_valid_index_(i) ? buf[i] : *static_cast<const_iterator>(nullptr); }
 
@@ -151,7 +151,7 @@ namespace Project::etl {
         /// insert new sequence given the index
         void insert(int index, Vector&& other) {
             Vector res = etl::move(other);
-            insert(res);
+            insert(index, res);
         }
 
         /// remove an item given the index

@@ -3,6 +3,7 @@
 
 #include "etl/algorithm.h"
 #include "etl/tuple.h"
+#include <thread>
 
 namespace Project::etl {
     /// function class that holds function pointer and context (alternative of capture list)
@@ -18,14 +19,14 @@ namespace Project::etl {
         mutable Context context; ///< alternative of capture list in a lambda expression
         
         /// construct from a functor (capture-less lambda expression, function pointer, or other invokable object)
-        template <typename Functor>
-        constexpr Function(Functor&& fn, C... context, disable_if_t<is_same_v<decay_t<Functor>, Function>, None>* = 0) 
+        template <typename Functor, typename = disable_if_t<is_same_v<decay_t<Functor>, Function>>>
+        constexpr Function(Functor&& fn, C... context)
         : fn(static_cast<Fn>(etl::forward<Functor>(fn)))
         , context{context...} {}
 
         /// assign from a functor (capture-less lambda expression, function pointer, or other invokable object)
-        template <typename Functor>
-        disable_if_t<is_same_v<decay_t<Functor>, Function>, Function&> operator=(Functor&& f) { 
+        template <typename Functor, typename = disable_if_t<is_same_v<decay_t<Functor>, Function>>>
+        Function& operator=(Functor&& f) {
             fn = static_cast<Fn>(etl::forward<Functor>(f)); return *this; 
         }
 
@@ -41,12 +42,12 @@ namespace Project::etl {
         }
 
         /// move constructor
-        constexpr Function(Function&& other) : fn(etl::move(other.fn)), context(etl::move(other.context)) { 
+        constexpr Function(Function&& other) noexcept : fn(etl::move(other.fn)), context(etl::move(other.context)) {
             other.fn = nullptr; 
         }
         
         /// move assignment
-        constexpr Function& operator=(Function&& other) {
+        constexpr Function& operator=(Function&& other) noexcept {
             fn = etl::move(other.fn);
             context = etl::move(other.context);
             other.fn = nullptr;
@@ -83,13 +84,13 @@ namespace Project::etl {
         constexpr Function() : fn(nullptr) {}
 
         /// construct from a functor (capture-less lambda expression, function pointer, or other invokable object)
-        template <typename Functor>
-        constexpr Function(Functor&& fn, disable_if_t<is_same_v<decay_t<Functor>, Function>, None>* = 0) 
+        template <typename Functor, typename = disable_if_t<is_same_v<decay_t<Functor>, Function>>>
+        constexpr Function(Functor&& fn)
         : fn(static_cast<Fn>(etl::forward<Functor>(fn))) {}
 
         /// assign from a functor (capture-less lambda expression, function pointer, or other invokable object)
-        template <typename Functor>
-        constexpr disable_if_t<is_same_v<decay_t<Functor>, Function>, Function&> operator=(Functor&& f) { 
+        template <typename Functor, typename = disable_if_t<is_same_v<decay_t<Functor>, Function>>>
+        constexpr Function& operator=(Functor&& f) {
             fn = static_cast<Fn>(etl::forward<Functor>(f)); return *this; 
         }
 
@@ -104,10 +105,10 @@ namespace Project::etl {
         }
 
         /// move constructor
-        constexpr Function(Function&& other) : fn(etl::exchange(other.fn, nullptr)) {}
+        constexpr Function(Function&& other) noexcept : fn(etl::exchange(other.fn, nullptr)) {}
         
         /// move assignment
-        constexpr Function& operator=(Function&& other) {
+        constexpr Function& operator=(Function&& other) noexcept {
             if (&other == this) return *this;
             fn = etl::exchange(other.fn, nullptr);
             return *this;
@@ -150,24 +151,24 @@ namespace Project::etl {
         constexpr Function() : fn(nullptr), context(nullptr) {}
 
         /// construct from a functor (capture-less lambda expression, function pointer, or other invokable object)
-        template <typename Functor, typename Ctx>
-        Function(Functor&& f, Ctx* ctx, disable_if_t<is_same_v<decay_t<Functor>, Function>, None>* = 0) 
+        template <typename Functor, typename Ctx, typename = disable_if_t<is_same_v<decay_t<Functor>, Function>>>
+        Function(Functor&& f, Ctx* ctx)
         : fn(nullptr), context(reinterpret_cast<Context>(ctx)) {
             auto pf = static_cast<R (*)(Ctx*, Args...)>(etl::forward<Functor>(f));
             fn = reinterpret_cast<Fn>(pf); 
         }
 
         /// construct from a functor (capture-less lambda expression, function pointer, or other invokable object)
-        template <typename Functor>
-        Function(Functor&& f, disable_if_t<is_same_v<decay_t<Functor>, Function>, None>* = 0) : fn(nullptr), context(nullptr) {
+        template <typename Functor, typename = disable_if_t<is_same_v<decay_t<Functor>, Function>>>
+        Function(Functor&& f) : fn(nullptr), context(nullptr) {
             auto pf = static_cast<R (*)(Args...)>(etl::forward<Functor>(f));
             fn = wrapperFunc;
             context = reinterpret_cast<Context>(pf);
         }
 
         /// assign from a functor (capture-less lambda expression, function pointer, or other invokable object)
-        template <typename Functor>
-        disable_if_t<is_same_v<decay_t<Functor>, Function>, Function&> operator=(Functor&& f) { 
+        template <typename Functor, typename = disable_if_t<is_same_v<decay_t<Functor>, Function>>>
+        Function& operator=(Functor&& f) {
             auto pf = static_cast<R (*)(Args...)>(etl::forward<Functor>(f));
             fn = wrapperFunc;
             context = reinterpret_cast<Context>(pf);
@@ -186,12 +187,12 @@ namespace Project::etl {
         }
 
         /// move constructor
-        constexpr Function(Function&& other) 
+        constexpr Function(Function&& other) noexcept
             : fn(etl::exchange(other.fn, nullptr))
             , context(etl::exchange(other.context, nullptr)) {}
         
         /// move assignment
-        constexpr Function& operator=(Function&& other) {
+        constexpr Function& operator=(Function&& other) noexcept {
             if (&other == this) return *this;
             fn = etl::exchange(other.fn, nullptr);
             context = etl::exchange(other.context, nullptr);

@@ -12,7 +12,7 @@ namespace Project::etl {
         Tuple<Sequences...> sequences;
 
     public:
-        constexpr Zip(Sequences... seq) : sequences{seq...} {}
+        constexpr explicit Zip(Sequences... seq) : sequences{seq...} {}
 
         constexpr Zip begin() const { return *this; }
         constexpr Zip end()   const { return *this; }
