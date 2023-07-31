@@ -21,6 +21,12 @@ TEST(Array, Declaration) {
     EXPECT_EQ(d, y);
 }
 
+TEST(Array, Empty) {
+    val a = array<int, 0>();
+    EXPECT_FALSE(a);
+    EXPECT_EQ(a, none);
+}
+
 TEST(Array, StructureBinding) {
     val [x, y, z] = array(1, 2, 3);
     EXPECT_EQ(x, 1);

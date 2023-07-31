@@ -108,7 +108,6 @@ TEST(LinkedList, Iterator) {
 
 TEST(LinkedList, Iter) {
     var a = list(1, 2, 3);
-    // var b = iter(a.tail(), a.end(), -1);
     var b = reversed(a);
     EXPECT_EQ(b.len(), 3);
     EXPECT_EQ(b(), 3);
@@ -173,4 +172,24 @@ TEST(LinkedList, Move) {
     EXPECT_EQ(b[0], 0);
     EXPECT_EQ(b[1], 1);
     EXPECT_EQ(b[2], 2);
+}
+
+TEST(LinkedList, Constness) {
+    var a = list(0, 1, 2);
+    var i = a.begin();
+    EXPECT_FALSE(is_const_v<remove_reference_t<decltype(a[0])>>);
+    EXPECT_FALSE(is_const_v<remove_reference_t<decltype(a.front())>>);
+    EXPECT_FALSE(is_const_v<remove_reference_t<decltype(a.back())>>);
+    EXPECT_FALSE(is_const_v<remove_reference_t<decltype(*i)>>);
+    EXPECT_FALSE(is_const_v<remove_reference_t<decltype(i[0])>>);
+    EXPECT_FALSE(is_const_v<remove_reference_t<decltype(*(i + 1))>>);
+
+    val b = list(0, 1, 2);
+    var j = b.begin();
+    EXPECT_TRUE(is_const_v<remove_reference_t<decltype(b[0])>>);
+    EXPECT_TRUE(is_const_v<remove_reference_t<decltype(b.front())>>);
+    EXPECT_TRUE(is_const_v<remove_reference_t<decltype(b.back())>>);
+    EXPECT_TRUE(is_const_v<remove_reference_t<decltype(*j)>>);
+    EXPECT_TRUE(is_const_v<remove_reference_t<decltype(j[0])>>);
+    EXPECT_TRUE(is_const_v<remove_reference_t<decltype(*(j + 1))>>);
 }

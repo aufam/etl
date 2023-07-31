@@ -83,12 +83,20 @@ namespace Project::etl {
         reference operator[](int i) { return is_valid_index_(i) ? buf[i] : *static_cast<iterator>(nullptr); }
         const_reference operator[](int i) const { return is_valid_index_(i) ? buf[i] : *static_cast<const_iterator>(nullptr); }
 
+        /// return forward iter object
+        Iter<iterator> iter() { return Iter(begin(), end(), 1); }
+        Iter<const_iterator> iter() const { return Iter(begin(), end(), 1); }
+
+        /// return reversed iter object
+        Iter<iterator> reversed() { return Iter(end() - 1, begin() - 1, -1); }
+        Iter<const_iterator> reversed() const { return Iter(end() - 1, begin() - 1, -1); }
+
         /// return true if buf is not null
         explicit operator bool() const { return buf != nullptr; }
 
         /// add an item to the vector
-        template <typename U>
-        enable_if_t<is_convertible_v<decay_t<U>, T>> append(U&& other) {
+        template <typename U, typename = enable_if_t<is_convertible_v<decay_t<U>, T>>>
+        void append(U&& other) {
             auto newCapacity = nItems + 1;
             if (capacity < newCapacity) 
                 reserve(newCapacity);
@@ -97,7 +105,7 @@ namespace Project::etl {
             ++nItems;
         }
 
-        /// add all items in a container to the vector
+        /// add all items from another vector to this vector
         void append(const Vector& other) {
             auto newCapacity = nItems + etl::len(other);
             if (capacity < newCapacity) 
@@ -107,15 +115,20 @@ namespace Project::etl {
             nItems += etl::len(other);
         }
 
-        /// add all items in a container to the vector
+        /// add all items from another vector to this vector
         void append(Vector&& other) {
-            Vector res = etl::move(other);
-            append(res);
+            Vector other_ = etl::move(other);
+            auto newCapacity = nItems + etl::len(other_);
+            if (capacity < newCapacity)
+                reserve(newCapacity);
+
+            etl::move(etl::begin(other_), etl::end(other_), end());
+            nItems += etl::len(other_);
         }
 
         /// insert new item given the index
-        template <typename U>
-        enable_if_t<is_convertible_v<decay_t<U>, T>> insert(int index, U&& item) {
+        template <typename U, typename = enable_if_t<is_convertible_v<decay_t<U>, T>>>
+        void insert(int index, U&& item) {
             index = index >= 0 ? etl::min(index, int(nItems)) :
                     int(nItems) + etl::max(index, -int(nItems));
 
@@ -125,13 +138,13 @@ namespace Project::etl {
 
             auto [x, y] = etl::pair(end(), end() - 1);
             for (; x != &buf[index]; --x, --y) 
-                *x = *y; // shift
+                *x = etl::move(*y); // shift
 
             buf[index] = etl::forward<T>(item);
             ++nItems;
         }
 
-        /// insert new sequence given the index
+        /// insert another vector given the index
         void insert(int index, const Vector& other) {
             index = index >= 0 ? etl::min(index, int(nItems)) :
                     int(nItems) + etl::max(index, -int(nItems));
@@ -142,16 +155,28 @@ namespace Project::etl {
 
             auto [x, y] = etl::pair(begin() + newCapacity - 1, end() - 1);
             for (; x != &buf[index]; --x, --y) 
-                *x = *y; // shift
+                *x = etl::move(*y); // shift
 
             etl::copy(etl::begin(other), etl::end(other), begin() + index);
             nItems += etl::len(other);
         }
 
-        /// insert new sequence given the index
+        /// insert another vector given the index
         void insert(int index, Vector&& other) {
-            Vector res = etl::move(other);
-            insert(index, res);
+            Vector other_ = etl::move(other);
+            index = index >= 0 ? etl::min(index, int(nItems)) :
+                    int(nItems) + etl::max(index, -int(nItems));
+
+            auto newCapacity = nItems + etl::len(other_);
+            if (capacity < newCapacity)
+                reserve(newCapacity);
+
+            auto [x, y] = etl::pair(begin() + newCapacity - 1, end() - 1);
+            for (; x != &buf[index]; --x, --y)
+                *x = etl::move(*y); // shift
+
+            etl::move(etl::begin(other_), etl::end(other_), begin() + index);
+            nItems += etl::len(other_);
         }
 
         /// remove an item given the index
@@ -182,7 +207,7 @@ namespace Project::etl {
                 return true;
             }
 
-            auto newBuf = copy_alloc_(newCapacity);
+            auto newBuf = move_alloc_(newCapacity);
             if (newBuf == nullptr) 
                 return false;
 
@@ -213,15 +238,15 @@ namespace Project::etl {
         }
 
         /// create new vector by adding an item
-        template <typename U>
-        enable_if_t<is_convertible_v<decay_t<U>, T>, Vector> operator+(U&& other) const { 
+        template <typename U, typename = enable_if_t<is_convertible_v<decay_t<U>, T>>>
+        Vector operator+(U&& other) const {
             auto newCapacity = nItems + 1;
             auto temp = copy_alloc_(newCapacity);
             temp[nItems] = etl::forward<T>(other);
             return { temp, newCapacity, newCapacity }; 
         }
 
-        /// create new vector by adding another container
+        /// create new vector by adding another vector
         Vector operator+(const Vector& other) const { 
             auto newCapacity = nItems + etl::len(other);
             auto temp = copy_alloc_(newCapacity);
@@ -229,23 +254,18 @@ namespace Project::etl {
             return { temp, newCapacity, newCapacity }; 
         }
 
-        /// create new vector by adding another container
-        Vector operator+(Vector&& other) const { 
-            Vector res = etl::move(other);
-            return operator+(res);
+        /// create new vector by adding another vector
+        Vector operator+(Vector&& other) const {
+            Vector other_ = etl::move(other);
+            auto newCapacity = nItems + etl::len(other_);
+            auto temp = copy_alloc_(newCapacity);
+            etl::move(etl::begin(other_), etl::end(other_), temp + nItems);
+            return { temp, newCapacity, newCapacity };
         }
 
         /// append operator
         template <typename U>
         Vector& operator+=(U&& other) { append(etl::forward<U>(other)); return *this; }
-
-        /// equality operator
-        template <typename Container>
-        bool operator==(Container&& other) const { return etl::compare_all(*this, etl::forward<Container>(other)); }
-
-        /// inequality operator
-        template <typename Container>
-        bool operator!=(Container&& other) const { return !operator==(etl::forward<Container>(other)); }
     
     protected:
         Vector(T* buffer, size_t nItems, size_t capacity) 
@@ -255,7 +275,15 @@ namespace Project::etl {
 
         iterator copy_alloc_(size_t newCapacity) const {
             auto temp = new T[newCapacity];
+            if (!temp) return temp;
             etl::copy(buf, buf + etl::min(newCapacity, nItems), temp);
+            return temp;
+        }
+
+        iterator move_alloc_(size_t newCapacity) const {
+            auto temp = new T[newCapacity];
+            if (!temp) return temp;
+            etl::move(buf, buf + etl::min(newCapacity, nItems), temp);
             return temp;
         }
 
@@ -293,6 +321,27 @@ namespace Project::etl {
     /// create empty vector and set the capacity
     template <typename T> auto
     vector_reserve(size_t capacity) { return Vector<T>(capacity); }
+
+    /// convert any sequence to a vector
+    template <typename Sequence> auto
+    vectorize(Sequence&& seq) {
+        using T = decay_t<decltype(*etl::begin(etl::declval<Sequence>()))>;
+        auto res = vector<T>();
+
+        if constexpr (has_len_v<remove_reference_t<Sequence>>)
+            res.reserve(etl::len(seq));
+
+        if constexpr (is_lvalue_reference_v<Sequence>) {
+            for (decltype(auto) item : seq)
+                res += item;
+        } else {
+            auto seq_ = etl::move(seq);
+            for (decltype(auto) item : seq_)
+                res += etl::move(item);
+        }
+
+        return res;
+    }
 
     /// type traits
     template <typename T> struct is_vector : false_type {};

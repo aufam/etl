@@ -57,17 +57,23 @@ TEST(Map, Dynamic) {
     EXPECT_EQ(m["three"], 4);
 }
 
-TEST(Map, util) {
-    var m = Map<const char*, int>();
-    m["one"] = 1;
-    m["two"] = 2;
-    EXPECT_EQ(m["one"], 1);
-    EXPECT_EQ(m["two"], 2);
+TEST(Map, Util) {
+    // map of name-age pairs
+    val ages = map<String<8>, int>({
+        {"Bob", 29},
+        {"Mark", 23},
+        {"Chuck", 23},
+        {"Osas", 35},
+        {"Jupri", 23}
+    });
 
-    var b = Vector({1, 2, 3, 4, 5, 6});
-    var y = b | filter(lambda (val item) { return item % 2 == 0; });
-    EXPECT_EQ(y(), 2);
-    EXPECT_EQ(y(), 4);
-    EXPECT_EQ(y(), 6);
+    // people who are 23
+    var names = ages | 
+        filter(lambda (val item) { return item.y == 23; }) |
+        transform(lambda (val item) { return item.x; });
+
+    EXPECT_EQ(next(names), "Mark");
+    EXPECT_EQ(next(names), "Chuck");
+    EXPECT_EQ(next(names), "Jupri");
 }
 

@@ -8,3 +8,4 @@
 - [ ] Nameless lambda placeholders
 - [ ] Numerics -> sorting, binary search
 - [ ] Memory -> allocator, uninitialized_copy, uninitialized_move
+- [ ] Clear definition of Container, Sequence, Iterator, Iterable, and Generator

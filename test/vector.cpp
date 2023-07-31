@@ -15,7 +15,7 @@ TEST(Vector, Declaration) {
     EXPECT_EQ(a, x);
     EXPECT_EQ(b, x);
     EXPECT_EQ(c, x);
-    EXPECT_NE(d, x);
+    EXPECT_FALSE(d == x);
 }
 
 TEST(Vector, Append) {
@@ -125,4 +125,21 @@ TEST(Vector, String) {
 
     EXPECT_EQ(a[0], "123");
     EXPECT_EQ(a[1], "456");
+}
+
+TEST(Vector, Vectorize) {
+    val a = vectorize(range(10));
+    EXPECT_EQ(a, range(10));
+
+    val b = vectorize(a | transform(lambda (val item) { return item * 2; }));
+    EXPECT_EQ(b, range(0, 20, 2));
+
+    var v = vector(1, 2, 3);
+    val c = vectorize(v); // copy
+    EXPECT_EQ(v, range(1, 4));
+    EXPECT_EQ(c, range(1, 4));
+
+    val d = vectorize(move(v)); // move
+    EXPECT_FALSE(v);
+    EXPECT_EQ(d, range(1, 4));
 }

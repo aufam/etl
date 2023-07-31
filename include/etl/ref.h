@@ -15,10 +15,10 @@ namespace Project::etl {
         constexpr Ref() : ptr(nullptr) {}
 
         /// default constructor
-        constexpr explicit Ref(T& t) : ptr(etl::addressof(t)) {}
+        constexpr Ref(T& t) : ptr(etl::addressof(t)) {} // NOLINT
 
         /// default constructor
-        constexpr explicit Ref(T* t) : ptr(t) {}
+        constexpr Ref(T* t) : ptr(t) {} // NOLINT
 
         /// disable rvalue constructor
         Ref(T&& t) = delete;

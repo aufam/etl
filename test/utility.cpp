@@ -15,18 +15,18 @@ TEST(Utility, Iter) {
     EXPECT_EQ(next(i), 2);
     EXPECT_EQ(next(i), 3);
 
-    i = iter(a, -1);
+    i = reversed(a);
     EXPECT_EQ(next(i), 3);
     EXPECT_EQ(next(i), 2);
     EXPECT_EQ(next(i), 1);
 
     val v = vector(4, 5, 6);
-    var j = iter(v, -1);
+    var j = reversed(v);
     EXPECT_EQ(next(j), 6);
     EXPECT_EQ(next(j), 5);
     EXPECT_EQ(next(j), 4);
 
-    j = iter(v, -1);
+    j = reversed(v);
     EXPECT_EQ(next(j), 6);
     EXPECT_EQ(next(j), 5);
     EXPECT_EQ(next(j), 4);
@@ -37,7 +37,7 @@ TEST(Utility, Iter) {
     EXPECT_EQ(next(k), 8);
     EXPECT_EQ(next(k), 9);
 
-    k = iter(l, -1);
+    k = reversed(l);
     EXPECT_EQ(next(k), 9);
     EXPECT_EQ(next(k), 8);
     EXPECT_EQ(next(k), 7);
@@ -55,6 +55,9 @@ TEST(Utility, range) {
         b.append(i);
 
     EXPECT_EQ(b, array(3, 2, 1));
+
+    val r1 = range(10);
+    EXPECT_EQ(reversed(r1), range(9, -1, -1));
 }
 
 TEST(Utility, enumerate) {
@@ -111,36 +114,36 @@ TEST(Utility, Generator) {
         return temp;
     };
 
-    val fibonacci_sequence = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55 };
+    val fibonacci_sequence = { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55 };
     EXPECT_TRUE(all_of(fibonacci_sequence, fib));
 }
 
 TEST(Utility, Transform) {
     val a = array(1, 2, 3);
-    var b = a | transform(lambda (val item) { return item * item; });
-    EXPECT_TRUE(all_of(array(1, 4, 9), b));
+    val b = a | transform(lambda (val item) { return item * item; });
+    EXPECT_EQ(array(1, 4, 9), b);
 
     val v = vector(1, 2, 3);
-    var c = v | transform(lambda (val item) { return item * item; });
-    EXPECT_TRUE(all_of(array(1, 4, 9), c));
+    val c = v | transform(lambda (val item) { return item * item; });
+    EXPECT_EQ(array(1, 4, 9), c);
 
     val l = list(1, 2, 3);
-    var d = l | transform(lambda (val item) { return item * item; });
-    EXPECT_TRUE(all_of(array(1, 4, 9), d));
+    val d = l | transform(lambda (val item) { return item * item; });
+    EXPECT_EQ(array(1, 4, 9), d);
 
     val r = range(1, 4);
-    var e = r | transform(lambda (val item) { return item * item; });
-    EXPECT_TRUE(all_of(array(1, 4, 9), e));
+    val e = r | transform(lambda (val item) { return item * item; });
+    EXPECT_EQ(array(1, 4, 9), e);
 }
 
 TEST(Utility, Filter) {
     val a = array(1, 2, 3, 4, 5, 6);
-    var x = a | filter(lambda (val item) { return is_even(item); });
-    EXPECT_TRUE(all_of(array(2, 4, 6), x));
+    val x = a | filter(lambda (val item) { return is_even(item); });
+    EXPECT_EQ(array(2, 4, 6), x);
 
     val d = range(1, 7);
-    var r = d | filter(lambda (val item) { return is_even(item); });
-    EXPECT_TRUE(all_of(array(2, 4, 6), r));
+    val r = d | filter(lambda (val item) { return is_even(item); });
+    EXPECT_EQ(array(2, 4, 6), r);
 
     var s = 2;
     for (val i in array(1,2,3,4,5,6) | filter(lambda (val item) { return is_even(item); })) {

@@ -16,6 +16,7 @@ namespace Project::etl {
 
         constexpr Zip begin() const { return *this; }
         constexpr Zip end()   const { return *this; }
+        constexpr Zip iter()  const { return *this; }
 
         constexpr explicit operator bool() const { return bool_helper_<0>(); }
 
@@ -69,10 +70,6 @@ namespace Project::etl {
     /// create zip object from any sequence
     template <typename... Sequences> constexpr auto
     zip(Sequences&&... seq) { return Zip(etl::iter(seq)...); }
-
-    /// iter specialization for zip object
-    template <typename... Sequences> constexpr auto
-    iter(Zip<Sequences...> z) { return z; }
 }
 
 #endif // ETL_ZIP_H
