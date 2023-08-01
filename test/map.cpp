@@ -1,6 +1,7 @@
 #include "etl/map.h"
 #include "etl/string.h"
 #include "gtest/gtest.h"
+#include "etl/placeholder.h"
 #include "etl/keywords.h"
 
 using namespace Project::etl;
@@ -69,8 +70,8 @@ TEST(Map, Util) {
 
     // people who are 23
     var names = ages | 
-        filter(lambda (val item) { return item.y == 23; }) |
-        transform(lambda (val item) { return item.x; });
+        filter(placeholder::arg.get<1>() == 23) |
+        transform(placeholder::arg.get<0>());
 
     EXPECT_EQ(next(names), "Mark");
     EXPECT_EQ(next(names), "Chuck");
