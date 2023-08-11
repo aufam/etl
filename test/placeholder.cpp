@@ -46,3 +46,11 @@ TEST(Placeholder, Assignment) {
     EXPECT_EQ(v.len(), 0);
     EXPECT_EQ(b, vector(1, 2, 3));
 }
+
+TEST(Placeholder, Retval) {
+    val constexpr get5 = placeholder::retval<> = 5;
+    EXPECT_EQ(get5(), 5);
+
+    val plus5 = placeholder::retval<int> = placeholder::arg + 5;
+    EXPECT_EQ(plus5(2), 7);
+}
