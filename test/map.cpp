@@ -70,8 +70,8 @@ TEST(Map, Util) {
 
     // people who are 23
     var names = ages | 
-        filter(placeholder::arg.get<1>() == 23) |
-        transform(placeholder::arg.get<0>());
+        filter(placeholder::arg<1>.get<1>() == 23) |
+        transform(placeholder::arg<1>.get<0>());
 
     EXPECT_EQ(next(names), "Mark");
     EXPECT_EQ(next(names), "Chuck");
