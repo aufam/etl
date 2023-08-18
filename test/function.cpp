@@ -125,15 +125,13 @@ TEST(Function, Bind) {
         int data;
 
     public:
-        Process(int data) : data(data) {}
+        explicit Process(int data) : data(data) {}
 
-        int init() { return data; }
-
-        Function<int(), Process*> getter = bind<&Process::get>(this);
+        Function<int(), const Process*> getter = bind<&Process::get>(this);
         Function<void(int), Process*> setter = bind<&Process::set>(this);
 
     private:
-        int get() { return data; }
+        int get() const { return data; }
         void set(int d) { data = d; }
     };
 

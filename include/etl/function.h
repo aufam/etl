@@ -12,10 +12,23 @@ namespace Project::etl::detail {
     template <typename ClassType, typename ReturnType, typename... Args, auto method>
     struct ExtractMethod<ReturnType (ClassType::*)(Args...), method> { 
         using Class = ClassType;
+        using ClassPtr = Class*;
         using Return = ReturnType;
         using Fn = Return(Args...);
-        using Fp = Return(*)(Class*, Args...); 
-        static inline Return(*const fn)(Class*, Args...) = +[] (Class* self, Args... args) {
+        using Fp = Return(*)(ClassPtr, Args...);
+        static inline Return(*const fn)(ClassPtr, Args...) = +[] (ClassPtr self, Args... args) {
+            return (self->*method)(args...);
+        };
+    };
+
+    template <typename ClassType, typename ReturnType, typename... Args, auto method>
+    struct ExtractMethod<ReturnType (ClassType::*)(Args...) const, method> {
+        using Class = ClassType;
+        using ClassPtr = const Class*;
+        using Return = ReturnType;
+        using Fn = Return(Args...);
+        using Fp = Return(*)(ClassPtr, Args...);
+        static inline Return(*const fn)(ClassPtr, Args...) = +[] (ClassPtr self, Args... args) {
             return (self->*method)(args...);
         };
     };
@@ -273,9 +286,9 @@ namespace Project::etl {
 
     /// bind a class method to etl function
     template <auto method> constexpr auto
-    bind(typename detail::ExtractMethod<decltype(method), method>::Class* self) {
+    bind(typename detail::ExtractMethod<decltype(method), method>::ClassPtr self) {
         using Extractor = detail::ExtractMethod<decltype(method), method>;
-        return Function<typename Extractor::Fn, typename Extractor::Class*> { Extractor::fn, self };
+        return Function<typename Extractor::Fn, typename Extractor::ClassPtr> { Extractor::fn, self };
     }
 }
 
