@@ -119,3 +119,26 @@ TEST(Function, LinkedList) {
     EXPECT_EQ(l[0], f1);
     EXPECT_EQ(l[1], f2);
 }
+
+TEST(Function, Bind) {
+    class Process {
+        int data;
+
+    public:
+        Process(int data) : data(data) {}
+
+        int init() { return data; }
+
+        Function<int(), Process*> getter = bind<&Process::get>(this);
+        Function<void(int), Process*> setter = bind<&Process::set>(this);
+
+    private:
+        int get() { return data; }
+        void set(int d) { data = d; }
+    };
+
+    Process p(10);
+    EXPECT_EQ(p.getter(), 10);
+    p.setter(1);
+    EXPECT_EQ(p.getter(), 1);
+}

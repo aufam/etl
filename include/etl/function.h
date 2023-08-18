@@ -5,6 +5,22 @@
 #include "etl/tuple.h"
 #include <thread>
 
+namespace Project::etl::detail {
+    template <typename, auto>
+    struct ExtractMethod;
+
+    template <typename ClassType, typename ReturnType, typename... Args, auto method>
+    struct ExtractMethod<ReturnType (ClassType::*)(Args...), method> { 
+        using Class = ClassType;
+        using Return = ReturnType;
+        using Fn = Return(Args...);
+        using Fp = Return(*)(Class*, Args...); 
+        static inline Return(*const fn)(Class*, Args...) = +[] (Class* self, Args... args) {
+            return (self->*method)(args...);
+        };
+    };
+}
+
 namespace Project::etl {
     /// function class that holds function pointer and context (alternative of capture list)
     template <typename T, typename... C> struct Function;
@@ -254,6 +270,13 @@ namespace Project::etl {
     /// create function with context, capture by reference
     template <typename ...C, typename R> auto
     functionR(R (*fn)(C&...), C&... context) { return Function<R(), C&...>(fn, context...); }
+
+    /// bind a class method to etl function
+    template <auto method> constexpr auto
+    bind(typename detail::ExtractMethod<decltype(method), method>::Class* self) {
+        using Extractor = detail::ExtractMethod<decltype(method), method>;
+        return Function<typename Extractor::Fn, typename Extractor::Class*> { Extractor::fn, self };
+    }
 }
 
 #endif //ETL_FUNCTION_H

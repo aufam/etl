@@ -1,5 +1,6 @@
 #include "etl/getter_setter.h"
 #include "etl/placeholder.h"
+#include "etl/function.h"
 #include "gtest/gtest.h"
 #include "etl/keywords.h"
 
@@ -46,17 +47,17 @@ TEST(GetterSetter, Class) {
     public:
         Process(Data& data) : data(data) {}
 
-        GetterSetter<int, std::function<int()>, std::function<void(int)>> i = {
-            [this] { return data.i; },
-            [this] (int value) { data.i = value; }
+        GetterSetter<int, Function<int(), Process*>, Function<void(int), Process*>> i = {
+            {+[] (Process* self) { return self->data.i; }, this},
+            {+[] (Process* self, int set) { self->data.i = set; }, this}
         }; 
 
-        Getter<float, std::function<float()>> f = {
-            [this] { return data.f; }
+        Getter<float, Function<float(), Process*>> f = {
+            {+[] (Process* self) { return self->data.f; }, this}
         }; 
         
-        Setter<bool, std::function<void(bool)>> b = {
-            [this] (bool value) { data.b = value; }
+        Setter<bool, Function<void(bool), Process*>> b = {
+            {+[] (Process* self, bool set) { self->data.b = set; }, this}
         }; 
     };
 
