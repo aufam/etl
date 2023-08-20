@@ -1,5 +1,4 @@
 #include "etl/getter_setter.h"
-#include "etl/placeholder.h"
 #include "etl/function.h"
 #include "gtest/gtest.h"
 #include "etl/keywords.h"
@@ -12,8 +11,7 @@ TEST(GetterSetter, Get) {
     float value = 10;
     val g = make_getter<float>([&value] { return value; });
 
-    float get_value = int(g);
-    const bool l = is_convertible_v<float, float>;
+    float get_value = g;
     EXPECT_EQ(get_value, 10);
     EXPECT_EQ(get_value, value);
 }
