@@ -1,6 +1,16 @@
 #ifndef ETL_ALL_H
 #define ETL_ALL_H
 
+// os specific
+#include "etl/event.h"
+#include "etl/heap.h"
+#include "etl/mutex.h"
+#include "etl/queue.h"
+#include "etl/semaphore.h"
+#include "etl/thread.h"
+#include "etl/time.h"
+#include "etl/timer.h"
+
 #include "etl/algorithm.h"
 #include "etl/any.h"
 #include "etl/array.h"
