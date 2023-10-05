@@ -6,7 +6,7 @@ file(GLOB_RECURSE ETL_SOURCES src/*.*)
 add_library(etl ${ETL_SOURCES})
 
 # include dirs
-target_include_directories(${PROJECT_NAME}.elf PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(etl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # defines
-target_compile_definitions(${PROJECT_NAME}.elf PUBLIC -DETL_VERSION="${ETL_VERSION}")
+target_compile_definitions(etl PUBLIC -DETL_VERSION="${ETL_VERSION}")
