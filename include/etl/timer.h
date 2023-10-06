@@ -20,8 +20,13 @@ namespace Project::etl {
     protected:
         osTimerId_t id; ///< timer pointer
 
+    #ifdef STM32F103xB
+        void referenceCounterInc() { if (id) ++reinterpret_cast<StaticTimer_t*>(id)->uxDummy6; }
+        void referenceCounterDec() { if (id) --reinterpret_cast<StaticTimer_t*>(id)->uxDummy6; }
+    #else
         void referenceCounterInc() { if (id) ++reinterpret_cast<StaticTimer_t*>(id)->uxDummy7; }
         void referenceCounterDec() { if (id) --reinterpret_cast<StaticTimer_t*>(id)->uxDummy7; }
+    #endif
 
     public:
         /// empty constructor
@@ -64,7 +69,11 @@ namespace Project::etl {
         explicit operator bool() { return count() > 0; }
 
         /// get the reference counter
+    #ifdef STM32F103xB
+        uint32_t count() { return id ? reinterpret_cast<StaticTimer_t*>(id)->uxDummy6 : 0; }
+    #else
         uint32_t count() { return id ? reinterpret_cast<StaticTimer_t*>(id)->uxDummy7 : 0; }
+    #endif
 
         /// get timer pointer
         osTimerId_t get() { return id; }
