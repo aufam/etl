@@ -38,7 +38,7 @@ in STL.
 ## How to use
 * Clone this branch to your STM32 project folder. For example:
 ```bash
-git clone -b FreeRTOS https://git.delameta.id/m.aufa/etl.git your_project_path/Middlewares/Third_Party/etl
+git clone -b FreeRTOS https://github.com/aufam/etl.git your_project_path/Middlewares/Third_Party/etl
 ```
 * Add these line to your project CMakeLists.txt:
 ```cmake
@@ -47,5 +47,5 @@ target_link_libraries(${PROJECT_NAME}.elf etl)
 ```
 * (Optional) Add the submodule:
 ```bash
-git submodule add -b FreeRTOS https://git.delameta.id/m.aufa/etl.git your_project_path/Middlewares/Third_Party/etl
+git submodule add -b FreeRTOS https://github.com/aufam/etl.git your_project_path/Middlewares/Third_Party/etl
 ```
