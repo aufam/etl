@@ -11,6 +11,7 @@
  */
 
 #include "etl/utility.h" // pair, triple, len, next, iter, enumerate, zip, range
+#include "etl/string.h"
 #include <ciso646>       // or, and, not, not_eq
 
 
@@ -62,5 +63,8 @@
 #define _ dummy__[[maybe_unused]] // unused variable
 
 #endif // ETL_DISABLE_MORE_KEYWORDS
+
+using namespace Project;
+using namespace Project::etl::literals;
 
 // #endif //ETL_KEYWORDS_H
