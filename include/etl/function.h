@@ -282,6 +282,7 @@ namespace Project::etl {
         Function& operator=(const Function<R(Args...), Ctx*>& other) {
             fn = reinterpret_cast<Fn>(other.fn);
             context = reinterpret_cast<Context>(other.context);
+            return *this;
         }
 
         /// move construct from Function<R(Args...), Ctx>
@@ -300,6 +301,7 @@ namespace Project::etl {
             context = reinterpret_cast<Context>(other.context);
             other.fn = nullptr;
             other.context = nullptr;
+            return *this;
         }
 
         /// copy construct from Function<R(Args...)>
@@ -312,6 +314,7 @@ namespace Project::etl {
         Function& operator=(const Function<R(Args...)>& other) {
             fn = wrapperFunc;
             context = reinterpret_cast<Context>(other.fn);
+            return *this;
         }
 
         /// move construct from Function<R(Args...)>
@@ -326,6 +329,7 @@ namespace Project::etl {
             fn = wrapperFunc;
             context = reinterpret_cast<Context>(other.fn);
             other.fn = nullptr;
+            return *this;
         }
 
         /// copy constructor
