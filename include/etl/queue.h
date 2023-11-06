@@ -185,7 +185,7 @@ namespace Project::etl {
     };
 
     struct StaticQueueAttributes {
-        const char* name = nullptr;
+        const char* name;
     };
 
     /// FreeRTOS static queue
@@ -213,7 +213,7 @@ namespace Project::etl {
         ///     - .name as null terminated string
         /// @return osStatus
         /// @note cannot be called from ISR
-        osStatus_t init(StaticQueueAttributes attributes) {
+        osStatus_t init(StaticQueueAttributes attributes = {.name=nullptr}) {
             if (this->id) return osError;
             
             osMessageQueueAttr_t attr = {};
