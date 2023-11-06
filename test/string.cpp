@@ -160,7 +160,8 @@ TEST(String, Cast) {
     EXPECT_EQ(&f[0], &d[2]);
 }
 
-TEST(String, Std) {
-    std::string s = "123456";
-    EXPECT_EQ(s, "123456");
+TEST(String, compare) {
+    char buffer[64] = "test\0 123";
+    var &str = string_cast(buffer);
+    EXPECT_TRUE(str == "test");
 }

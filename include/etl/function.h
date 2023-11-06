@@ -169,7 +169,7 @@ namespace Project::etl {
         constexpr bool operator!=(Function&& other) const { return !operator==(etl::forward<Functor>(other)); }
     };
 
-    /// function class specialization for Context = void*
+    /// function class specialization for Context = non void
     template <typename R, typename... Args, typename C>
     struct Function<R(Args...), C> {
         typedef R Result;
@@ -254,7 +254,7 @@ namespace Project::etl {
         }
 
         /// construct from a functor (capture-less lambda expression, function pointer, or other invokable object)
-        template <typename Functor, typename = disable_if_t<is_etl_function_v<decay_t<Functor>>>>
+        template <typename Functor, typename = disable_if_t<is_etl_function_v<decay_t<Functor>> || is_same_v<decay_t<Functor>, None>>>
         Function(Functor&& f) : Function() {
             auto pf = static_cast<R (*)(Args...)>(etl::forward<Functor>(f));
             fn = wrapperFunc;
