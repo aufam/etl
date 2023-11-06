@@ -283,7 +283,15 @@ namespace Project::etl {
     /// is_string
     template <typename T> struct is_string : false_type {};
     template <> struct is_string<char[]> : true_type {};
+    template <> struct is_string<const char[]> : true_type {};
+    template <> struct is_string<volatile char[]> : true_type {};
+    template <> struct is_string<const volatile char[]> : true_type {};
+
     template <size_t N> struct is_string<char[N]> : true_type {};
+    template <size_t N> struct is_string<const char[N]> : true_type {};
+    template <size_t N> struct is_string<volatile char[N]> : true_type {};
+    template <size_t N> struct is_string<const volatile char[N]> : true_type {};
+    
     template <typename T> inline constexpr bool is_string_v = is_string<T>::value;
 
     /// is_function
