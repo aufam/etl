@@ -28,6 +28,7 @@
 #include "etl/pid_controller.h"
 #include "etl/placeholder.h"
 #include "etl/ref.h"
+#include "etl/scope_exit.h"
 #include "etl/string.h"
 #include "etl/tuple.h"
 #include "etl/vector.h"
