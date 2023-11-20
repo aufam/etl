@@ -72,8 +72,8 @@ TEST(String, Append) {
 
 TEST(String, IsContaining) {
     var s = string("Test %d%d%d", 1, 2, 3);
-    EXPECT_TRUE(s.isContaining("123"));
-    EXPECT_FALSE(s.isContaining("321"));
+    EXPECT_TRUE(s.contains("123"));
+    EXPECT_FALSE(s.contains("321"));
 
     EXPECT_EQ(s.find("Test "), 0);
     EXPECT_EQ(s.find("123"), 5);
@@ -160,8 +160,22 @@ TEST(String, Cast) {
     EXPECT_EQ(&f[0], &d[2]);
 }
 
-TEST(String, compare) {
+TEST(String, Compare) {
     char buffer[64] = "test\0 123";
     var &str = string_cast(buffer);
     EXPECT_TRUE(str == "test");
+}
+
+TEST(String, Conversion) {
+    const char* a = "123";
+    val &s1 = string_cast<8>(a);
+    EXPECT_EQ(s1.to_int(), 123);
+
+    const char* b = nullptr;
+    val &s2 = string_cast<8>(b);
+    EXPECT_EQ(s2.to_int_or(1000), 1000);
+
+    const char* c = "";
+    val &s3 = string_cast<8>(c);
+    EXPECT_EQ(s3.to_float_or(0.1f), 0.1f);
 }

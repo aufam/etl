@@ -11,7 +11,7 @@ TEST(PID, PID) {
     val kd = 0.3;
     val kdf = 0.4;
 
-    var controller = pid(
+    var controller [[maybe_unused]] = pid(
         placeholder::retval = kp,
         placeholder::retval = ki,
         placeholder::retval = kd,

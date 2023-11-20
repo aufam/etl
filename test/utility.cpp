@@ -152,7 +152,7 @@ TEST(Utility, Filter) {
     }
 
     s = 1;
-    for (val i in array(1,2,3,4,5,6) | filter(lambda (val item) { return true; })) {
+    for (val i in array(1,2,3,4,5,6) | filter(lambda (val) { return true; })) {
         EXPECT_EQ(s, i);
         s++;
     }

@@ -9,7 +9,7 @@ using namespace Project::etl;
 
 TEST(GetterSetter, Get) {
     float value = 10;
-    val g = make_getter<float>([&value] { return value; });
+    val g = getter<float>([&value] { return value; });
 
     float get_value = g;
     EXPECT_EQ(get_value, 10);
@@ -18,7 +18,7 @@ TEST(GetterSetter, Get) {
 
 TEST(GetterSetter, Set) {
     float value = 10;
-    val g = make_setter<float>([&value] (float new_value) { value = new_value; });
+    val g = setter<float>([&value] (float new_value) { value = new_value; });
 
     g = 20;
     EXPECT_EQ(value, 20);
@@ -26,7 +26,7 @@ TEST(GetterSetter, Set) {
 
 TEST(GetterSetter, GetSet) {
     float value = 10;
-    val g = make_getter_setter<float>([&value] { return value; }, [&value] (float new_value) { value = new_value; });
+    val g = getter_setter<float>([&value] { return value; }, [&value] (float new_value) { value = new_value; });
 
     g = 20;
     val get_value = float(g);
