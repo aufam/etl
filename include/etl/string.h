@@ -18,7 +18,7 @@
 namespace Project::etl {
     template <size_t N> class SplitString;
 
-    /// simple string class with c-style formatter
+    /// static string class with c-style formatter
     template <size_t N = ETL_STRING_DEFAULT_SIZE>
     class String {
         char str[N];
@@ -230,15 +230,52 @@ namespace Project::etl {
         size_t find(const String<M>& substring) const { return find(substring, substring.len()); }
 
         /* check if a substring is inside this string */
-        bool isContaining(const char* substring, size_t n) { return find(substring, n) < len(); }
+        bool contains(const char* substring, size_t n) { return find(substring, n) < len(); }
 
-        bool isContaining(const char* substring) { return find(substring) < len(); }
+        bool contains(const char* substring) { return find(substring) < len(); }
 
         template <size_t M>
-        bool isContaining(const String<M>& substring) { return find(substring) < len(); }
+        bool contains(const String<M>& substring) { return find(substring) < len(); }
 
         template <size_t M = ETL_SHORT_STRING_DEFAULT_SIZE>
         auto split(const char* separator = " ") { return SplitString<M>(str, separator); }
+
+        /* primitive type conversion */
+        template <typename T, typename = enable_if<is_arithmetic_v<T>>>
+        T scan(const char* format) const { T res; sscanf(str, format, &res); return res; }
+
+        int to_int(const char* format = "%d") const { return scan<int>(format); }
+        char to_char(const char* format = "%c") const { return scan<char>(format); }
+        short to_short(const char* format = "%hd") const { return scan<short>(format); }
+        long to_long(const char* format = "%ld") const { return scan<long>(format); }
+        long long to_long_long(const char* format = "%lld") const { return scan<long long>(format); }
+
+        unsigned int to_unsigned_int(const char* format = "%u") const { return scan<unsigned int>(format); }
+        unsigned char to_unsigned_char(const char* format = "%hhu") const { return scan<unsigned char>(format); }
+        unsigned short to_unsigned_short(const char* format = "%hu") const { return scan<unsigned short>(format); }
+        unsigned long to_unsigned_long(const char* format = "%lu") const { return scan<unsigned long>(format); }
+        unsigned long long to_unsigned_long_long(const char* format = "%llu") const { return scan<unsigned long long>(format); }
+
+        float to_float(const char* format = "%f") const { return scan<float>(format); }
+        double to_double(const char* format = "%lf") const { return scan<double>(format); }
+
+        template <typename T, typename = enable_if<is_arithmetic_v<T>>>
+        T scan_or(T value, const char* format) const { return &str[0] == nullptr ? value : scan<T>(format); }
+
+        int to_int_or(int value, const char* format = "%d") const { return scan_or<int>(value, format); }
+        char to_char_or(char value, const char* format = "%c") const { return scan_or<char>(value, format); }
+        short to_short_or(short value, const char* format = "%hd") const { return scan_or<short>(value, format); }
+        long to_long_or(long value, const char* format = "%ld") const { return scan_or<long>(value, format); }
+        long long to_long_long_or(long long value, const char* format = "%lld") const { return scan_or<long long>(value, format); }
+
+        unsigned int to_unsigned_int_or(unsigned int value, const char* format = "%u") const { return scan_or<unsigned int>(value, format); }
+        unsigned char to_unsigned_char_or(unsigned char value, const char* format = "%hhu") const { return scan_or<unsigned char>(value, format); }
+        unsigned short to_unsigned_short_or(unsigned short value, const char* format = "%hu") const { return scan_or<unsigned short>(value, format); }
+        unsigned long to_unsigned_long_or(unsigned long value, const char* format = "%lu") const { return scan_or<unsigned long>(value, format); }
+        unsigned long long to_unsigned_long_long_or(unsigned long long value, const char* format = "%llu") const { return scan_or<unsigned long long>(value, format); }
+
+        float to_float(float value, const char* format = "%f") const { return scan_or<float>(value, format); }
+        double to_double(double value, const char* format = "%lf") const { return scan_or<double>(value, format); }
     };
 
     /// create string from string literal, size can be implicitly or explicitly specified
