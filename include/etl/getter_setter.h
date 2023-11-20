@@ -6,12 +6,9 @@
 namespace Project::etl {
 
     template <typename T, typename GetterFunction>
-    class Getter {
+    struct Getter {
         GetterFunction get;
 
-    public:
-        constexpr Getter(GetterFunction get) : get(get) {}        
-      
         constexpr operator T() const { return get(); }
 
         template <typename U>
@@ -23,11 +20,8 @@ namespace Project::etl {
     
 
     template <typename T, typename SetterFunction>
-    class Setter {
+    struct Setter {
         SetterFunction set;
-
-    public:
-        constexpr Setter(SetterFunction set) : set(set) {}
 
         template <typename U>
         constexpr decltype(auto) operator=(U&& value) const { return set(etl::forward<U>(value)); }
@@ -40,12 +34,9 @@ namespace Project::etl {
 
 
     template <typename T, typename GetterFunction, typename SetterFunction>
-    class GetterSetter {
+    struct GetterSetter {
         GetterFunction get;
         SetterFunction set;
-
-    public:
-        constexpr GetterSetter(GetterFunction get, SetterFunction set) : get(get), set(set) {}
 
         constexpr operator T() const { return get(); }
 
@@ -58,13 +49,13 @@ namespace Project::etl {
 
 
     template <typename T, typename GetterFunction> constexpr auto
-    make_getter(GetterFunction&& get) { return Getter<T, GetterFunction> { etl::forward<GetterFunction>(get) }; }
+    getter(GetterFunction&& get) { return Getter<T, GetterFunction> { etl::forward<GetterFunction>(get) }; }
 
     template <typename T, typename SetterFunction> constexpr auto
-    make_setter(SetterFunction&& set) { return Setter<T, SetterFunction> { etl::forward<SetterFunction>(set) }; }
+    setter(SetterFunction&& set) { return Setter<T, SetterFunction> { etl::forward<SetterFunction>(set) }; }
 
     template <typename T, typename GetterFunction, typename SetterFunction> constexpr auto
-    make_getter_setter(GetterFunction&& get, SetterFunction&& set) { 
+    getter_setter(GetterFunction&& get, SetterFunction&& set) { 
         return GetterSetter<T, GetterFunction, SetterFunction> { 
             etl::forward<GetterFunction>(get), 
             etl::forward<SetterFunction>(set) 
