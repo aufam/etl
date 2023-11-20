@@ -121,7 +121,7 @@ namespace Project::etl {
         }
 
         /// return true if first character is not '\0'
-        constexpr explicit operator bool() const { return str[0] != '\0'; }
+        constexpr explicit operator bool() const { return &str[0] != nullptr && str[0] != '\0'; }
 
         /// assign from other const char*
         constexpr String& operator=(const char* other) {
@@ -260,7 +260,7 @@ namespace Project::etl {
         double to_double(const char* format = "%lf") const { return scan<double>(format); }
 
         template <typename T, typename = enable_if<is_arithmetic_v<T>>>
-        T scan_or(T value, const char* format) const { return &str[0] == nullptr ? value : scan<T>(format); }
+        T scan_or(T value, const char* format) const { return operator bool() ? scan<T>(format) : value; }
 
         int to_int_or(int value, const char* format = "%d") const { return scan_or<int>(value, format); }
         char to_char_or(char value, const char* format = "%c") const { return scan_or<char>(value, format); }
@@ -274,8 +274,8 @@ namespace Project::etl {
         unsigned long to_unsigned_long_or(unsigned long value, const char* format = "%lu") const { return scan_or<unsigned long>(value, format); }
         unsigned long long to_unsigned_long_long_or(unsigned long long value, const char* format = "%llu") const { return scan_or<unsigned long long>(value, format); }
 
-        float to_float(float value, const char* format = "%f") const { return scan_or<float>(value, format); }
-        double to_double(double value, const char* format = "%lf") const { return scan_or<double>(value, format); }
+        float to_float_or(float value, const char* format = "%f") const { return scan_or<float>(value, format); }
+        double to_double_or(double value, const char* format = "%lf") const { return scan_or<double>(value, format); }
     };
 
     /// create string from string literal, size can be implicitly or explicitly specified
