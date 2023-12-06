@@ -21,7 +21,7 @@ namespace Project::etl {
     struct array_traits<T, 0> {
         typedef etl::None type;
         static constexpr T* ptr(const type&) noexcept { return nullptr; }
-        static constexpr T& ref(const type&, int) noexcept { *static_cast<T*>(nullptr); }
+        static constexpr T& ref(const type&, int) noexcept { return *static_cast<T*>(nullptr); }
     };
 
     template <typename T, size_t N> using array_traits_t = typename array_traits<T, N>::type;
