@@ -81,18 +81,12 @@ TEST(String, IsContaining) {
 
 TEST(String, SplitString) {
     val ss = string("Test 123 abc").split();
-    EXPECT_STREQ(ss[0], "Test");
-    EXPECT_STREQ(ss[1], "123");
-    EXPECT_STREQ(ss[2], "abc");
+    EXPECT_EQ(ss[0], "Test");
+    EXPECT_EQ(ss[1], "123");
+    EXPECT_EQ(ss[2], "abc");
     EXPECT_EQ(ss[3], null);
     EXPECT_EQ(ss[4], null);
     EXPECT_EQ(len(ss), 3);
-
-    var s = string("Test 123");
-    val sp = SplitString(s);
-    EXPECT_STREQ(sp[0], "Test");
-    EXPECT_STREQ(sp[1], "123");
-    EXPECT_EQ(len(sp), 2);
 }
 
 TEST(String, Constexpr) {

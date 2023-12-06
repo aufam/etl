@@ -1,22 +1,11 @@
 #ifndef ETL_STRING_H
 #define ETL_STRING_H
 
-#include <cstring> // strlen, strcpy, memset
 #include <cstdarg> // va_list, va_start, va_end
 #include <cstdio>  // vsnprintf
-
-#ifndef ETL_STRING_DEFAULT_SIZE
-#define ETL_STRING_DEFAULT_SIZE 64
-#endif
-
-#ifndef ETL_SHORT_STRING_DEFAULT_SIZE
-#define ETL_SHORT_STRING_DEFAULT_SIZE 16
-#endif
-
-#include "etl/algorithm.h"
+#include "etl/string_view.h"
 
 namespace Project::etl {
-    template <size_t N> class SplitString;
 
     /// static string class with c-style formatter
     template <size_t N = ETL_STRING_DEFAULT_SIZE>
@@ -165,13 +154,6 @@ namespace Project::etl {
             return *this;
         }
 
-        template <size_t M>
-        constexpr String &operator<<(const String<M>& other)  { *this += other; return *this; }
-
-        constexpr String &operator<<(const char* other)       { *this += other; return *this; }
-        
-        constexpr String &operator<<(char ch)                 { *this += ch; return *this; }
-
         /// C-style formatter
         char* operator()(const char* fmt, ...) {
             va_list vl;
@@ -182,100 +164,50 @@ namespace Project::etl {
             return str;
         }
 
-        /* compare functions */
-        template <size_t M> int
-        compare(const String<M>& other)           const { return strncmp(str, other.data(), N); }
+        template <size_t M> constexpr int
+        compare(const String<M>& other) const { return StringView(str).compare(other.str); }
         
-        template <size_t M> int
-        compare(const String<M>& other, size_t n) const { return strncmp(str, other.data(), n); }
+        constexpr int 
+        compare(StringView other) const { return StringView(str).compare(other); }
 
-        int compare(const char* other, size_t n)  const { return strncmp(str, other, n); }
-        
-        int compare(const char* other)            const { return strncmp(str, other, N); }
+        template <size_t M> constexpr bool
+        operator==(const String<M>& other) const { return StringView(str) == StringView(other.str); }
 
-        /* compare operators */
-        template <size_t M> bool
-        operator==(const String<M>& other) const { return compare(other) == 0; }
-        
-        template <size_t M> bool
-        operator>(const String<M>& other)  const { return compare(other) > 0; }
-        
-        template <size_t M> bool
-        operator<(const String<M>& other)  const { return compare(other) < 0; }
+        constexpr bool 
+        operator==(StringView other) const { return StringView(str) == StringView(other); }
 
-        bool operator==(const char* other) const { return compare(other) == 0; }
-        
-        bool operator>(const char* other)  const { return compare(other) > 0; }
-        
-        bool operator<(const char* other)  const { return compare(other) < 0; }
-
-        template <size_t M> bool
+        template <size_t M> constexpr bool
         operator!=(const String<M>& other) const { return !operator==(other); }
 
-        bool operator!=(const char* other) const { return !operator==(other); }
+        constexpr bool 
+        operator!=(const char* other) const { return !operator==(other); }
 
-        /* find a substring inside this string */
-        size_t find(const char* substring, size_t n) const {
-            size_t i = 0;
-            for (auto &ch : *this) {
-                if (strncmp(substring, &ch, n) == 0) break;
-                i++;
-            }
-            return i;
-        }
+        constexpr auto 
+        substr(int start, size_t length) const { return StringView(&operator[](start), length); }
 
-        size_t find(const char* substring) const { return find(substring, strlen(substring)); }
+        constexpr size_t 
+        find(StringView substring) const { return StringView(str).find(substring); }
 
-        template <size_t M>
-        size_t find(const String<M>& substring) const { return find(substring, substring.len()); }
+        constexpr bool 
+        contains(StringView substring) const { return StringView(str).contains(substring); }
 
-        /* check if a substring is inside this string */
-        bool contains(const char* substring, size_t n) { return find(substring, n) < len(); }
+        constexpr int
+        to_int() const { return StringView(str).to_int(); }
 
-        bool contains(const char* substring) { return find(substring) < len(); }
+        constexpr int
+        to_int_or(int value) const { return StringView(str).to_int_or(value); }
 
-        template <size_t M>
-        bool contains(const String<M>& substring) { return find(substring) < len(); }
+        constexpr float
+        to_float() const { return StringView(str).to_float(); }
 
-        template <size_t M = ETL_SHORT_STRING_DEFAULT_SIZE>
-        auto split(const char* separator = " ") { return SplitString<M>(str, separator); }
+        constexpr float
+        to_float_or(float value) const { return StringView(str).to_float_or(value); }
 
-        /* primitive type conversion */
-        template <typename T, typename = enable_if<is_arithmetic_v<T>>>
-        T scan(const char* format) const { T res; sscanf(str, format, &res); return res; }
+        template <size_t M = ETL_SHORT_STRING_DEFAULT_SIZE> auto 
+        split(StringView separator = " ") const { return StringView(str).split(separator); }
 
-        int to_int(const char* format = "%d") const { return scan<int>(format); }
-        char to_char(const char* format = "%c") const { return scan<char>(format); }
-        short to_short(const char* format = "%hd") const { return scan<short>(format); }
-        long to_long(const char* format = "%ld") const { return scan<long>(format); }
-        long long to_long_long(const char* format = "%lld") const { return scan<long long>(format); }
-
-        unsigned int to_unsigned_int(const char* format = "%u") const { return scan<unsigned int>(format); }
-        unsigned char to_unsigned_char(const char* format = "%hhu") const { return scan<unsigned char>(format); }
-        unsigned short to_unsigned_short(const char* format = "%hu") const { return scan<unsigned short>(format); }
-        unsigned long to_unsigned_long(const char* format = "%lu") const { return scan<unsigned long>(format); }
-        unsigned long long to_unsigned_long_long(const char* format = "%llu") const { return scan<unsigned long long>(format); }
-
-        float to_float(const char* format = "%f") const { return scan<float>(format); }
-        double to_double(const char* format = "%lf") const { return scan<double>(format); }
-
-        template <typename T, typename = enable_if<is_arithmetic_v<T>>>
-        T scan_or(T value, const char* format) const { return operator bool() ? scan<T>(format) : value; }
-
-        int to_int_or(int value, const char* format = "%d") const { return scan_or<int>(value, format); }
-        char to_char_or(char value, const char* format = "%c") const { return scan_or<char>(value, format); }
-        short to_short_or(short value, const char* format = "%hd") const { return scan_or<short>(value, format); }
-        long to_long_or(long value, const char* format = "%ld") const { return scan_or<long>(value, format); }
-        long long to_long_long_or(long long value, const char* format = "%lld") const { return scan_or<long long>(value, format); }
-
-        unsigned int to_unsigned_int_or(unsigned int value, const char* format = "%u") const { return scan_or<unsigned int>(value, format); }
-        unsigned char to_unsigned_char_or(unsigned char value, const char* format = "%hhu") const { return scan_or<unsigned char>(value, format); }
-        unsigned short to_unsigned_short_or(unsigned short value, const char* format = "%hu") const { return scan_or<unsigned short>(value, format); }
-        unsigned long to_unsigned_long_or(unsigned long value, const char* format = "%lu") const { return scan_or<unsigned long>(value, format); }
-        unsigned long long to_unsigned_long_long_or(unsigned long long value, const char* format = "%llu") const { return scan_or<unsigned long long>(value, format); }
-
-        float to_float_or(float value, const char* format = "%f") const { return scan_or<float>(value, format); }
-        double to_double_or(double value, const char* format = "%lf") const { return scan_or<double>(value, format); }
+        template <size_t M = ETL_SHORT_STRING_DEFAULT_SIZE> auto 
+        match(StringView format, StringView separator = "%s") const { return StringView(str).match(format, separator); }
     };
 
     /// create string from string literal, size can be implicitly or explicitly specified
@@ -365,50 +297,6 @@ namespace Project::etl {
     template <size_t N> struct remove_extent<const String<N>> { typedef char type; };
     template <size_t N> struct remove_extent<volatile String<N>> { typedef char type; };
     template <size_t N> struct remove_extent<const volatile String<N>> { typedef char type; };
-
-    /// simple split string using strtok
-    /// @tparam N string buf size, default = ETL_STRING_DEFAULT_SIZE
-    /// @tparam M argv buf size, default = ETL_SHORT_STRING_DEFAULT_SIZE
-    template <size_t N = ETL_SHORT_STRING_DEFAULT_SIZE>
-    class SplitString {
-        mutable size_t argc = 0;    ///< number of arguments
-        mutable char* argv[N] = {}; ///< array of argument values
-
-    public: 
-        typedef char* value_type;
-        typedef char** iterator;
-        typedef const char** const_iterator;
-        typedef char* reference;
-        typedef const char* const_reference;
-        
-        /// construct from char*
-        explicit SplitString(char* text, const char* separator = " ") {
-            for (; argc < N; argc++) {
-                argv[argc] = strtok(argc == 0 ? text : nullptr, separator);
-                if (argv[argc] == nullptr) break;
-            }
-        }
-
-        /// construct from String
-        template <size_t M = ETL_SHORT_STRING_DEFAULT_SIZE>
-        explicit SplitString(String<M>& text, const char* separator = " ")
-        : SplitString(text.data(), separator) {}
-
-        size_t len() const { return argc; }
-
-        iterator begin()  { return &argv[0]; }
-        iterator end()    { return &argv[argc]; }
-        reference front() { return argv[0]; }
-        reference back()  { return argv[argc - 1]; }
-
-        const_iterator begin()  const { return &argv[0]; }
-        const_iterator end()    const { return &argv[argc]; }
-        const_reference front() const { return argv[0]; }
-        const_reference back()  const { return argv[argc - 1]; }
-
-        reference operator[](size_t index) { return index < argc ? argv[index] : nullptr; }
-        const_reference operator[](size_t index) const { return index < argc ? argv[index] : nullptr; }
-    };
 }
 
 namespace Project::etl::literals {
