@@ -30,8 +30,8 @@ namespace Project::etl {
         /// empty constructor
         constexpr StringView() : str(nullptr), length(0) {}
 
-        /// default constructor
-        constexpr StringView(const char* str, size_t length) : str(str), length(etl::min(calculate_length(str), length)) {}
+        /// default constructor, notice that it doesn't check the '\0' termination
+        constexpr StringView(const char* str, size_t length) : str(str), length(length) {}
 
         /// implicit constructor from C string
         constexpr StringView(const char* str) : str(str), length(calculate_length(str)) {}
@@ -80,12 +80,14 @@ namespace Project::etl {
 
         /// implementation of strncmp
         constexpr int compare(const StringView& other) const { 
-            for (size_t i = 0; i < length && i < other.length; ++i) {
+            const auto min_len = etl::min(length, other.length);
+            for (size_t i = 0; i < min_len; ++i) {
                 if (str[i] < other.str[i]) {
                     return -1;
                 } else if (str[i] > other.str[i]) {
                     return 1;
-                } else if (str[i] == '\0') {
+                } else if ((str[i] == '\0' && i + 1 == other.length) || 
+                           (other.str[i] == '\0' && i + 1 == length)) {
                     // Both strings are equal up to this point, and s1 is shorter
                     return 0;
                 }
@@ -94,7 +96,7 @@ namespace Project::etl {
         }
 
         constexpr bool operator==(const StringView& other) const { 
-            return length == other.length && compare(other) == 0; 
+            return compare(other) == 0; 
         }
         
         constexpr bool operator!=(const StringView& other) const { 
@@ -235,7 +237,7 @@ namespace Project::etl {
     inline constexpr auto 
     string_view(const char* text) { return StringView(text); }
     
-    /// create string view from C-string with length
+    /// create string view from C-string with length, it doesn't check the '\0' termination
     inline constexpr auto 
     string_view(const char* text, size_t length) { return StringView(text, length); }
     
@@ -243,7 +245,7 @@ namespace Project::etl {
     inline auto 
     string_view(const uint8_t* text) { return StringView(reinterpret_cast<const char*>(text)); }
     
-    /// create string view from uint8_t* with length
+    /// create string view from uint8_t* with length, it doesn't check the '\0' termination
     inline auto 
     string_view(const uint8_t* text, size_t length) { return StringView(reinterpret_cast<const char*>(text), length); }
 
@@ -274,6 +276,10 @@ namespace Project::etl {
             for (auto next_token = text; next_token.begin() < text.end() && argc < N;) {
                 auto pos = next_token.find(separator);
                 auto pos_max = pos + separator.length;
+
+                if (pos >= next_token.length) {
+                    break;
+                }
 
                 if (ignore_duplicate || pos > 0) // pos == 0 means it is duplicate
                     argv[argc++] = next_token.substr(0, pos);
@@ -321,6 +327,10 @@ namespace Project::etl {
             for (auto &token : format_split) {
                 auto pos = text.find(token);
                 auto pos_max = pos + token.length;
+
+                if (pos >= text.length) {
+                    break;
+                }
 
                 if (argc > 0) {
                     res[argc - 1].end = text.begin() + pos;
