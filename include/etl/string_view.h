@@ -277,7 +277,7 @@ namespace Project::etl {
                 auto pos = next_token.find(separator);
                 auto pos_max = pos + separator.length;
 
-                if (pos >= next_token.length) {
+                if (pos > next_token.length) {
                     break;
                 }
 
