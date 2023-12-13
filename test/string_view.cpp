@@ -120,4 +120,14 @@ TEST(StringView, Parse) {
     EXPECT_EQ(req.version, "HTTP/1.1");
     EXPECT_EQ(req.get_head("Content-Type"), "application/json");
     EXPECT_EQ(req.get_head("Content-Length"), "");
+
+    auto split = "192.168.200.247"sv.split<4>(".");
+    auto split0 = split[0];
+    auto split1 = split[1];
+    auto split2 = split[2];
+    auto split3 = split[3];
+    EXPECT_EQ(split0.to_int(), 192);
+    EXPECT_EQ(split1.to_int(), 168);
+    EXPECT_EQ(split2.to_int(), 200);
+    EXPECT_EQ(split3.to_int(), 247);
 }
