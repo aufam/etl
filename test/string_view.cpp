@@ -17,16 +17,36 @@ TEST(StringView, Split) {
 }
 
 TEST(StringView, Match) {
-    auto match = "12 34 "sv.match("%s %s");
+    auto match = " 12 34"sv.match(" %s %s");
     for (auto &sv : match) {
         std::cout << "string view test: " << std::string_view(sv.data(), sv.len()) << "end\n";
     }
     EXPECT_EQ(match[0], "12");
-    EXPECT_EQ(match[1], "34 ");
+    EXPECT_EQ(match[1], "34");
     EXPECT_EQ(match[2], "");
 }
 
 TEST(StringView, MatchAPI) {
+    auto match = "/api/arg"sv.match("/api/%s");
+    for (auto &sv : match) {
+        std::cout << "string view test: " << std::string_view(sv.data(), sv.len()) << "end\n";
+    }
+    EXPECT_EQ(match[0], "arg");
+    EXPECT_EQ(match[1], "");
+    EXPECT_EQ(match[2], "");
+}
+
+TEST(StringView, MatchAPIMultiple) {
+    auto match = "/api/arg1/arg2/123"sv.match("/api/%s/%s/%s");
+    for (auto &sv : match) {
+        std::cout << "string view test: " << std::string_view(sv.data(), sv.len()) << "end\n";
+    }
+    EXPECT_EQ(match[0], "arg1");
+    EXPECT_EQ(match[1], "arg2");
+    EXPECT_EQ(match[2], "123");
+}
+
+TEST(StringView, MatchAPIEmpty) {
     auto match = "/api"sv.match("/api/%s");
     for (auto &sv : match) {
         std::cout << "string view test: " << std::string_view(sv.data(), sv.len()) << "end\n";
