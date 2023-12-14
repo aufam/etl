@@ -96,7 +96,10 @@ namespace Project::etl {
         }
 
         constexpr bool operator==(const StringView& other) const { 
-            return compare(other) == 0; 
+            if (bool(*this) == bool(other)) {
+                return compare(other) == 0; 
+            }
+            return false;
         }
         
         constexpr bool operator!=(const StringView& other) const { 

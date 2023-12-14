@@ -70,6 +70,9 @@ namespace Project::etl {
             return *this;
         }
 
+        /// implicit conversion to string view
+        constexpr explicit operator StringView() const { return StringView(str, len()); }
+
         /// size in bytes
         static constexpr size_t size() { return N; }
 
@@ -165,16 +168,16 @@ namespace Project::etl {
         }
 
         template <size_t M> constexpr int
-        compare(const String<M>& other) const { return StringView(str).compare(other.str); }
+        compare(const String<M>& other) const { return StringView(*this).compare(other.str); }
         
         constexpr int 
-        compare(StringView other) const { return StringView(str).compare(other); }
+        compare(StringView other) const { return StringView(*this).compare(other); }
 
         template <size_t M> constexpr bool
-        operator==(const String<M>& other) const { return StringView(str) == StringView(other.str); }
+        operator==(const String<M>& other) const { return StringView(*this) == StringView(other.str); }
 
         constexpr bool 
-        operator==(StringView other) const { return StringView(str) == StringView(other); }
+        operator==(StringView other) const { return StringView(*this) == StringView(other); }
 
         template <size_t M> constexpr bool
         operator!=(const String<M>& other) const { return !operator==(other); }
@@ -233,6 +236,10 @@ namespace Project::etl {
     /// create empty string, size is ETL_SHORT_STRING_DEFAULT_SIZE 
     constexpr auto 
     short_string() { return etl::string<ETL_SHORT_STRING_DEFAULT_SIZE>(); }
+
+        /// create empty string, default size is ETL_STRING_DEFAULT_SIZE 
+    template <size_t N> constexpr auto 
+    string_view(const String<N>& text) { return StringView(text.data(), text.len()); }
 
     /// create string from 2 strings, size is s1.size() + s2.size() - 1
     /// @warning string buffer might be unnecessarily large
