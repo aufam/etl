@@ -16,7 +16,7 @@ namespace Project::etl {
         /// parse
         static constexpr Json parse(StringView text) { return Json::parse(text, Type::UNKNOWN); }
 
-        /// return false is type is unknown
+        /// return false if type is unknown
         constexpr explicit operator bool() const { return type != Type::UNKNOWN; }
 
         /// retrieve next JSON object
@@ -65,6 +65,12 @@ namespace Project::etl {
         constexpr const Json& operator*() const { return *this; }
         constexpr Json& operator*() { return *this; }
 
+        constexpr size_t len() const { 
+            size_t i = 0;
+            for (auto json [[maybe_unused]] : *this) ++i;
+            return i;
+        }
+
         // structured binding support
         template <std::size_t Index>
         constexpr auto get() const {
@@ -75,10 +81,10 @@ namespace Project::etl {
             }
         }
 
-        constexpr int to_int_or(int other) const { return type == Type::NUMBER ? text.to_int_or(other) : other; }
-        constexpr float to_float_or(float other) const { return type == Type::NUMBER ? text.to_float_or(other) : other; }
+        constexpr int to_int_or(int other) const { return is_number() ? text.to_int_or(other) : other; }
+        constexpr float to_float_or(float other) const { return is_number() ? text.to_float_or(other) : other; }
         constexpr StringView to_string_or(StringView other) const { 
-            return type == Type::STRING ? text.substr(1, text.len() - 2) : other; // remove ""
+            return is_string() ? text.substr(1, text.len() - 2) : other; // remove ""
         }
 
         constexpr int to_int() const { return to_int_or(0); }

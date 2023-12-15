@@ -30,6 +30,8 @@ TEST(JSON, Parse) {
     EXPECT_EQ(json["address"]["zip"].to_string(), "10001");
     EXPECT_EQ(json["isActive"].is_true(), true);
     EXPECT_EQ(json["info"].is_null(), true);
+
+    EXPECT_EQ(json.len(), 7);
 }
 
 TEST(JSON, Iterator) {
@@ -41,6 +43,7 @@ TEST(JSON, Iterator) {
         ++i;
     }
     EXPECT_EQ(i, 4);
+    EXPECT_EQ(json.len(), 4);
 }
 
 TEST(JSON, StructuredBinding) {
@@ -72,4 +75,6 @@ TEST(JSON, StructuredBinding) {
     EXPECT_EQ(names[1], "Bejo");
     EXPECT_EQ(names[2], "Prapto");
     EXPECT_EQ(names[3], "Derek");
+
+    EXPECT_EQ(json.len(), 4);
 }

@@ -26,6 +26,8 @@ in STL.
 [LinkedList](include/etl/linked_list.h), and [Map](include/etl/map.h))
 * Static [string class](include/etl/string.h)
 * Static [function class](include/etl/function.h)
+* String view in constexpr context
+* JSON parser in constexpr context
 * No RTTI
 * No virtual functions
 * Templated compile time constants
