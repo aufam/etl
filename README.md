@@ -1,4 +1,4 @@
-# Embedded Template Library (ETL) using FreeRTOS v2 for STM32 projects
+# Embedded Template Library (ETL)
 
 ## Overview
 C++ is a great language to use in embedded applications. 
@@ -18,34 +18,69 @@ in STL.
 ## Requirements
 * C++17
 * cmake minimum version 3.7
-* STM32CubeMx generated code
 
 ## Features
+* Cross-platform
+* Headers only
+* No dynamic memory allocation (Except [Vector](include/etl/vector.h),
+[LinkedList](include/etl/linked_list.h), and [Map](include/etl/map.h))
 * Static [string class](include/etl/string.h)
 * Static [function class](include/etl/function.h)
+* String view in constexpr context
+* JSON parser in constexpr context
 * No RTTI
 * No virtual functions
 * Templated compile time constants
 * Some useful [mathematics user-defined literals](include/etl/math.h)
 * [Complex number](include/etl/complex.h) with custom size
 * Additional [keywords](include/etl/keywords.h)
-* FreeRTOS [thread](include/etl/thread.h), [timer](include/etl/timer.h), 
-[semaphore](include/etl/semaphore.h), [mutex](include/etl/mutex.h), 
-[queue](include/etl/queue.h), [event](include/etl/event.h)
-* FreeRTOS [heap management](include/etl/heap.h)
-* FreeRTOS [dynamic allocation](src/dynamic_allocation.cpp)
+
+## Installation
+```bash
+mkdir build
+cmake -B build
+make -C build
+sudo make install -C build
+```
+All header files will be installed in /usr/local/include
+
+To uninstall:
+```bash
+sudo make uninstall -C build
+```
 
 ## How to use
-* Clone this branch to your STM32 project folder. For example:
-```bash
-git clone -b FreeRTOS https://github.com/aufam/etl.git your_project_path/Middlewares/Third_Party/etl
-```
-* Add these line to your project CMakeLists.txt:
+If it's already installed, you can use it right away. To make sure
+if it's correctly installed to include path, you can import the 
+library to your cmake project:
 ```cmake
-add_subdirectory(Middlewares/Third_Party/etl)
-target_link_libraries(${PROJECT_NAME}.elf etl)
+find_package(etl CONFIG REQUIRED)
+target_link_libraries(yourApp etl)
 ```
-* (Optional) Add the submodule:
+Or simply add [etl/include](include) to your project include directories
+if it's not installed
+```cmake
+include_directories(etl/include)
+```
+
+## Build test
+Prerequisites:
+* [Google Test](https://github.com/google/googletest)
 ```bash
-git submodule add -b FreeRTOS https://github.com/aufam/etl.git your_project_path/Middlewares/Third_Party/etl
+cmake -DBUILD_TESTS=ON -B build
+make -C build
 ```
+### Run tests
+```bash
+./build/test/test_all
+```
+
+## Build documentation
+Prerequisites:
+* [Doxygen](https://github.com/doxygen/doxygen.git)
+```bash
+cmake -DBUILD_DOCS=ON -B build
+make -C build
+```
+Documentation will be generated in 
+[build/docs/html/index.html](build/docs/html/index.html)
