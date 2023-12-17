@@ -184,7 +184,6 @@ namespace Project::etl {
                 break;
             }
 
-            err = "Invalid JSON";
             return Json::error("Invalid JSON object");
         }
 
