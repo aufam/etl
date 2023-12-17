@@ -62,7 +62,7 @@ TEST(Utility, range) {
 
 TEST(Utility, enumerate) {
     var p = array(10, 11, 12);
-    for (val [x, y] in enumerate(p, 10)) {
+    for (var [x, y] in enumerate(p, 10)) {
         EXPECT_EQ(x, y);
         y -= 10;
     }
@@ -78,16 +78,16 @@ TEST(Utility, zip) {
         x = y;
     }
 
-    for (val [x, y] in zip(p, q))
+    for (var [x, y] in zip(p, q))
         EXPECT_EQ(x, y);
     
     EXPECT_EQ(p, array(1, 2, 3, 8));
 
     val constexpr a = array(1, 2, 3);
     val constexpr b = array(2, 4, 6);
-    val constexpr f = lambda (val a, val b) {
+    val constexpr f = lambda (val &a, val &b) {
         var res = 0;
-        for (val [x, y] in zip(a, b))
+        for (var [x, y] in zip(a, b))
             res += x * y;
         return res;
     };

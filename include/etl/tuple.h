@@ -35,13 +35,19 @@ namespace Project::etl {
     get(TupleImpl<i, Item, Items...>& t) { return t.TupleHead<i, Item>::item; }
 
     template <size_t i, typename Item, typename... Items> constexpr auto&&
-    get(TupleImpl<i, Item, Items...>&& t) { return etl::move(etl::get(t)); }
+    get(TupleImpl<i, Item, Items...>&& t) { return etl::move(t.TupleHead<i, Item>::item); }
+
+    template <size_t i, typename Item, typename... Items> constexpr auto&
+    get(TupleImpl<i, Item&, Items...>&& t) { return t.TupleHead<i, Item&>::item; }
 
     template <size_t i, typename Item, typename... Items> constexpr const auto&
     get(const TupleImpl<i, Item, Items...>& t) { return t.TupleHead<i, Item>::item; }
 
     template <size_t i, typename Item, typename... Items> constexpr const auto&&
-    get(const TupleImpl<i, Item, Items...>&& t) { return etl::move(etl::get(t)); }
+    get(const TupleImpl<i, Item, Items...>&& t) { return etl::move(t.TupleHead<i, Item>::item); }
+
+    template <size_t i, typename Item, typename... Items> constexpr const auto&
+    get(const TupleImpl<i, Item&, Items...>&& t) { return t.TupleHead<i, Item&>::item; }
 
     template <size_t... i, typename T> auto
     tuple_slice(T& t, integer_sequence<size_t, i...>) { return etl::tuple(etl::get<i>(t)...); }
