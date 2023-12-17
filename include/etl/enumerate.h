@@ -25,10 +25,10 @@ namespace Project::etl {
         
         constexpr void operator++() { ++sequence; ++cnt; }
 
-        constexpr auto operator*() { return etl::pair<int, decltype(*sequence)>(cnt, *sequence); }
+        constexpr auto operator*() { return etl::Tuple<int, decltype(*sequence)>{cnt, *sequence}; }
         
         constexpr auto operator()() {
-            using R = etl::Pair<int, remove_reference_t<decltype(*sequence)>>;
+            using R = etl::Tuple<int, remove_reference_t<decltype(*sequence)>>;
             auto valid = operator bool();
             auto res = valid ? R{cnt, *sequence} : R{};
             if (valid) operator++();
