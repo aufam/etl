@@ -25,6 +25,7 @@ namespace Project::etl {
         constexpr void operator++() { inc_helper_<0>(); }
 
         constexpr auto operator*() { return deref_helper_(index_sequence_for<Sequences...>{}); }
+        constexpr auto operator*() const { return deref_helper_(index_sequence_for<Sequences...>{}); }
 
         constexpr auto operator()() { return next_helper_(index_sequence_for<Sequences...>{}); }
 
@@ -46,6 +47,11 @@ namespace Project::etl {
         template <size_t... i>
         constexpr auto deref_helper_(index_sequence<i...>) { 
             return Tuple<decltype(*etl::get<i>(sequences))...> { *etl::get<i>(sequences)... } ; 
+        }
+
+        template <size_t... i>
+        constexpr auto deref_helper_(index_sequence<i...>) const { 
+            return Tuple<add_const_t<decltype(*etl::get<i>(sequences))>...> { *etl::get<i>(sequences)... } ; 
         }
 
         template <size_t... i>
