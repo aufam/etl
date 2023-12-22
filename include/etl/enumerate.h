@@ -26,6 +26,7 @@ namespace Project::etl {
         constexpr void operator++() { ++sequence; ++cnt; }
 
         constexpr auto operator*() { return etl::Tuple<int, decltype(*sequence)>{cnt, *sequence}; }
+        constexpr auto operator*() const { return etl::Tuple<int, add_const_t<decltype(*sequence)>>{cnt, *sequence}; }
         
         constexpr auto operator()() {
             using R = etl::Tuple<int, remove_reference_t<decltype(*sequence)>>;

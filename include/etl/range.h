@@ -13,8 +13,6 @@ namespace Project::etl {
         U step;
 
     public:
-//        friend class RangeHelper;
-
         constexpr Range(T start, T stop, U step) : start(start), stop(stop), step(step) {}
 
         constexpr Range begin() const { return *this; }
@@ -56,7 +54,7 @@ namespace Project::etl {
         constexpr void operator++() { start += step; }
 
         /// dereference operator
-        constexpr T operator*() { return start; }
+        constexpr T operator*() const { return start; }
 
         /// next operator
         constexpr T operator()() { 
