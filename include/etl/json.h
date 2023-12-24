@@ -178,7 +178,7 @@ namespace Project::etl {
                 break;
             }
 
-            if (is_number_(text[i]) || (text[i] == '-' && is_number_(text[i + 1]))) {
+            if (is_number_(text[i]) || ((text[i] == '-' || text[i] == '+') && is_number_(text[i + 1]))) {
                 type = Type::NUMBER;
                 end_pos = start_pos + 1;
                 break;
@@ -238,6 +238,9 @@ namespace Project::etl {
                     if (!found_e && (text[i] == 'e' || text[i] == 'E')) {
                         found_e = true;
                         if (text[i + 1] == '-') {
+                            ++i;
+                        }
+                        if (text[i + 1] == '+') {
                             ++i;
                         }
                         continue;

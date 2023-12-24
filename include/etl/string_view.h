@@ -148,7 +148,9 @@ namespace Project::etl {
         }
         
         constexpr int to_int_or(int value) const { 
-            return (str && ((str[0] >= '0' && str[0] <= '9') || str[0] == '-')) ? to_int_helper() : value; 
+            return (str && ((str[0] >= '0' && str[0] <= '9') || str[0] == '-'|| str[0] == '+')) 
+                ? to_int_helper() 
+                : value; 
         }
         
         constexpr float to_float() const { 
@@ -156,7 +158,9 @@ namespace Project::etl {
         }
 
         constexpr float to_float_or(float value) const { 
-            return (str && ((str[0] >= '0' && str[0] <= '9') || str[0] == '-' || str[0] == '.')) ? to_float_helper() : value; 
+            return (str && ((str[0] >= '0' && str[0] <= '9') || str[0] == '-' || str[0] == '+' || str[0] == '.')) 
+                ? to_float_helper() 
+                : value; 
         }
 
         /* split and match */
@@ -182,8 +186,20 @@ namespace Project::etl {
             if (str[0] == '-')
                 return -substr(1, length - 1).to_int();
 
+            if (str[0] == '+')
+                return substr(1, length - 1).to_int();
+
             return (str[index] >= '0' && str[index] <= '9') 
                 ? to_int_helper(result * 10 + (str[index] - '0'), index + 1) 
+                : result;
+        }
+
+        constexpr int to_int_no_sign_helper(int result = 0, size_t index = 0) const {
+            if (!str || index >= length)
+                return result;
+
+            return (str[index] >= '0' && str[index] <= '9') 
+                ? to_int_no_sign_helper(result * 10 + (str[index] - '0'), index + 1) 
                 : result;
         }
  
@@ -194,10 +210,13 @@ namespace Project::etl {
             if (str[0] == '-')
                 return -substr(1, length - 1).to_float();
 
+            if (str[0] == '+')
+                return substr(1, length - 1).to_float();
+
             if (str[index] == '.') {
                 auto sv = substr(index + 1, length - (index + 1));
                 auto cn = sv.contiguous_number();
-                auto res = result + float(sv.to_int()) / ten_to_the_power_of(cn);
+                auto res = result + float(sv.to_int_no_sign_helper()) / ten_to_the_power_of(cn);
                 auto maxIndex = cn + index + 1;
                 return maxIndex < length && (str[maxIndex] == 'e' || str[maxIndex] == 'E')
                     ? to_float_helper(res, maxIndex)
