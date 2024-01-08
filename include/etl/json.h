@@ -144,8 +144,8 @@ namespace Project::etl {
                 continue;
             }
             
-            const auto text_4 = text.substr(start_pos, start_pos + 4);
-            const auto text_5 = text.substr(start_pos, start_pos + 5);
+            const auto text_4 = text.substr(start_pos, 4);
+            const auto text_5 = text.substr(start_pos, 5);
 
             if (text_4 == "null") {
                 type = Type::NULL_;
