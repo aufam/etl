@@ -38,7 +38,7 @@ TEST(Function, ContextWithArgs) {
     /// ```C++
     /// std::function<void(int)> iMultiplyBy = [&i](int c){ i *= c; };
     /// ```
-    val iMultiplyBy = Function<void(int), int&>(lambda (var i, val c) { i *= c; }, i);
+    val iMultiplyBy = Function<void(int), int&>(lambda (var &i, val c) { i *= c; }, i);
 
     iMultiplyBy(10);
     EXPECT_EQ(i, 20);
