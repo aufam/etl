@@ -75,14 +75,11 @@ namespace Project::etl {
         constexpr Iterator increment_helper(int inc) const {
             Iterator res = first;
             if (inc > 0) {
-                for (int i = 0; i != inc; i += 1) {
-                    if (res == last) break;
+                for (int i = 0; i != inc && res != last; i += 1) {
                     ++res;
                 }
             } else if (inc < 0) {
-                for (int i = 0; i != -inc; i += 1) {
-                    if (res == last)
-                        break;
+                for (int i = 0; i != -inc && res != last; i += 1) {
                     if constexpr (has_prefix_decrement_v<Iterator>)
                         --res;
                     else
