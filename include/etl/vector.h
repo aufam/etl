@@ -1,12 +1,13 @@
 #ifndef ETL_VECTOR_H
 #define ETL_VECTOR_H
 
+#include "etl/allocator.h"
 #include "etl/algorithm.h"
 
 namespace Project::etl {
 
     /// dynamic contiguous arrays
-    template <typename T>
+    template <typename T, typename A = etl::Allocator<T>>
     class Vector {
     protected:
         T* buf;
@@ -18,34 +19,57 @@ namespace Project::etl {
         typedef const T* const_iterator;
         typedef T& reference;
         typedef const T& const_reference;
+        typedef A Alloc;
 
         /// empty constructor
         constexpr Vector() : Vector(nullptr, 0, 0) {}
 
         /// construct and set the capacity
-        explicit Vector(size_t capacity) : Vector(new T[capacity], 0, capacity) {}
+        explicit Vector(size_t capacity) : Vector() {
+            buf = allocate(capacity);
+            if (buf) this->capacity = capacity;
+        }
 
         /// construct from initializer list
-        Vector(std::initializer_list<T> items) : Vector(new T[items.size()], items.size(), items.size()) {
-            if (buf)
-                etl::copy(items.begin(), items.end(), begin());
+        Vector(std::initializer_list<T>&& items) : Vector() {
+            buf = allocate(items.size());
+            if (!buf) return;
+
+            capacity = items.size();            
+            for (auto& it : items) {
+                new(buf + nItems) T(etl::move(it));
+                ++nItems;
+            }
         }
 
         /// copy constructor
-        Vector(const Vector& v) : Vector(v.copy_alloc_(v.capacity), v.nItems, v.capacity) {}
+        Vector(const Vector& other) : Vector() { *this = other; }
 
         /// move constructor
-        Vector(Vector&& v) noexcept : Vector(v.buf, v.nItems, v.capacity) { v.reset_(); }
+        Vector(Vector&& other) noexcept : Vector() { *this = etl::move(other); }
 
         /// copy assignment
         Vector& operator=(const Vector& other) {
             if (this == &other) return *this;
 
-            bool valid = bool(buf) && bool(other.buf);
-            if (other.nItems > nItems)
-                valid = reserve(other.nItems);
+            T* temp = nullptr;
+            if (other.nItems > capacity) {
+                temp = allocate(other.nItems);
+                if (!temp) return *this;
+            }
+
+            clear();
             
-            if (valid) {
+            if (temp) {
+                deallocate(buf, capacity);
+                reset_(temp, 0, other.nItems);
+
+                for (auto& it : other) {
+                    new(buf + nItems) T(it);
+                    ++nItems;
+                }
+            }
+            else {
                 etl::copy(other.begin(), other.end(), buf);
                 nItems = other.nItems;
             }
@@ -98,32 +122,38 @@ namespace Project::etl {
         template <typename U, typename = enable_if_t<is_convertible_v<decay_t<U>, T>>>
         void append(U&& other) {
             auto newCapacity = nItems + 1;
-            if (capacity < newCapacity) 
-                reserve(newCapacity);
+            if (capacity < newCapacity && !reserve(newCapacity))
+                return;
 
-            buf[nItems] = etl::forward<U>(other);
+            new(buf + nItems) T(etl::forward<U>(other));
             ++nItems;
         }
 
         /// add all items from another vector to this vector
         void append(const Vector& other) {
             auto newCapacity = nItems + etl::len(other);
-            if (capacity < newCapacity) 
-                reserve(newCapacity);
+            if (capacity < newCapacity && !reserve(newCapacity)) 
+                return;
+            
+            auto ptr = end();
+            for (auto src = etl::begin(other); src != etl::end(other); ++src, ++ptr)
+                new(ptr) T(*src);
 
-            etl::copy(etl::begin(other), etl::end(other), end());
-            nItems += etl::len(other);
+            nItems = newCapacity;
         }
 
         /// add all items from another vector to this vector
         void append(Vector&& other) {
-            Vector other_ = etl::move(other);
-            auto newCapacity = nItems + etl::len(other_);
-            if (capacity < newCapacity)
-                reserve(newCapacity);
+            auto newCapacity = nItems + etl::len(other);
+            if (capacity < newCapacity && !reserve(newCapacity)) 
+                return;
 
-            etl::move(etl::begin(other_), etl::end(other_), end());
-            nItems += etl::len(other_);
+            auto ptr = end();
+            for (auto src = etl::begin(other); src != etl::end(other); ++src, ++ptr)
+                new(ptr) T(etl::move(*src));
+            
+            nItems = newCapacity;
+            other.reset_delete_();
         }
 
         /// insert new item given the index
@@ -132,15 +162,19 @@ namespace Project::etl {
             index = index >= 0 ? etl::min(index, int(nItems)) :
                     int(nItems) + etl::max(index, -int(nItems));
 
+            if (index == int(nItems))
+                return append(etl::forward<U>(item));
+
             auto newCapacity = nItems + 1;
-            if (capacity < newCapacity)
-                reserve(newCapacity);
+            if (capacity < newCapacity && !reserve(newCapacity)) 
+                return;
 
-            auto [x, y] = etl::pair(end(), end() - 1);
-            for (; x != &buf[index]; --x, --y) 
-                *x = etl::move(*y); // shift
+            new(buf + nItems) T(etl::move(buf[nItems - 1]));
+            for (int i = nItems - 1; i > index; --i) {
+                buf[i] = etl::move(buf[i - 1]);
+            }
 
-            buf[index] = etl::forward<T>(item);
+            buf[index] = T(etl::forward<U>(item));
             ++nItems;
         }
 
@@ -149,15 +183,31 @@ namespace Project::etl {
             index = index >= 0 ? etl::min(index, int(nItems)) :
                     int(nItems) + etl::max(index, -int(nItems));
 
+            if (index == int(nItems))
+                return append(other);
+            
             auto newCapacity = nItems + etl::len(other);
-            if (capacity < newCapacity)
-                reserve(newCapacity);
+            if (capacity < newCapacity && !reserve(newCapacity)) 
+                return;
+            
+            // shift
+            for (int i = index; i < int(nItems); ++i) {
+                int idx = i + etl::len(other);
+                if (idx >= int(nItems))
+                    new(buf + idx) T(etl::move(buf[i]));
+                else
+                    buf[idx] = etl::move(buf[i]);
+            }
 
-            auto [x, y] = etl::pair(begin() + newCapacity - 1, end() - 1);
-            for (; x != &buf[index]; --x, --y) 
-                *x = etl::move(*y); // shift
+            // copy
+            for (int i = 0; i < int(etl::len(other)); i++) {
+                int idx = i + index;
+                if (idx >= int(nItems))
+                    new(buf + idx) T(other[i]);
+                else
+                    buf[idx] = other[i];
+            }
 
-            etl::copy(etl::begin(other), etl::end(other), begin() + index);
             nItems += etl::len(other);
         }
 
@@ -167,16 +217,32 @@ namespace Project::etl {
             index = index >= 0 ? etl::min(index, int(nItems)) :
                     int(nItems) + etl::max(index, -int(nItems));
 
-            auto newCapacity = nItems + etl::len(other_);
-            if (capacity < newCapacity)
-                reserve(newCapacity);
+            if (index == int(nItems))
+                return append(etl::move(other));
+            
+            auto newCapacity = nItems + etl::len(other);
+            if (capacity < newCapacity && !reserve(newCapacity)) 
+                return;
+            
+            // shift
+            for (int i = index; i < int(nItems); ++i) {
+                int idx = i + etl::len(other);
+                if (idx >= int(nItems))
+                    new(buf + idx) T(etl::move(buf[i]));
+                else
+                    buf[idx] = etl::move(buf[i]);
+            }
 
-            auto [x, y] = etl::pair(begin() + newCapacity - 1, end() - 1);
-            for (; x != &buf[index]; --x, --y)
-                *x = etl::move(*y); // shift
+            // move
+            for (int i = 0; i < int(etl::len(other)); i++) {
+                int idx = i + index;
+                if (idx >= int(nItems))
+                    new(buf + idx) T(etl::move(other[i]));
+                else
+                    buf[idx] = etl::move(other[i]);
+            }
 
-            etl::move(etl::begin(other_), etl::end(other_), begin() + index);
-            nItems += etl::len(other_);
+            nItems += etl::len(other);
         }
 
         /// remove an item given the index
@@ -184,8 +250,9 @@ namespace Project::etl {
             if (!is_valid_index_(index)) 
                 return false;
 
+            buf[index].~T();
             for (; index < int(nItems) - 1; ++index)
-                buf[index] = buf[index + 1];
+                buf[index] = etl::move(buf[index + 1]);
 
             --nItems;
             return true;
@@ -210,19 +277,24 @@ namespace Project::etl {
             auto newBuf = move_alloc_(newCapacity);
             if (newBuf == nullptr) 
                 return false;
+            
+            for (size_t i = newCapacity; i < nItems; ++i) 
+                buf[i].~T();
 
-            reset_delete_(newBuf, etl::min(nItems, newCapacity), newCapacity);
+            deallocate(buf, capacity);
+            reset_(newBuf, etl::min(nItems, newCapacity), newCapacity);
             return true;
         }
 
         /// set n items to 0, capacity remains the same
-        void clear() { nItems = 0; }
+        void clear() { 
+            for (auto ptr = begin(); ptr != end(); ++ptr)
+                ptr->~T();
+            nItems = 0;
+        }
 
         /// shrink the capacity to fit the number of items
         bool shrink() { return reserve(nItems); }
-
-        /// expand the number of items to fit the capacity
-        void expand() { nItems = capacity; }
 
         /// slice operator
         Iter<iterator> operator()(int start, int stop, int step = 1) { 
@@ -242,7 +314,7 @@ namespace Project::etl {
         Vector operator+(U&& other) const {
             auto newCapacity = nItems + 1;
             auto temp = copy_alloc_(newCapacity);
-            temp[nItems] = etl::forward<T>(other);
+            new(temp + nItems) T(etl::forward<U>(other));
             return { temp, newCapacity, newCapacity }; 
         }
 
@@ -250,16 +322,29 @@ namespace Project::etl {
         Vector operator+(const Vector& other) const { 
             auto newCapacity = nItems + etl::len(other);
             auto temp = copy_alloc_(newCapacity);
-            etl::copy(etl::begin(other), etl::end(other), temp + nItems);
+
+            
+            auto dest = temp + nItems;
+            for (auto &it : other) {
+                new(dest) T(it);
+                ++dest;
+            }
+
             return { temp, newCapacity, newCapacity }; 
         }
 
         /// create new vector by adding another vector
         Vector operator+(Vector&& other) const {
-            Vector other_ = etl::move(other);
-            auto newCapacity = nItems + etl::len(other_);
+            auto newCapacity = nItems + etl::len(other);
             auto temp = copy_alloc_(newCapacity);
-            etl::move(etl::begin(other_), etl::end(other_), temp + nItems);
+            
+            auto dest = temp + nItems;
+            for (auto &it : other) {
+                new(dest) T(etl::move(it));
+                ++dest;
+            }
+            other.reset_delete_();
+
             return { temp, newCapacity, newCapacity };
         }
 
@@ -274,16 +359,22 @@ namespace Project::etl {
             , capacity(buffer ? capacity : 0) {}
 
         iterator copy_alloc_(size_t newCapacity) const {
-            auto temp = new T[newCapacity];
+            auto temp = allocate(newCapacity);
             if (!temp) return temp;
-            etl::copy(buf, buf + etl::min(newCapacity, nItems), temp);
+
+            auto src = begin();
+            for (auto dest = temp; dest != temp + newCapacity && src != end(); ++dest, ++src)
+                new(dest) T(*src);
             return temp;
         }
 
-        iterator move_alloc_(size_t newCapacity) const {
-            auto temp = new T[newCapacity];
+        iterator move_alloc_(size_t newCapacity) {
+            auto temp = allocate(newCapacity);
             if (!temp) return temp;
-            etl::move(buf, buf + etl::min(newCapacity, nItems), temp);
+
+            auto src = begin();
+            for (auto dest = temp; dest != temp + newCapacity && src != end(); ++dest, ++src)
+                new(dest) T(etl::move(*src));
             return temp;
         }
 
@@ -294,7 +385,10 @@ namespace Project::etl {
         }
 
         void reset_delete_(iterator ptr = nullptr, size_t n = 0, size_t cap = 0) {
-            delete[] buf;
+            for (auto item = begin(); item != end(); ++item)
+                item->~T();
+            
+            deallocate(buf, capacity);
             reset_(ptr, n, cap);
         }
 
@@ -304,23 +398,34 @@ namespace Project::etl {
             if (index < 0 || size_t(index) >= nItems) return false; // out of range
             return true;
         }
+
+        static iterator allocate(size_t n) {
+            Alloc alloc;
+            return alloc.allocate(n);
+        }
+
+        static void deallocate(iterator ptr, size_t n) {
+            Alloc alloc;
+            alloc.deallocate(ptr, n);
+        }
     };
 
     /// create vector with variadic template function, the type can be implicitly or explicitly specified
-    template <typename T = void, typename U, typename... Us, typename R = conditional_t<is_void_v<T>, decay_t<U>, T>> auto
+    template <typename T = void, 
+        typename U, typename... Us, typename R = conditional_t<is_void_v<T>, decay_t<U>, T>> auto
     vector(U&& val, Us&&...vals) { return Vector<R> { R(etl::forward<U>(val)), R(etl::forward<Us>(vals))... }; }
 
     /// create vector from initializer list
-    template <typename T> auto
-    vector(std::initializer_list<T> items) { return Vector<T>(items); }
+    template <typename T, typename A = etl::Allocator<T>> auto
+    vector(std::initializer_list<T>&& items) { return Vector<T, A>(etl::move(items)); }
 
     /// create empty vector, capacity is 0
-    template <typename T> constexpr auto
-    vector() { return Vector<T>(); }
+    template <typename T, typename A = etl::Allocator<T>> constexpr auto
+    vector() { return Vector<T, A>(); }
 
     /// create empty vector and set the capacity
-    template <typename T> auto
-    vector_reserve(size_t capacity) { return Vector<T>(capacity); }
+    template <typename T, typename A = etl::Allocator<T>> auto
+    vector_reserve(size_t capacity) { return Vector<T, A>(capacity); }
 
     /// convert any sequence to a vector
     template <typename Sequence> auto

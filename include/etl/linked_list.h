@@ -11,7 +11,6 @@ namespace Project::etl {
         struct Node; ///< contains the item and pointer to next and prev items
 
     public:
-
         template <typename U>
         class Iterator;
 

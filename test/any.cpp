@@ -38,9 +38,6 @@ TEST(Any, Dynamic) {
     EXPECT_EQ(a.as<Vector<int>>()[0], 1);
     EXPECT_EQ(a.as<Vector<int>>()[1], 2);
     EXPECT_EQ(a.as<Vector<int>>()[2], 3);
-
-    // properly delete object
-    a.detach<Vector<int>>();
 }
 
 TEST(Any, Vector) {

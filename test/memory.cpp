@@ -16,6 +16,8 @@ TEST(Memory, Unique) {
     EXPECT_FALSE(b);
     EXPECT_EQ(b.get_value_or("released"), "released");
     EXPECT_EQ(*c, "test 123");
+
+    var d = unique_ptr<String<16>>(c);
 }
 
 TEST(Memory, Shared) {

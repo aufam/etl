@@ -3,7 +3,6 @@
 
 #include "etl/algorithm.h"
 #include "etl/tuple.h"
-#include <thread>
 
 namespace Project::etl::detail {
     template <typename, auto>
@@ -248,7 +247,7 @@ namespace Project::etl {
         /// construct from a functor (capture-less lambda expression, function pointer, or other invokable object)
         template <typename Functor, typename Ctx, typename = disable_if_t<is_etl_function_v<decay_t<Functor>>>>
         Function(Functor&& f, Ctx* ctx)
-                : fn(nullptr), context(reinterpret_cast<Context>(ctx)) {
+                : fn(nullptr), context(reinterpret_cast<Context>(const_cast<etl::remove_const_t<Ctx>*>(ctx))) {
             auto pf = static_cast<R (*)(Ctx*, Args...)>(etl::forward<Functor>(f));
             fn = reinterpret_cast<Fn>(pf);
         }

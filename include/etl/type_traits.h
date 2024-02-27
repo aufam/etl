@@ -385,6 +385,79 @@ namespace Project::etl {
     };
     template <typename T, typename U> inline constexpr bool is_convertible_v = is_convertible<T, U>::value;
 
+    // is_copy_constructible
+    template <typename T>
+    struct is_copy_constructible {
+        template <typename U, typename = decltype(U(etl::declval<const U&>()))> static auto check(int) -> etl::true_type;
+        template <typename U> static auto check(...) -> etl::false_type;
+        static constexpr bool value = decltype(check<T>(0))::value;
+    };
+    template <typename T, size_t N> struct is_copy_constructible<T[N]> : public etl::false_type {};
+    template <typename T> struct is_copy_constructible<T&> : public etl::false_type {};
+    template <typename T> inline constexpr bool is_copy_constructible_v = is_copy_constructible<T>::value;
+
+    // is_move_constructible
+    template <typename T>
+    struct is_move_constructible {
+        template <typename U, typename = decltype(U(etl::declval<U&&>()))> static auto check(int) -> etl::true_type;
+        template <typename U> static auto check(...) -> etl::false_type;
+        static constexpr bool value = decltype(check<T>(0))::value;
+    };
+    template <typename T, size_t N> struct is_move_constructible<T[N]> : public etl::false_type {};
+    template <typename T> struct is_move_constructible<T&> : public etl::false_type {};
+    template <> struct is_move_constructible<void> : public etl::false_type {};
+    template <typename T> struct is_move_constructible<const T> : public is_move_constructible<T> {};
+    template <typename T> struct is_move_constructible<volatile T> : public is_move_constructible<T> {};
+    template <typename T> struct is_move_constructible<const volatile T> : public is_move_constructible<T> {};
+    template <typename T> inline constexpr bool is_move_constructible_v = is_move_constructible<T>::value;
+
+    // is_copy_assignable
+    template <typename T>
+    struct is_copy_assignable {
+        template <typename U, typename = decltype(etl::declval<U&>() = etl::declval<const U&>())> static auto check(int) -> etl::true_type;
+        template <typename U> static auto check(...) -> etl::false_type;
+        static constexpr bool value = decltype(check<T>(0))::value;
+    };
+    template <typename T, size_t N> struct is_copy_assignable<T[N]> : public etl::false_type {};
+    template <typename T> struct is_copy_assignable<T&> : public etl::false_type {};
+    template <> struct is_copy_assignable<void> : public etl::false_type {};
+    template <typename T> struct is_copy_assignable<const T> :etl::false_type {};
+    template <typename T> struct is_copy_assignable<volatile T> :etl::false_type {};
+    template <typename T> struct is_copy_assignable<const volatile T> :etl::false_type {};
+    template <typename T> inline constexpr bool is_copy_assignable_v = is_copy_assignable<T>::value;
+
+    // is_move_assignable
+    template <typename T>
+    struct is_move_assignable {
+        template <typename U, typename = decltype(etl::declval<U&>() = etl::declval<U&&>())> static auto check(int) -> etl::true_type;
+        template <typename U> static auto check(...) -> etl::false_type;
+        static constexpr bool value = decltype(check<T>(0))::value;
+    };
+    template <typename T, size_t N> struct is_move_assignable<T[N]> : public etl::false_type {};
+    template <typename T> struct is_move_assignable<T&> : public etl::false_type {};
+    template <> struct is_move_assignable<void> : public etl::false_type {};
+    template <typename T> struct is_move_assignable<const T> :etl::false_type {};
+    template <typename T> struct is_move_assignable<volatile T> :etl::false_type {};
+    template <typename T> struct is_move_assignable<const volatile T> :etl::false_type {};
+    template <typename T> inline constexpr bool is_move_assignable_v = is_move_assignable<T>::value;
+
+    // is_destructible
+    template <typename T>
+    struct is_destructible {
+        static constexpr bool value = is_compound_v<T> && !is_pointer_v<T>;
+    };
+    template <typename T> inline constexpr bool is_destructible_v = is_destructible<T>::value;
+
+
+    // has_empty_constructor
+    template <typename T>
+    struct has_empty_constructor {
+        template <typename U, typename = decltype(U())> static auto check(int) -> etl::true_type;
+        template <typename U> static auto check(...) -> etl::false_type;
+        static constexpr bool value = decltype(check<T>(0))::value;
+    };
+    template <typename T> inline constexpr bool has_empty_constructor_v = has_empty_constructor<T>::value;
+
     /// a meta-function that always yields void, used for detecting valid types.
     template <typename...> using void_t = void;
 

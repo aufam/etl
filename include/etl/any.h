@@ -1,7 +1,7 @@
 #ifndef ETL_ANY_H
 #define ETL_ANY_H
 
-#include "etl/utility_basic.h"
+#include "etl/allocator.h"
 
 namespace Project::etl {
 
@@ -9,66 +9,88 @@ namespace Project::etl {
     /// @note if the type has custom destructor, you have to manually delete it by invoking detach<T>() 
     /// before destructing or reassigning this object
     class Any {
-        uint8_t* ptr;
-        size_t n;
+        etl::Allocator<uint8_t> alloc;
+        uint8_t* ptr = nullptr;
+        size_t n = 0;
+        void (*copy_construct)(uint8_t*, uint8_t*) = nullptr;
+        void (*copy_assign)(uint8_t*, uint8_t*) = nullptr;
+        void (*destruct)(uint8_t*) = nullptr;
 
     public:
         /// empty constructor
-        constexpr Any() : ptr(nullptr), n(0) {}
+        constexpr Any() {}
 
-        /// copy constructor
-        Any(const Any& other) : ptr(new uint8_t[other.n]), n(other.n) {
-            if (ptr == nullptr) {
-                n = 0;
+        /// copy constructors
+        Any(const Any& other) { 
+            if (other.copy_construct == nullptr)
                 return;
-            }
-
-            for (size_t i = 0; i < n; i++)
-                ptr[i] = other.ptr[i];
+            
+            alloc = other.alloc;
+            ptr = alloc.allocate(other.n);
+            if (ptr == nullptr)
+                return;
+            
+            other.copy_construct(other.ptr, ptr);
+            n = other.n;
+            copy_construct = other.copy_construct;
+            copy_assign = other.copy_assign;
+            destruct = other.destruct;
         }
 
         /// copy assignment
         Any& operator=(const Any& other) {
             if (&other == this) return *this;
-            detach();
-            
-            ptr = new uint8_t[other.n];
-            n = other.n;
-            if (ptr == nullptr) {
-                n = 0;
+
+            if (is_same_type(other)) {
+                if (copy_assign) copy_assign(other.ptr, ptr);
                 return *this;
             }
 
-            for (size_t i = 0; i < n; i++)
-                ptr[i] = other.ptr[i];
+            Any temp = other;
+            *this = etl::move(temp);
             return *this;
         }
 
         /// move constructor
-        Any(Any&& other) noexcept : ptr(etl::exchange(other.ptr, nullptr)), n(etl::exchange(other.n, 0)) {}
+        Any(Any&& other) noexcept { 
+            *this = etl::move(other);
+        }
 
         /// move assignment
         Any& operator=(Any&& other) noexcept {
             if (&other == this) return *this;
-            detach();
 
+            detach();
+            alloc = etl::move(other.alloc);
             ptr = etl::exchange(other.ptr, nullptr);
             n = etl::exchange(other.n, 0);
+            copy_construct = etl::exchange(other.copy_construct, nullptr);
+            copy_assign = etl::exchange(other.copy_assign, nullptr);
+            destruct = etl::exchange(other.destruct, nullptr);
             return *this;
         }
 
         /// construct from any type
         /// @note disable if value type is Any& or const T&&
         template <typename T, typename = disable_if_t<is_same_v<T, Any&> || is_const_v<T>>>
-        Any(T&& value) : ptr(nullptr), n(0) {
+        Any(T&& value) {
             using U = decay_t<T>;
             if constexpr (!is_same_v<U, None>) {
-                ptr = new uint8_t[sizeof(U)];
+                ptr = alloc.allocate(sizeof(U));
                 if (ptr == nullptr) 
                     return;
                 
                 new(ptr) U(etl::forward<T>(value));
                 n = sizeof(U);
+
+                if constexpr (etl::is_copy_constructible_v<U>)
+                copy_construct = +[] (uint8_t* src, uint8_t* dest) { new(dest) U(*reinterpret_cast<U*>(src)); };
+                
+                if constexpr (etl::is_copy_assignable_v<U>)
+                copy_assign = +[] (uint8_t* src, uint8_t* dest) { *reinterpret_cast<U*>(dest) = *reinterpret_cast<U*>(src); };
+
+                if constexpr (etl::is_destructible_v<U>)
+                destruct = +[] (uint8_t* ptr) { reinterpret_cast<U*>(ptr)->~U(); };
             }
         }
 
@@ -86,16 +108,20 @@ namespace Project::etl {
         size_t size() const { return n; }
 
         /// invoke destructor T and reset
-        template <typename T = void, typename = disable_if_t<is_same_v<T, Any> || is_const_v<T>>>
         void detach() {
             if (ptr == nullptr) return;
+            if (destruct) destruct(ptr);
             
-            if constexpr (is_compound_v<T> && !is_pointer_v<T>)
-                reinterpret_cast<T*>(ptr)->~T();
-            
-            delete[] ptr;
+            alloc.deallocate(ptr, n);
             ptr = nullptr;
             n = 0;
+            copy_construct = nullptr;
+            copy_assign = nullptr;
+            destruct = nullptr;
+        }
+
+        bool is_same_type(const Any& other) const {
+            return copy_construct == other.copy_construct && copy_assign == other.copy_assign && destruct == other.destruct;
         }
 
         /// cast to any type
