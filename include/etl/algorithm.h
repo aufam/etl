@@ -120,7 +120,7 @@ namespace Project::etl {
 
     /// check if all elements of two sequences are the same
     template <typename Sequence1, typename Sequence2> constexpr bool
-    compare_all(Sequence1&& seq1, Sequence2&& seq2) { return operator==(etl::forward<Sequence1>(seq1), etl::forward<Sequence2>(seq2)); }
+    compare_all(Sequence1&& seq1, Sequence2&& seq2) { return seq1 == seq2; }
 
     /// check if any elements of two sequences are the same
     template <typename Sequence1, typename Sequence2> constexpr bool
@@ -216,8 +216,15 @@ namespace Project::etl {
     }
 
     /// copy all of elements to the given destination
+    template <typename Iterator, typename IteratorDest> constexpr auto
+    copy(Iterator first, Iterator last, IteratorDest dest, IteratorDest dest_last) {
+        for (; first != last && dest != dest_last; ++first, ++dest) *dest = *first;
+        return dest;
+    }
+
+    /// copy all of elements to the given destination
     template <typename Sequence, typename SequenceDest> constexpr auto
-    copy(Sequence&& seq, SequenceDest& dest) { return copy(etl::begin(seq), etl::end(seq), etl::begin(dest)); }
+    copy(Sequence&& seq, SequenceDest& dest) { return copy(etl::begin(seq), etl::end(seq), etl::begin(dest), etl::end(dest)); }
 
     /// copy all of elements that satisfy the predicate to the given destination
     template <typename Iterator, typename IteratorDest, typename UnaryPredicate> constexpr auto
@@ -227,9 +234,16 @@ namespace Project::etl {
     }
     
     /// copy all of elements that satisfy the predicate to the given destination
+    template <typename Iterator, typename IteratorDest, typename UnaryPredicate> constexpr auto
+    copy_if(Iterator first, Iterator last, IteratorDest dest, IteratorDest dest_last, UnaryPredicate&& fn) {
+        for (; first != last && dest != dest_last; ++first) if (fn(*first)) { *dest = *first; ++dest; }
+        return dest;
+    }
+
+    /// copy all of elements that satisfy the predicate to the given destination
     template <typename Sequence, typename SequenceDest, typename UnaryPredicate> constexpr auto
     copy_if(Sequence&& seq, SequenceDest& dest, UnaryPredicate&& fn) {
-        return etl::copy_if(etl::begin(seq), etl::end(seq), etl::begin(dest), etl::forward<UnaryPredicate>(fn));
+        return etl::copy_if(etl::begin(seq), etl::end(seq), etl::begin(dest), etl::end(dest), etl::forward<UnaryPredicate>(fn));
     }
 
     /// move all of elements that satisfy the predicate to the given destination
@@ -240,10 +254,34 @@ namespace Project::etl {
     }
 
     /// move all of elements that satisfy the predicate to the given destination
+    template <typename Iterator, typename IteratorDest> constexpr auto
+    move(Iterator first, Iterator last, IteratorDest dest, IteratorDest dest_last) {
+        for (; first != last && dest != dest_last; ++first, ++dest) *dest = etl::move(*first);
+        return dest;
+    }
+
+    /// move all of elements that satisfy the predicate to the given destination
     template <typename Sequence, typename SequenceDest> constexpr void
-    move(Sequence&& seq, SequenceDest& dest) {
-        for (auto [x, y] : etl::zip(etl::forward<Sequence>(seq), etl::forward<SequenceDest>(dest)))
-            y = etl::move(x);
+    move(Sequence&& seq, SequenceDest& dest) { return move(etl::begin(seq), etl::end(seq), etl::begin(dest), etl::end(dest)); }
+
+    /// move all of elements that satisfy the predicate to the given destination
+    template <typename Iterator, typename IteratorDest, typename UnaryPredicate> constexpr auto
+    move_if(Iterator first, Iterator last, IteratorDest dest, UnaryPredicate&& fn) {
+        for (; first != last && dest != nullptr; ++first) if (fn(*first)) { *dest = std::move(*first); ++dest; }
+        return dest;
+    }
+    
+    /// move all of elements that satisfy the predicate to the given destination
+    template <typename Iterator, typename IteratorDest, typename UnaryPredicate> constexpr auto
+    move_if(Iterator first, Iterator last, IteratorDest dest, IteratorDest dest_last, UnaryPredicate&& fn) {
+        for (; first != last && dest != dest_last; ++first) if (fn(*first)) { *dest = std::move(*first); ++dest; }
+        return dest;
+    }
+
+    /// move all of elements that satisfy the predicate to the given destination
+    template <typename Sequence, typename SequenceDest, typename UnaryPredicate> constexpr auto
+    move_if(Sequence&& seq, SequenceDest& dest, UnaryPredicate&& fn) {
+        return etl::move_if(etl::begin(seq), etl::end(seq), etl::begin(dest), etl::end(dest), etl::forward<UnaryPredicate>(fn));
     }
 
     /// swap all of elements
@@ -251,12 +289,17 @@ namespace Project::etl {
     swap_element(Iterator1 first, Iterator1 last, Iterator2 dest) {
         for (; first != last && dest != nullptr; ++first, ++dest) etl::swap(*first, *dest);
     }
-    
+
+    /// swap all of elements
+    template <typename Iterator1, typename Iterator2> constexpr void
+    swap_element(Iterator1 first, Iterator1 last, Iterator2 dest, Iterator2 dest_last) {
+        for (; first != last && dest != dest_last; ++first, ++dest) etl::swap(*first, *dest);
+    }
+
     /// swap all of elements
     template <typename Sequence1, typename Sequence2> constexpr void
     swap_element(Sequence1&& seq1, Sequence2&& seq2) {
-        for (auto [x, y] : etl::zip(etl::forward<Sequence1>(seq1), etl::forward<Sequence2>(seq2)))
-            etl::swap(x, y);
+        etl::swap_element(etl::begin(seq1), etl::end(seq1), etl::begin(seq2), etl::end(seq2));
     }
 
     /// replace all elements with the given value

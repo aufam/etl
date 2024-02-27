@@ -4,6 +4,7 @@
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
 #include "etl/array.h"
+#include "etl/time.h"
 
 namespace Project::etl {
 
@@ -117,11 +118,11 @@ namespace Project::etl {
         }
 
         /// get the capacity
-        /// @note cannot be called from ISR
+        /// @note can be called from ISR
         uint32_t size() { return osMessageQueueGetCapacity(id); }
 
         /// get the item size in bytes
-        /// @note cannot be called from ISR
+        /// @note can be called from ISR
         uint32_t itemSize() { return osMessageQueueGetMsgSize(id); }
 
         /// get the number of items

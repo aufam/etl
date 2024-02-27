@@ -126,6 +126,12 @@ namespace Project::etl {
 
     template <typename T, typename = enable_if_t<etl::is_compound_v<T>>> constexpr bool
     operator!=(None, const T& value) { return !operator==(value, etl::none); }
+
+    struct Ignore {
+        template <typename T>
+        constexpr void operator=(T&&) const {}
+    };
+    inline static constexpr Ignore ignore;
 }
 
 #endif // ETL_MOVE_H

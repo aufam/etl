@@ -7,6 +7,7 @@
 namespace Project::etl::heap {
 
     inline const Getter<size_t, size_t(*)()> freeSize = { xPortGetFreeHeapSize };
+    inline const Getter<size_t, size_t(*)()> totalSize = {.get=[] { return configTOTAL_HEAP_SIZE; }};
     inline const Getter<size_t, size_t(*)()> minimumEverFreeSize = { xPortGetMinimumEverFreeHeapSize };
     
 }
