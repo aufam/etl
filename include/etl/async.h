@@ -18,6 +18,9 @@ namespace Project::etl {
                 return std::apply(fn, std::move(args_));
             };
         }
+    
+    private:
+        std::function<R(Args...)> fn;
     };
 }
 
