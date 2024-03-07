@@ -8,8 +8,8 @@ namespace Project::etl {
     /// provide a dynamic storage for storing and manipulating value of any type
     /// @note if the type has custom destructor, you have to manually delete it by invoking detach<T>() 
     /// before destructing or reassigning this object
+    template <typename A = etl::Allocator<uint8_t>>
     class Any {
-        etl::Allocator<uint8_t> alloc;
         uint8_t* ptr = nullptr;
         size_t n = 0;
         void (*copy_construct)(uint8_t*, uint8_t*) = nullptr;
@@ -25,7 +25,7 @@ namespace Project::etl {
             if (other.copy_construct == nullptr)
                 return;
             
-            alloc = other.alloc;
+            A alloc;
             ptr = alloc.allocate(other.n);
             if (ptr == nullptr)
                 return;
@@ -61,7 +61,6 @@ namespace Project::etl {
             if (&other == this) return *this;
 
             detach();
-            alloc = etl::move(other.alloc);
             ptr = etl::exchange(other.ptr, nullptr);
             n = etl::exchange(other.n, 0);
             copy_construct = etl::exchange(other.copy_construct, nullptr);
@@ -76,6 +75,7 @@ namespace Project::etl {
         Any(T&& value) {
             using U = decay_t<T>;
             if constexpr (!is_same_v<U, None>) {
+                A alloc;
                 ptr = alloc.allocate(sizeof(U));
                 if (ptr == nullptr) 
                     return;
@@ -112,6 +112,7 @@ namespace Project::etl {
             if (ptr == nullptr) return;
             if (destruct) destruct(ptr);
             
+            A alloc;
             alloc.deallocate(ptr, n);
             ptr = nullptr;
             n = 0;
@@ -140,11 +141,12 @@ namespace Project::etl {
     };
 
     /// create empty any object
-    inline auto any() { return etl::Any(); }
+    template <typename A = etl::Allocator<uint8_t>> auto
+    any() { return etl::Any<A>(); }
 
     /// create any object of a given value
-    template <typename T> auto
-    any(T&& value) { return etl::Any(etl::forward<T>(value)); }
+    template <typename A = etl::Allocator<uint8_t>, typename T> auto
+    any(T&& value) { return etl::Any<A>(etl::forward<T>(value)); }
 }
 
 #endif // ETL_ANY_H

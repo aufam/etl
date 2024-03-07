@@ -8,6 +8,20 @@
 
 using namespace Project::etl;
 
+TEST(Any, test) {
+    struct Message {
+        uint8_t cmd;
+        union { float f; int i; uint32_t u; };
+    };
+
+    uint8_t buffer[sizeof(Message)];
+    auto ptr = new (buffer) Message{.cmd=10, .u=2};
+    std::cout << "cmd: " << int(ptr->cmd) << '\n'
+              << "u: " << ptr->u << '\n'
+              << "i: " << ptr->i << '\n'
+              << "f: " << ptr->f << '\n';
+}
+
 TEST(Any, Dynamic) {
     Any a = 10;
     EXPECT_EQ(a.as<int>(), 10);
@@ -41,7 +55,7 @@ TEST(Any, Dynamic) {
 }
 
 TEST(Any, Vector) {
-    var v = vector<Any>();
+    var v = vector<Any<>>();
 
     Any a = 10;
     v += move(a);
@@ -55,7 +69,7 @@ TEST(Any, Vector) {
     EXPECT_EQ(v[0].as<int>(), 10);
     EXPECT_EQ(v[1].as<int>(), 20);
 
-    v = vector<Any>(string<8>("test"), move(b));
+    v = vector<Any<>>(string<8>("test"), move(b));
 
     EXPECT_FALSE(b);
     EXPECT_EQ(v[0].as<String<8>>(), "test");
@@ -63,7 +77,7 @@ TEST(Any, Vector) {
 }
 
 TEST(Any, LinkedList) {
-    var l = list<Any>();
+    var l = list<Any<>>();
 
     Any a = 10;
     Any b = 20;
@@ -76,7 +90,7 @@ TEST(Any, LinkedList) {
     EXPECT_EQ(l[0].as<int>(), 10);
     EXPECT_EQ(l[1].as<int>(), 20);
 
-    l = list<Any>(string<8>("test"), move(b));
+    l = list<Any<>>(string<8>("test"), move(b));
 
     EXPECT_FALSE(b);
     EXPECT_EQ(l[0].as<String<8>>(), "test");

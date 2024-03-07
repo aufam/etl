@@ -9,7 +9,6 @@ namespace Project::etl {
     /// dynamic contiguous arrays
     template <typename T, typename A = etl::Allocator<T>>
     class Vector {
-    protected:
         T* buf;
         size_t nItems, capacity;
 
@@ -352,7 +351,7 @@ namespace Project::etl {
         template <typename U>
         Vector& operator+=(U&& other) { append(etl::forward<U>(other)); return *this; }
     
-    protected:
+    private:
         Vector(T* buffer, size_t nItems, size_t capacity) 
             : buf(buffer)
             , nItems(buffer ? nItems : 0)
@@ -410,28 +409,26 @@ namespace Project::etl {
         }
     };
 
-    /// create vector with variadic template function, the type can be implicitly or explicitly specified
-    template <typename T = void, 
-        typename U, typename... Us, typename R = conditional_t<is_void_v<T>, decay_t<U>, T>> auto
-    vector(U&& val, Us&&...vals) { return Vector<R> { R(etl::forward<U>(val)), R(etl::forward<Us>(vals))... }; }
+    /// create vector with variadic template function, the type can be explicitly specified
+    template <typename T, typename A = etl::Allocator<T>, typename... Ts> auto
+    vector(Ts&&...vals) { return Vector<T, A> { T{etl::forward<Ts>(vals)}... }; }
+
+    /// create vector with variadic template function with default allocator, the type can be implicitly specified
+    template <typename T, typename... Ts> auto
+    vector(T&& val, Ts&&...vals) { return Vector<T> { etl::forward<T>(val), T{etl::forward<Ts>(vals)}... }; }
 
     /// create vector from initializer list
     template <typename T, typename A = etl::Allocator<T>> auto
     vector(std::initializer_list<T>&& items) { return Vector<T, A>(etl::move(items)); }
-
-    /// create empty vector, capacity is 0
-    template <typename T, typename A = etl::Allocator<T>> constexpr auto
-    vector() { return Vector<T, A>(); }
 
     /// create empty vector and set the capacity
     template <typename T, typename A = etl::Allocator<T>> auto
     vector_reserve(size_t capacity) { return Vector<T, A>(capacity); }
 
     /// convert any sequence to a vector
-    template <typename Sequence> auto
+    template <typename T, typename A = etl::Allocator<T>, typename Sequence> auto
     vectorize(Sequence&& seq) {
-        using T = decay_t<decltype(*etl::begin(etl::declval<Sequence>()))>;
-        auto res = vector<T>();
+        auto res = vector<T, A>();
 
         if constexpr (has_len_v<remove_reference_t<Sequence>>)
             res.reserve(etl::len(seq));
@@ -447,19 +444,26 @@ namespace Project::etl {
 
         return res;
     }
+        
+    /// convert any sequence to a vector with default allocator
+    template <typename Sequence> auto
+    vectorize(Sequence&& seq) {
+        using T = decay_t<decltype(*etl::begin(etl::declval<Sequence>()))>;
+        return vectorize<T>(etl::forward<Sequence>(seq));
+    }
 
     /// type traits
     template <typename T> struct is_vector : false_type {};
-    template <typename T> struct is_vector<Vector<T>> : true_type {};
-    template <typename T> struct is_vector<const Vector<T>> : true_type {};
-    template <typename T> struct is_vector<volatile Vector<T>> : true_type {};
-    template <typename T> struct is_vector<const volatile Vector<T>> : true_type {};
+    template <typename T, typename A> struct is_vector<Vector<T, A>> : true_type {};
+    template <typename T, typename A> struct is_vector<const Vector<T, A>> : true_type {};
+    template <typename T, typename A> struct is_vector<volatile Vector<T, A>> : true_type {};
+    template <typename T, typename A> struct is_vector<const volatile Vector<T, A>> : true_type {};
     template <typename T> inline constexpr bool is_vector_v = is_vector<T>::value;
 
-    template <typename T> struct remove_extent<Vector<T>> { typedef T type; };
-    template <typename T> struct remove_extent<const Vector<T>> { typedef T type; };
-    template <typename T> struct remove_extent<volatile Vector<T>> { typedef T type; };
-    template <typename T> struct remove_extent<const volatile Vector<T>> { typedef T type; };
+    template <typename T, typename A> struct remove_extent<Vector<T, A>> { typedef T type; };
+    template <typename T, typename A> struct remove_extent<const Vector<T, A>> { typedef T type; };
+    template <typename T, typename A> struct remove_extent<volatile Vector<T, A>> { typedef T type; };
+    template <typename T, typename A> struct remove_extent<const volatile Vector<T, A>> { typedef T type; };
 }
 
 #endif //ETL_VECTOR_H

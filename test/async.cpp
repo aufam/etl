@@ -25,7 +25,7 @@ TEST(Async, Await) {
     // invoke in this thread
     auto res = example(10).then([] (int num) {
         return num * 10;
-    }).wait();
+    }).await();
 
     EXPECT_EQ(res, 200);
 }

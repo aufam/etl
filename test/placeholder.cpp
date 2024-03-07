@@ -65,6 +65,14 @@ TEST(Placeholder, Retval) {
 
     val constexpr bar = retval = _1 + _2;
     EXPECT_EQ(bar(2, 3), 5);
+
+    int a = 10;
+    val f = retval = _1;
+    
+    int& g = f(a);
+    g++;
+
+    EXPECT_EQ(a, 11);
 }
 
 TEST(Placeholder, Args) {

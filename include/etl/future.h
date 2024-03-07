@@ -13,23 +13,23 @@ namespace Project::etl {
         template <typename Functor>
         Future(Functor&& f) : fn(etl::forward<Functor>(f)) {}
 
-        T wait() const { return fn(); }
+        T await() const { return fn(); }
 
         template <typename Functor>
         auto then(Functor&& func) {
             if constexpr (etl::is_void_v<T>)
-            return Future<decltype(func())>([get=etl::move(fn), func=etl::forward<Functor>(func)] { 
-                return (get(), func()); 
+            return Future<decltype(func())>([future=etl::move(*this), func=etl::forward<Functor>(func)] { 
+                return (future.await(), func()); 
             });
             else
-            return Future<decltype(func(etl::declval<T>()))>([get=etl::move(fn), func=etl::forward<Functor>(func)] { 
-                return func(get()); 
+            return Future<decltype(func(etl::declval<T>()))>([future=etl::move(*this), func=etl::forward<Functor>(func)] { 
+                return func(future.await()); 
             });
         } 
 
         template <typename U>
-        Future<U> operator|(Future<U>&& future) {
-            return [get=etl::move(fn), future=etl::move(future)] { return (get(), future.fn()); };
+        Future<U> operator|(Future<U>&& other) {
+            return [future=etl::move(*this), other=etl::move(other)] { return (future.await(), other.await()); };
         } 
 
         std::future<T> launch() {

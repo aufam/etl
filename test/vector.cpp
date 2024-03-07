@@ -8,7 +8,7 @@ using namespace Project::etl;
 TEST(Vector, Declaration) {
     val a = vector(0, 1, 2);                // using variadic function
     val b = vector<int>(0.0, 1.0f, '\02');  // implicitly cast to the desired type
-    val c = vector<int>({0, 1, 2});         // from initializer list
+    val c = vector({0, 1, 2});              // from initializer list
     val d = vector<int>();                  // empty vector
 
     val x = {0, 1, 2};
