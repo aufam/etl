@@ -1,12 +1,14 @@
 #ifndef ETL_LINKED_LIST_H
 #define ETL_LINKED_LIST_H
 
+#include "etl/allocator.h"
 #include "etl/algorithm.h"
 
 namespace Project::etl {
 
     /// doubly linked list. every item will be allocated to heap
-    template <typename T>
+    template <typename T, typename A = etl::Allocator<T>>
+    // template <typename T>
     class LinkedList {
         struct Node; ///< contains the item and pointer to next and prev items
 
@@ -31,8 +33,8 @@ namespace Project::etl {
         }
 
         /// construct from initializer list
-        LinkedList(std::initializer_list<T> items) {
-            for (auto& item : items) push(item);
+        LinkedList(std::initializer_list<T>&& items) {
+            for (auto& item : items) push(etl::move(item));
         }
 
         /// copy constructor
@@ -237,31 +239,52 @@ namespace Project::etl {
         make_iterator(U&& item) { return iterator(new Node(etl::forward<U>(item))); }
     };
 
-    /// create linked list with variadic template function, the type can be implicitly or explicitly specified
-    template <typename T = void, typename U, typename... Us, typename R = conditional_t<is_void_v<T>, decay_t<U>, T>> auto
-    list(U&& val, Us&&... vals) { return LinkedList<R> { R(etl::forward<U>(val)), R(etl::forward<Us>(vals))... }; }
+    /// create linked list with variadic template function, the type can be explicitly specified
+    template <typename T, typename A = etl::Allocator<T>, typename... Ts> auto
+    list(Ts&&...vals) { return LinkedList<T, A> { T{etl::forward<Ts>(vals)}... }; }
+
+    /// create linked list with variadic template function with default allocator, the type can be implicitly specified
+    template <typename T, typename... Ts> auto
+    list(T&& val, Ts&&...vals) { return LinkedList<T> { etl::forward<T>(val), T{etl::forward<Ts>(vals)}... }; }
 
     /// create linked list from initializer list
-    template <typename T> auto
-    list(std::initializer_list<T> items) { return LinkedList<T>(items); }
+    template <typename T, typename A = etl::Allocator<T>> auto
+    list(std::initializer_list<T>&& items) { return LinkedList<T, A>(etl::move(items)); }
 
-    /// empty linked list
-    template <typename T> auto 
-    list() { return LinkedList<T> {}; }
-
-    template <typename T>
-    struct LinkedList<T>::Node {
-        T item;
+    template <typename T, typename A>
+    struct LinkedList<T, A>::Node {
+        T* item = nullptr;
         mutable Node* next = nullptr;
         mutable Node* prev = nullptr;
         
-        explicit Node(const T& item) : item(item) {}
-        explicit Node(T&& item) : item(etl::move(item)) {}
+        explicit Node(const T& it) {
+            A alloc;
+            item = alloc.allocate(1);
+            if (item) {
+                new (item) T(it);
+            }
+        }
+
+        explicit Node(T&& it) {
+            A alloc;
+            item = alloc.allocate(1);
+            if (item) {
+                new (item) T(etl::move(it));
+            }
+        }
+
+        ~Node() {
+            if (item) {
+                item->~T();
+                A alloc;
+                alloc.deallocate(item, 1);
+            }
+        }
     };
 
-    template <typename T>
+    template <typename T, typename A>
     template <typename U>
-    class LinkedList<T>::Iterator {
+    class LinkedList<T, A>::Iterator {
         static_assert(is_same_v<U, Node*> || is_same_v<U, const Node*>, "the iterator has to be node pointer");
         friend class LinkedList<T>;
         Node* node;
@@ -315,10 +338,10 @@ namespace Project::etl {
         /// arrow operator to access the item's member
         auto* operator->() const {
             if constexpr (is_const_v<remove_pointer_t<U>>) {
-                const auto it = node ? &node->item : nullptr;
+                const auto it = node ? node->item : nullptr;
                 return it;
             } else {
-                auto it = node ? &node->item : nullptr;
+                auto it = node ? node->item : nullptr;
                 return it;
             }
         }
@@ -327,10 +350,10 @@ namespace Project::etl {
         /// @warning make sure node is not null
         auto& operator*() const {
             if constexpr (is_const_v<remove_pointer_t<U>>) {
-                const auto& it = node->item;
+                const auto& it = *node->item;
                 return it;
             } else {
-                auto& it = node->item;
+                auto& it = *node->item;
                 return it;
             }
         }
@@ -460,16 +483,16 @@ namespace Project::etl {
 
     /// type traits
     template <typename T> struct is_linked_list : false_type {};
-    template <typename T> struct is_linked_list<LinkedList<T>> : true_type {};
-    template <typename T> struct is_linked_list<const LinkedList<T>> : true_type {};
-    template <typename T> struct is_linked_list<volatile LinkedList<T>> : true_type {};
-    template <typename T> struct is_linked_list<const volatile LinkedList<T>> : true_type {};
+    template <typename T, typename A> struct is_linked_list<LinkedList<T, A>> : true_type {};
+    template <typename T, typename A> struct is_linked_list<const LinkedList<T, A>> : true_type {};
+    template <typename T, typename A> struct is_linked_list<volatile LinkedList<T, A>> : true_type {};
+    template <typename T, typename A> struct is_linked_list<const volatile LinkedList<T, A>> : true_type {};
     template <typename T> inline constexpr bool is_linked_list_v = is_linked_list<T>::value;
 
-    template <typename T> struct remove_extent<LinkedList<T>> { typedef T type; };
-    template <typename T> struct remove_extent<const LinkedList<T>> { typedef T type; };
-    template <typename T> struct remove_extent<volatile LinkedList<T>> { typedef T type; };
-    template <typename T> struct remove_extent<const volatile LinkedList<T>> { typedef T type; };
+    template <typename T, typename A> struct remove_extent<LinkedList<T, A>> { typedef T type; };
+    template <typename T, typename A> struct remove_extent<const LinkedList<T, A>> { typedef T type; };
+    template <typename T, typename A> struct remove_extent<volatile LinkedList<T, A>> { typedef T type; };
+    template <typename T, typename A> struct remove_extent<const volatile LinkedList<T, A>> { typedef T type; };
 }
 
 #endif //ETL_LINKED_LIST_H

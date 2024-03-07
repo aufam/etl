@@ -2,6 +2,7 @@
 #define ETL_PLACEHOLDER_H
 
 #include "etl/utility.h"
+#include <tuple>
 
 namespace Project::etl::placeholder {
 
@@ -560,25 +561,25 @@ namespace Project::etl::placeholder {
     template <size_t N>
     constexpr Argument arg {
         [] (auto&& arg) -> decltype(auto) {
-            return std::forward<decltype(etl::get<N - 1>(arg))>(etl::get<N - 1>(arg));
+            return etl::forward<decltype(etl::get<N - 1>(arg))>(etl::get<N - 1>(arg));
         }
     };
 
     constexpr Argument _1 {
         [] (auto&& arg) -> decltype(auto) {
-            return std::forward<decltype(etl::get<0>(arg))>(etl::get<0>(arg));
+            return etl::forward<decltype(etl::get<0>(arg))>(etl::get<0>(arg));
         }
     };
 
     constexpr Argument _2 {
         [] (auto&& arg) -> decltype(auto) {
-            return std::forward<decltype(etl::get<1>(arg))>(etl::get<1>(arg));
+            return etl::forward<decltype(etl::get<1>(arg))>(etl::get<1>(arg));
         }
     };
 
     constexpr Argument _3 {
         [] (auto&& arg) -> decltype(auto) {
-            return std::forward<decltype(etl::get<2>(arg))>(etl::get<2>(arg));
+            return etl::forward<decltype(etl::get<2>(arg))>(etl::get<2>(arg));
         }
     };
 }

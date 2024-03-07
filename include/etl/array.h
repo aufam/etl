@@ -80,7 +80,7 @@ namespace Project::etl {
 
     /// create array from initializer list
     template <typename T, size_t N> constexpr Array<T, N>
-    array(std::initializer_list<T> items) { Array<T, N> res; etl::copy(items.begin(), items.end(), res.begin()); return res; }
+    array(std::initializer_list<T> items) { Array<T, N> res; etl::copy(items.begin(), items.end(), res.begin(), res.end()); return res; }
 
     /// create array with default constructed T, array type and size are explicitly specified
     template <typename T, size_t N> constexpr auto

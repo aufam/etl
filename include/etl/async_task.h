@@ -12,44 +12,34 @@
 #endif
 
 #ifndef ETL_ASYNC_TASK_THREAD_SIZE
-#define ETL_ASYNC_TASK_THREAD_SIZE 512
+#define ETL_ASYNC_TASK_THREAD_SIZE 1024
 #endif
 
 namespace Project::etl {
     extern Tasks tasks;
 
+    template <typename F, typename... Args>
+    auto async(F&& fn, Args&&... args);
+
     class Task {
         friend class Tasks;
+        Task() = default;
 
-        void init(osPriority_t prio, const char* name) {
-            thread.init({.function=etl::bind<&Task::execute>(this), .prio=prio, .name=name, });
-            que.init({.name=name, });
-        }
-
-        void execute() {
-            for (;;) {
-                etl::this_thread::waitFlagsAny();
-                auto ptr = que.pop();
-                ::free(ptr); 
-                que.push(from_isr ? (fn_from_isr(), nullptr) : fn());
-                cleanup();
-            }
-        }
-
-        void cleanup() {
-            fn = nullptr;
-            fn_from_isr = nullptr;
-            busy = false;
-            from_isr = false;
-        }
+        void init(osPriority_t prio, const char* name);
+        void execute();
+        void cleanup();
 
         etl::Thread<ETL_ASYNC_TASK_THREAD_SIZE> thread;
         etl::Queue<void*, 1> que;
+        uint8_t args[32] = {};
 
+        etl::Function<void*(), void*> fn_static;
+        etl::Function<void(), void*> free_args;
         std::function<void*()> fn;
-        etl::Function<void(), void*> fn_from_isr;
+
+        bool is_running = true;
         bool busy = false;
-        bool from_isr = false;
+        bool is_static = false;
     };
 
 
@@ -61,91 +51,132 @@ namespace Project::etl {
             std::function<void()> abort_fn = nullptr;
         };
 
-        int resources() {
-            int cnt = 0;
-            for (auto &it : tasks) if (not it.busy) ++cnt;
-            return cnt;
-        }
+        int resources();
+        void terminate_all();
 
-        void launch_from_isr(etl::Function<void(), void*> fn) {
-            auto task = select_task();
-            if (task != nullptr) {
-                task->busy = true;
-                task->from_isr = true;
-                task->fn_from_isr = fn;
-                task->thread.setFlags(0b1);
-            }
-        }
-
-        template <typename R, typename... Args, typename... InnerArgs>
-        void launch_from_isr(const etl::Async<R(Args...)>& async, InnerArgs... args) {
-            async.assign_args(std::forward<InnerArgs>(args)...);
-            launch_from_isr({[] (const etl::Async<R(Args...)>* async) { async->invoke(); }, &async});
-        }
-
-        template <typename T>
-        Future<etl::unique_ptr<T>> launch(Future<T>&& future, LaunchArgs args) {
-            auto task = select_task();
-            if (task != nullptr) {
-                task->busy = true;
-                task->fn = [fn=etl::move(future.fn), ignore=args.ignore_result] { return ignore ? (fn(), nullptr) : new T(fn()); };
-                task->thread.setFlags(0b1);
-            }
-            
-            return [que=task ? &task->que : nullptr, timeout=args.timeout, abort_fn=etl::move(args.abort_fn)] { 
-                if (not que)
-                    return etl::unique_ptr<T>();
-                
-                void* res = nullptr;
-                if (que->pop(res, timeout) < 0 and abort_fn)
-                    abort_fn();
-                
-                return etl::unique_ptr<T>(reinterpret_cast<T*>(res));
-            };
-        }
-
-        Future<void> launch(Future<void>&& future, LaunchArgs args) {
-            auto task = select_task();
-            if (task != nullptr) {
-                task->busy = true;
-                task->fn = [fn=etl::move(future.fn)] { return (fn(), nullptr); };
-                task->thread.setFlags(0b1);
-            }
-            
-            return [que=task ? &task->que : nullptr, timeout=args.timeout, abort_fn=etl::move(args.abort_fn)] { 
-                if (not que)
-                    return;
-
-                void* res;
-                if (que->pop(res, timeout) < 0 and abort_fn)
-                    abort_fn();
-            };
-        }
+        template <typename T> Future<etl::conditional_t<etl::is_void_v<T>, void, etl::unique_ptr<T>>>
+        launch(Future<T>&& future, LaunchArgs args);
 
         template <typename T>
         auto launch(Future<T>&& future) { return launch(etl::move(future), LaunchArgs{.timeout=etl::time::infinite}); }
 
-        template <typename R, typename... Args>
-        void launch(Future<R(Args...)>, LaunchArgs) = delete;
+        template <typename T>
+        void launch(const Future<T>&, LaunchArgs) = delete;
 
     private:
-        Task* select_task() {
-            int prio = osPriorityHigh;
-            for (auto &task : tasks) task.init((osPriority_t) prio--, "");
-            if (not tasks[0].thread.get())
-                return nullptr;
-
-            Task* task = nullptr;
-            for (auto &it : tasks) if (not it.busy) {
-                task = &it;
-                break;
-            }
-
-            return task;
-        }
+        Task* select_task();
 
         Task tasks[ETL_ASYNC_TASKS_SIZE];
+
+        template <typename F, typename... Args>
+        friend auto async(F&& fn, Args&&... args);
+
+        template <auto method, typename Class, typename... Args>
+        friend auto async(Class* self, Args&&... args);
+
+        template <typename TAsync, typename... Args>
+        friend auto async(const etl::Async<TAsync>* fn, Args&&... args);
+
+        template <typename F, typename... Args>
+        auto launch_static(F&& fn, Args&&... args);
     };
+
+    template <typename F, typename... Args>
+    auto async(F&& fn, Args&&... args) {
+        return tasks.launch_static(etl::forward<F>(fn), etl::forward<Args>(args)...);
+    }
+
+    template <auto method, typename Class, typename... Args>
+    auto async(Class* self, Args&&... args) {
+        return tasks.launch_static(etl::bind<method>(self), etl::forward<Args>(args)...);
+    }
+
+    template <typename TAsync, typename... Args>
+    auto async(const etl::Async<TAsync>* fn, Args&&... args) {
+        return tasks.launch_static(+[](const etl::Async<TAsync>* fn, Args&&... args) {
+            return (*fn)(etl::forward<Args>(args)...).await();
+        }, fn, etl::forward<Args>(args)...);
+    }
+
+    template <typename TAsync, typename... Args>
+    auto async(const etl::Async<TAsync>& fn, Args&&... args) {
+        return async(&fn, etl::forward<Args>(args)...);
+    }
+
+    template <typename T> Future<etl::conditional_t<etl::is_void_v<T>, void, etl::unique_ptr<T>>>
+    Tasks::launch(Future<T>&& future, LaunchArgs args) {
+        auto task = select_task();
+        if (task != nullptr) {
+            if constexpr (etl::is_void_v<T>) {
+                task->fn = [fn=etl::move(future.fn)]() -> void* { return (fn(), nullptr); };
+            } else {
+                task->fn = [fn=etl::move(future.fn), ignore=args.ignore_result]() -> void* { 
+                    return ignore ? (fn(), nullptr) : new T(fn()); 
+                };
+            }
+            task->busy = true;
+            task->thread.setFlags(0b1);
+        }
+
+        return [task, timeout=args.timeout, abort_fn=etl::move(args.abort_fn)] { 
+            void* res = nullptr;
+            if (task != nullptr && task->que.pop(res, timeout) < 0 && abort_fn) {
+                abort_fn();
+            }
+
+            if constexpr (!etl::is_void_v<T>) {
+                return etl::unique_ptr<T>(static_cast<T*>(res));
+            }
+        };
+    }
+
+    template <typename F, typename... Args>
+    auto Tasks::launch_static(F&& fn, Args&&... args) {
+        using Fn = etl::conditional_t<etl::is_function_reference_v<F>, etl::add_pointer_t<etl::remove_reference_t<F>>, F>;
+        using ResultType = decltype(etl::declval<F>()(etl::declval<Args>()...));
+        using Result = etl::conditional_t<etl::is_void_v<ResultType>, void, etl::unique_ptr<ResultType>>;
+        using FnArgs = std::pair<Fn, std::tuple<Args...>>;
+
+        auto task = select_task();
+        if (task == nullptr)
+            return Future<Result>(etl::Function<Result(), void*>());
+
+        auto fn_args = new (task->args) FnArgs(std::make_pair(
+            etl::forward<Fn>(fn), 
+            std::forward_as_tuple(etl::forward<Args>(args)...)
+        ));
+
+        task->fn_static = {[] (FnArgs* fn_args) -> void* {
+            auto& fn = fn_args->first;
+            auto& args = fn_args->second;
+
+            if constexpr (etl::is_void_v<ResultType>) {
+                std::apply(etl::move(fn), etl::move(args));
+                return nullptr;
+            } else {
+                return new ResultType(std::apply(etl::move(fn), etl::move(args)));
+            }
+        }, fn_args};
+
+        task->free_args = {[] (FnArgs* fn_args) {
+            fn_args->~FnArgs();
+        }, fn_args};
+
+        task->busy = true;
+        task->is_static = true;
+        task->thread.setFlags(0b1);
+
+        return Future<Result>(etl::Function<Result(), void*>([] (Task* task) { 
+            if (task == nullptr)
+                return Result();
+            
+            void* res = nullptr;
+            task->que.pop(res);
+            if constexpr (!etl::is_void_v<ResultType>) {
+                return Result(static_cast<ResultType*>(res));
+            }
+        }, task));
+    }
 }
 
 #endif

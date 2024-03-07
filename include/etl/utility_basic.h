@@ -1,7 +1,20 @@
-#ifndef ETL_MOVE_H
-#define ETL_MOVE_H
+#ifndef ETL_UTILITY_BASIC_H
+#define ETL_UTILITY_BASIC_H
 
 #include "etl/type_traits.h"
+
+void* operator new(size_t size);
+void* operator new(size_t size, uint8_t* ptr);
+
+void operator delete(void *ptr);
+void operator delete(void *ptr, size_t);
+
+extern "C" {
+void* malloc(size_t size);
+void* calloc(size_t nItems, size_t itemSize);
+void* realloc(void* ptr, size_t newSize);
+void free(void* ptr);
+}
 
 namespace Project::etl {
 
@@ -134,4 +147,4 @@ namespace Project::etl {
     inline static constexpr Ignore ignore;
 }
 
-#endif // ETL_MOVE_H
+#endif // ETL_UTILITY_BASIC_H

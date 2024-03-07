@@ -70,7 +70,7 @@ namespace Project::etl {
         explicit operator bool() { return count() > 0; }
 
         /// get the reference counter
-        uint32_t count() { return reinterpret_cast<StaticQueue_t*>(id)->uxDummy8; }
+        uint32_t count() { return id ? reinterpret_cast<StaticQueue_t*>(id)->uxDummy8 : 0; }
 
         /// decrease reference counter and clean resource if reference counter is 0 
         /// @return osStatus
@@ -93,7 +93,15 @@ namespace Project::etl {
         /// @return osStatus
         /// @note can be called from ISR if timeout == 0
         osStatus_t push(const_reference item, etl::Time timeout = etl::time::immediate, uint8_t prio = 0) { 
-            return osMessageQueuePut(id, &item, prio, timeout.tick); 
+            uint8_t buffer[sizeof(T)];
+            new (buffer) T(item);
+            return osMessageQueuePut(id, buffer, prio, timeout.tick); 
+        }
+
+        osStatus_t push(reference item, etl::Time timeout = etl::time::immediate, uint8_t prio = 0) { 
+            uint8_t buffer[sizeof(T)];
+            new (buffer) T(etl::move(item));
+            return osMessageQueuePut(id, buffer, prio, timeout.tick); 
         }
         
         /// pop first item out from the queue
@@ -103,7 +111,14 @@ namespace Project::etl {
         /// @return osStatus
         /// @note can be called from ISR if timeout == 0
         osStatus_t pop(reference item, etl::Time timeout = etl::time::immediate, uint8_t* prio = nullptr) { 
-            return osMessageQueueGet(id, &item, prio, timeout.tick); 
+            uint8_t buffer[sizeof(T)];
+            auto res = osMessageQueueGet(id, buffer, prio, timeout.tick); 
+            if (res == osOK) {
+                auto ptr = reinterpret_cast<T*>(buffer);
+                item = etl::move(*ptr);
+                ptr->~T(); 
+            }
+            return res;
         }
 
         /// pop first item out from the queue
@@ -111,10 +126,15 @@ namespace Project::etl {
         /// @param[out] prio pointer to priority level, default null (ignore)
         /// @return the first item
         /// @note can be called from ISR if timeout == 0
-        value_type pop(etl::Time timeout = etl::time::immediate, uint8_t *prio = nullptr) {
-            value_type item = {};
-            pop(item, timeout, prio);
-            return item;
+        T pop(etl::Time timeout = etl::time::immediate, uint8_t *prio = nullptr) {
+            uint8_t buffer[sizeof(T)];
+            if (osMessageQueueGet(id, buffer, prio, timeout.tick) == osOK) {
+                auto ptr = reinterpret_cast<T*>(buffer);
+                T res = etl::move(*ptr);
+                ptr->~T(); 
+                return res;
+            }
+            return T{};
         }
 
         /// get the capacity
@@ -178,6 +198,11 @@ namespace Project::etl {
         /// @note can be called from ISR
         QueueInterface<T>& operator<<(const_reference item) { push(item); return *this; }
 
+        /// push operator
+        /// @param[in] item the first item
+        /// @note can be called from ISR
+        QueueInterface<T>& operator<<(reference item) { push(item); return *this; }
+
         /// pop operator
         /// @param[out] item the first item
         /// @note can be called from ISR
@@ -197,7 +222,7 @@ namespace Project::etl {
     template <class T, size_t N>
     class Queue : public QueueInterface<T> {
         StaticQueue_t controlBlock = {};
-        Array<T, N> buffer = {};
+        uint8_t buffer[sizeof(T) * N] = {};
 
     public:
         /// default constructor

@@ -27,7 +27,7 @@ namespace Project::etl {
         /// construct from array char with different size 
         template <size_t M>
         constexpr String(const char (&text)[M]) : str{} { // NOLINT
-            etl::copy(text, text + etl::min(N, M), begin());
+            etl::copy(text, text + M, data(), data() + N);
             str[N - 1] = '\0';
         }
 
@@ -47,8 +47,7 @@ namespace Project::etl {
         template <size_t M>
         constexpr String& operator=(const String<M>& other) {
             if constexpr (N == M) if (this == &other) return *this;
-            auto n = etl::min(N, M);
-            etl::copy(other.begin(), other.begin() + n, str);
+            etl::copy(other.data(), other.data() + M, data(), data() + N);
             str[N - 1] = '\0';
             return *this;
         }
@@ -310,7 +309,7 @@ namespace Project::etl::literals {
 
     constexpr auto operator ""s(const char* text, size_t n) {
         String<ETL_SHORT_STRING_DEFAULT_SIZE> s;
-        copy(text, text + n, s.data());
+        etl::copy(text, text + n, s.data(), s.data() + s.size());
         s[ETL_SHORT_STRING_DEFAULT_SIZE - 1] = '\0';
         return s;
     }

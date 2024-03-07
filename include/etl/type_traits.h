@@ -303,6 +303,11 @@ namespace Project::etl {
     template <typename T> struct is_function_pointer : false_type {};
     template <typename R, typename... Args> struct is_function_pointer<R(*)(Args...)> : true_type {};
     template <typename T> inline constexpr bool is_function_pointer_v = is_function_pointer<T>::value;
+
+    /// is_function_reference
+    template <typename T> struct is_function_reference : false_type {};
+    template <typename R, typename... Args> struct is_function_reference<R(&)(Args...)> : true_type {};
+    template <typename T> inline constexpr bool is_function_reference_v = is_function_reference<T>::value;
    
     /// is_functor
     template <typename T>
