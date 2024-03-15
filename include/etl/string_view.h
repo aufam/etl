@@ -251,6 +251,14 @@ namespace Project::etl {
         }
     };
 
+    constexpr bool operator==(const char* str, const StringView& other) { 
+        return other == str;
+    }
+    
+    constexpr bool operator!=(const char* str, const StringView& other) { 
+        return other != str;
+    }
+
     /// create empty string view
     inline constexpr auto 
     string_view() { return StringView(); }

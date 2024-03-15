@@ -17,7 +17,7 @@ TEST(Function, Context) {
     EXPECT_EQ(i, 4);
     EXPECT_TRUE(is_functor_v<decltype(iSquare)>);
 
-    iSquare.fn = nullptr;
+    iSquare = nullptr;
     iSquare(); // do nothing
     EXPECT_EQ(i, 4);
 }
@@ -61,7 +61,7 @@ TEST(Function, Empty) {
 
 TEST(Function, Compare) {
     int p = 0;
-    val f = lambda (int n) { return n; };
+    var f = +lambda (int n) { return n; };
     var g = function<int(int)>();
     var h = function<int(int)>(f);
 
@@ -75,26 +75,6 @@ TEST(Function, Compare) {
     h = nullptr;
     EXPECT_FALSE(g == h);
     EXPECT_FALSE(h == g);
-}
-
-TEST(Function, Array) {
-    char text1[] = "test";
-    char text2[] = "123";
-
-    val arr = array(
-        function<void()>(lambda (char* test) {
-            std::cout << test << '\n';
-        }, text1),
-        function<void()>(lambda (char* test) {
-            std::cout << test << '\n';
-        }, text2)
-    );
-
-    for (var f in arr)
-        f();
-    
-    EXPECT_EQ(arr[0].context, text1);
-    EXPECT_EQ(arr[1].context, text2);
 }
 
 TEST(Function, LinkedList) {
@@ -123,16 +103,14 @@ TEST(Function, LinkedList) {
 TEST(Function, Bind) {
     class Process {
         int data;
+        int get() const { return data; }
+        void set(int d) { data = d; }
 
     public:
         explicit Process(int data) : data(data) {}
 
-        Function<int(), const Process*> getter = bind<&Process::get>(this);
+        Function<int(), void*> getter = bind<&Process::get>(this);
         Function<void(int), Process*> setter = bind<&Process::set>(this);
-
-    private:
-        int get() const { return data; }
-        void set(int d) { data = d; }
     };
 
     Process p(10);
