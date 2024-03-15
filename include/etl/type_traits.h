@@ -49,6 +49,7 @@ namespace Project::etl {
     template <typename T> struct add_rvalue_reference      { typedef T&& type; };
     template <typename T> struct add_rvalue_reference<T&>  { typedef T& type; };
     template <typename T> struct add_rvalue_reference<T&&> { typedef T&& type; };
+    template <> struct add_rvalue_reference<void>      { typedef void type; };
     template <typename T> using add_rvalue_reference_t = typename add_rvalue_reference<T>::type;
 
     /// declval

@@ -1,64 +1,67 @@
 #include "etl/async_task.h"
+#include "etl/bit.h"
 
 namespace Project::etl {
-    Tasks tasks;
+    Tasks* Tasks::self = nullptr;
 
-    int Tasks::resources() {
-        int cnt = 0;
-        for (auto &it : tasks) if (it.is_running && !it.busy) ++cnt;
-        return cnt;
+    void Tasks::init() {
+        self = this;
+        
+        int prio = osPriorityAboveNormal;
+        for (auto& thd: threads)
+            thd.init({.function=etl::bind<&Tasks::execute>(this), .prio=(osPriority_t) prio++});
+
+        for (auto& receiver: receivers)
+            receiver.result.init();
     }
 
-    void Tasks::terminate_all() {
-        for (auto &task: tasks) {
-            task.thread.setFlags(0b10);
-            task.is_running = false;
-        }
-    }
-
-    Task* Tasks::select_task() {
-        int prio = osPriorityHigh;
-        for (auto &task : tasks) task.init((osPriority_t) prio--, "");
-        if (!tasks[0].thread.get())
-            return nullptr;
-
-        Task* task = nullptr;
-        for (auto &it : tasks) if (it.is_running && !it.busy) {
-            task = &it;
-            break;
-        }
-
-        return task;
-    }
-
-    void Task::init(osPriority_t prio, const char* name) {
-        thread.init({.function=etl::bind<&Task::execute>(this), .prio=prio, .name=name, });
-        que.init({.name=name, });
-    }
-
-    void Task::execute() {
-        while (is_running) {
+    void Tasks::execute() {
+        while (true) {
             auto flag = etl::this_thread::waitFlagsAny();
-            if (flag & 0b10) {
+            if (not flag)
                 break;
-            }
 
-            auto ptr = que.pop();
-            ::free(ptr); 
-            que.push(is_static ? fn_static() : fn());
-            cleanup();
+            auto channel = etl::count_trailing_zeros(flag.get());            
+            auto sender = &senders[channel];
+            auto receiver = &receivers[channel];
+            
+            auto result = sender->promise();
+            sender->closure();
+
+            if (receiver->is_waiting)
+                receiver->result.push(result);
+            
+            receiver->is_waiting = false;
+            ::memset(sender->mempool, 0, sizeof(sender->mempool));
+            sender->promise = nullptr;
+            sender->closure = nullptr;
         }
 
         etl::this_thread::exit();
     }
 
-    void Task::cleanup() {
-        if (is_static)
-            free_args();
-        
-        fn = nullptr;
-        fn_static = nullptr;
-        busy = false;
-        is_static = false;
+    int Tasks::resources() {
+        int cnt = 0;
+        for (auto &sender: senders) if (!sender.promise) {
+            ++cnt;
+        }
+
+        return cnt;
+    }
+
+    void Tasks::terminate() {
+        for (int i = 0; i < ETL_ASYNC_N_CHANNELS; ++i) {
+            threads[i].setFlags(osFlagsError);
+        }
+    }
+
+    int Tasks::select_channel() {
+        int i = 0;
+        for (; i < ETL_ASYNC_N_CHANNELS; ++i) {
+            if (!senders[i].promise && receivers[i].result.len() == 0)
+                break;
+        }
+
+        return i;
     }
 }

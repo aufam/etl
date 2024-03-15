@@ -2,11 +2,8 @@
 #include <stdlib.h>
 #include <string.h> // memcpy
 
-size_t malloc_cnt = 0;
-size_t custom_cnt = 0;
 
 void* malloc(size_t size) { 
-    malloc_cnt += size;
     return pvPortMalloc(size); 
 }
 

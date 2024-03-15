@@ -1,16 +1,11 @@
 #include "FreeRTOS.h"
 
 
-extern "C" size_t malloc_cnt;
-extern "C" size_t custom_cnt;
-
 void* operator new(size_t size) { 
-    malloc_cnt += size;
     return pvPortMalloc(size); 
 }
 
-void* operator new(size_t size, uint8_t* ptr) { 
-    custom_cnt += size;
+void* operator new(size_t, uint8_t* ptr) { 
     return ptr; 
 }
 
