@@ -167,8 +167,6 @@ namespace Project::etl {
             return *this;
         }
 
-        ~Function() { fn = nullptr; }
-
         /// invoke operator
         constexpr R operator()(Args... args) const { return invoke(etl::forward<Args>(args)...); }
 
@@ -203,7 +201,8 @@ namespace Project::etl {
                 }
             }
         }
-
+    
+    public:
         Fn fn; ///< function pointer, default null
     };
 
@@ -219,7 +218,7 @@ namespace Project::etl {
         constexpr Function() : fn(nullptr), context(nullptr) {}
 
         constexpr Function(decltype(nullptr)) : Function() {}
-        constexpr Function& operator=(decltype(nullptr)) { this->~Function(); return *this; }
+        constexpr Function& operator=(decltype(nullptr)) { fn = nullptr; context = nullptr; return *this; }
 
         /// construct from a functor that is convertible to a function pointer
         template <typename Functor, typename = disable_if_t<is_etl_function_v<decay_t<Functor>>>>
@@ -249,11 +248,6 @@ namespace Project::etl {
             return *this;
         }
 
-        ~Function() { 
-            fn = nullptr;
-            context = nullptr;
-        }
-
         /// invoke operator
         constexpr R operator()(Args... args) const { return invoke(etl::forward<Args>(args)...); }
 
@@ -280,6 +274,7 @@ namespace Project::etl {
             }
         }
 
+    public:
         Fn fn; ///< function pointer, default null
         Context context; ///< alternative of capture list, default null
     };
@@ -296,7 +291,7 @@ namespace Project::etl {
         constexpr Function() : fn(nullptr), context(nullptr) {}
 
         constexpr Function(decltype(nullptr)) : Function() {}
-        constexpr Function& operator=(decltype(nullptr)) { this->~Function(); return *this; }
+        constexpr Function& operator=(decltype(nullptr)) { fn = nullptr; context = nullptr; return *this; }
 
         /// construct from a functor that is convertible to a function pointer
         template <typename Functor, typename = disable_if_t<is_etl_function_v<decay_t<Functor>>>>
@@ -325,11 +320,6 @@ namespace Project::etl {
             return *this;
         }
 
-        ~Function() { 
-            fn = nullptr;
-            context = nullptr;
-        }
-
         /// invoke operator
         constexpr R operator()(Args... args) const { return invoke(etl::forward<Args>(args)...); }
 
@@ -355,7 +345,8 @@ namespace Project::etl {
                 }
             }
         }
-
+    
+    public:
         Fn fn; ///< function pointer, default null
         Context context; ///< alternative of capture list, default null
     };
@@ -372,7 +363,7 @@ namespace Project::etl {
         constexpr Function() : fn(nullptr), context(nullptr) {}
 
         constexpr Function(decltype(nullptr)) : Function() {}
-        constexpr Function& operator=(decltype(nullptr)) { this->~Function(); return *this; }
+        constexpr Function& operator=(decltype(nullptr)) { fn = nullptr; context = nullptr; return *this; }
 
         /// construct from a functor that is convertible to a function pointer
         template <typename Functor, typename Ctx, typename = disable_if_t<is_etl_function_v<decay_t<Functor>>>>
@@ -527,11 +518,6 @@ namespace Project::etl {
             return *this;
         }
 
-        ~Function() { 
-            fn = nullptr;
-            context = nullptr;
-        }
-
         /// invoke operator
         constexpr R operator()(Args... args) const { return invoke(etl::forward<Args>(args)...); }
 
@@ -584,7 +570,8 @@ namespace Project::etl {
                 }
             }
         }
-
+    
+    public:
         Fn fn = nullptr; ///< function pointer, default null
         Context context = nullptr; ///< alternative of capture list, default null
     };
