@@ -241,7 +241,7 @@ namespace Project::etl {
 
     /// create linked list with variadic template function, the type can be explicitly specified
     template <typename T, typename A = etl::Allocator<T>, typename... Ts> auto
-    list(Ts&&...vals) { return LinkedList<T, A> { T{etl::forward<Ts>(vals)}... }; }
+    list(Ts&&...vals) { return LinkedList<T, A> { T(etl::forward<Ts>(vals))... }; }
 
     /// create linked list with variadic template function with default allocator, the type can be implicitly specified
     template <typename T, typename... Ts> auto

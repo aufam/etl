@@ -35,7 +35,7 @@ TEST(Optional, Move) {
 TEST(Optional, Empty) {
     float* p = nullptr;
     float& r = *p;
-    var a = optional<int>(r);
+    var a = optional<int&>(r);
 
     EXPECT_FALSE(a);
 }
