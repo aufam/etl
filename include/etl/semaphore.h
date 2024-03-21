@@ -1,10 +1,7 @@
 #ifndef ETL_SEMAPHORE_H
 #define ETL_SEMAPHORE_H
 
-#include "FreeRTOS.h"
-#include "cmsis_os2.h"
-#include "etl/utility.h"
-#include "etl/time.h"
+#include "etl/future.h"
 
 namespace Project::etl {
 
@@ -82,11 +79,23 @@ namespace Project::etl {
         /// name as null terminated string
         const char* getName() { return osSemaphoreGetName(id); }  
 
-        /// acquire semaphore token, token counter will be decreased by one
-        /// @param timeout default = timeInfinite
-        /// @return osStatus
-        /// @note can be called from ISR if timeout == time::immediate
-        osStatus_t acquire(etl::Time timeout = etl::time::infinite) { return osSemaphoreAcquire(id, timeout.tick); }
+        /// @brief Acquires a semaphore token, decreasing the token counter by one.
+        /// @param timeout The maximum time to wait for the semaphore.
+        ///                Use `time::immediate` if called from an ISR to indicate immediate timeout.
+        /// @return A Result object containing either void if the semaphore was acquired successfully,
+        ///         or an error code if the operation failed.
+        Result<void, osStatus_t> wait(Time timeout) { 
+            auto status = osSemaphoreAcquire(id, timeout.tick); 
+            if (status == osOK) return Ok();
+            else return Err(status);
+        }
+
+        /// @brief Waits indefinitely for a semaphore token to become available.
+        /// @return A Result object containing either void if the semaphore was acquired successfully,
+        ///         or an error code if the operation failed.
+        Result<void, osStatus_t> await() { 
+            return wait(etl::time::infinite); 
+        }
 
         /// release semaphore token, token counter will be increased by one
         /// @return osStatus
@@ -96,18 +105,6 @@ namespace Project::etl {
         /// get token counter
         /// @note can be called from ISR
         uint32_t tokenCount() { return osSemaphoreGetCount(id); }
-
-        /// release operator
-        SemaphoreInterface& operator++(int) { release(); return *this; }
-
-        /// release operator
-        void operator++() { release(); }
-
-        /// acquire operator, wait forever
-        SemaphoreInterface& operator--(int) { acquire(); return *this; }
-
-        /// acquire operator, wait forever
-        void operator--() { acquire(); }
     };
 
     struct SemaphoreAttributes {

@@ -12,9 +12,8 @@ namespace Project::etl {
         template <typename Functor>
         Async(Functor&& f) : fn(std::forward<Functor>(f)) {}
 
-        template <typename... Args_>
-        Future<R> operator()(Args_&&... args) const { 
-            return async(fn, etl::forward<Args_>(args)...);
+        Future<R> operator()(Args... args) const { 
+            return async(fn, etl::forward<Args>(args)...);
         }
 
     private:

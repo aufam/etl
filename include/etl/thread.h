@@ -1,12 +1,9 @@
 #ifndef ETL_THREAD_H
 #define ETL_THREAD_H
 
-#include "FreeRTOS.h"
-#include "cmsis_os2.h"
+#include "etl/future.h"
 #include "etl/array.h"
 #include "etl/event.h"
-#include "etl/function.h"
-#include "etl/time.h"
 
 namespace Project::etl {
 
@@ -115,10 +112,7 @@ namespace Project::etl {
         /// @param flags specifies the flags of the thread that shall be set
         /// @return this thread's flags after setting or error code if highest bit set
         /// @note can be called from ISR
-        FlagManager setFlags(uint32_t flags) { return osThreadFlagsSet(id, flags); }
-
-        /// set flags operator
-        ThreadInterface& operator|(uint32_t flags) { setFlags(flags); return *this; }
+        Result<uint32_t, osStatus_t> setFlags(uint32_t flags) { return detail::eventResult(osThreadFlagsSet(id, flags)); }
     };
 
     struct StaticThreadAttributes {
@@ -275,38 +269,43 @@ namespace Project::etl::this_thread {
     /// @param flags specifies the flags of the thread that shall be reset
     /// @return current thread's flags before resetting or error code if highest bit set
     /// @note should be called in thread function
-    inline FlagManager resetFlags(uint32_t flags) { return osThreadFlagsClear(flags); }
+    inline Result<uint32_t, osStatus_t> resetFlags(uint32_t flags) { return detail::eventResult(osThreadFlagsClear(flags)); }
 
     /// get the current flags of the current running thread
     /// @return current thread's flags
     /// @note should be called in thread function
-    inline FlagManager getFlags() { return osThreadFlagsGet(); }
+    inline Result<uint32_t, osStatus_t> getFlags() { return detail::eventResult(osThreadFlagsGet()); }
 
-    /// wait for flags of the current running thread to become signaled
-    /// @param args
-    ///     - .flags specifies the flags to wait for
-    ///     - .option osFlagsWaitAny (default) or osFlagsWaitAll
-    ///     - .timeout default = osWaitForever
-    ///     - .doReset specifies wether reset the flags or not, default = true
-    /// @return current thread's flags before resetting or error code if highest bit set
-    /// @note should be called in thread function
-    inline FlagManager waitFlags(Event::WaitFlagsArgs args) { 
-        if (!args.doReset) args.option |= osFlagsNoClear;
-        return osThreadFlagsWait(args.flags, args.option, args.timeout.tick); 
+    /// @brief Fetches specific flags of the current running thread.
+    /// @param args Arguments for fetching flags:
+    ///             - .flags specifies the flags to fetch
+    ///             - .option osFlagsWaitAny (default) or osFlagsWaitAll
+    ///             - .doReset specifies whether to reset the flags or not, default = true
+    /// @return A Future object representing the flags before resetting.
+    ///         The caller needs to invoke .wait(timeout) or await() to get the result object of the flags.
+    /// @note This function should be called in the thread function.
+    inline Future<uint32_t> fetchFlags(Event::WaitFlagsArgs args) { 
+        return [args] (Time timeout) mutable -> Result<uint32_t, osStatus_t> {
+            if (!args.doReset) args.option |= osFlagsNoClear;
+            return detail::eventResult(osThreadFlagsWait(args.flags, args.option, timeout.tick)); 
+        };
     }
 
-    /// wait for any flags of the current running thread to become signaled
-    /// @param args
-    ///     - .timeout default = osWaitForever
-    ///     - .doReset specifies wether reset the flags or not, default = true
-    /// @return current thread's flags before resetting or error code if highest bit set
-    /// @note should be called in thread function
-    inline FlagManager waitFlagsAny(Event::WaitFlagsAnyArgs args = {}) { 
-        uint32_t flags = (1u << 24) - 1; // all possible flags
-        uint32_t option = osFlagsWaitAny;
-        if (!args.doReset) option |= osFlagsNoClear;
-        return osThreadFlagsWait(flags, option, args.timeout.tick); 
+    /// @brief Fetches any flags of the current running thread.
+    /// @param args Arguments for fetching flags:
+    ///             - .doReset specifies whether to reset the flags or not, default = true
+    /// @return A Future object representing the flags before resetting.
+    ///         The caller needs to invoke .wait(timeout) or await() to get the result object of the flags.
+    /// @note This function should be called in the thread function.
+    inline Future<uint32_t> fetchAnyFlags(Event::WaitFlagsAnyArgs args = {}) { 
+        return [args] (Time timeout) mutable -> Result<uint32_t, osStatus_t> {
+            const uint32_t flags = (1u << 24) - 1; // all possible flags
+            uint32_t option = osFlagsWaitAny;
+            if (!args.doReset) option |= osFlagsNoClear;
+            return detail::eventResult(osThreadFlagsWait(flags, option, timeout.tick)); 
+        };
     }
+
 }
 
 #endif //ETL_THREAD_H

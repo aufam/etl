@@ -17,19 +17,24 @@ namespace Project::etl {
 
     void Tasks::execute() {
         while (true) {
-            auto flag = etl::this_thread::waitFlagsAny();
-            if (not flag)
+            auto flag = osThreadFlagsWait(0xFFFFFF, osFlagsWaitAny, osWaitForever);
+            if (flag & osFlagsError) {
                 break;
+            }
 
-            auto channel = etl::count_trailing_zeros(flag.get());            
+            auto channel = etl::count_trailing_zeros(flag);
+            if (channel >= ETL_ASYNC_N_CHANNELS) {
+                break;
+            }
+
             auto sender = &senders[channel];
             auto receiver = &receivers[channel];
-            
+
             auto result = sender->promise();
             sender->closure();
 
             if (receiver->is_waiting)
-                receiver->result.push(result);
+                receiver->result.push(result).await();
             
             receiver->is_waiting = false;
             ::memset(sender->mempool, 0, sizeof(sender->mempool));
@@ -50,9 +55,8 @@ namespace Project::etl {
     }
 
     void Tasks::terminate() {
-        for (int i = 0; i < ETL_ASYNC_N_CHANNELS; ++i) {
-            threads[i].setFlags(osFlagsError);
-        }
+        for (int i = 0; i < ETL_ASYNC_N_CHANNELS; ++i)
+            etl::ignore = threads[i].setFlags(1u << ETL_ASYNC_N_CHANNELS);
     }
 
     int Tasks::select_channel() {

@@ -12,7 +12,7 @@
 #endif
 
 #ifndef ETL_ASYNC_TASK_THREAD_SIZE
-#define ETL_ASYNC_TASK_THREAD_SIZE 512
+#define ETL_ASYNC_TASK_THREAD_SIZE 256
 #endif
 
 namespace Project::etl {
@@ -96,32 +96,40 @@ namespace Project::etl {
             fn_args->~FnArgs();
         }, fn_args};
 
-        threads[channel].setFlags(1 << channel);
+        etl::ignore = threads[channel].setFlags(1 << channel);
 
-        return Future<T>(etl::Function<etl::Result<T>(etl::Time), void*>([] (Receiver* receiver, etl::Time timeout) -> etl::Result<T> { 
+        return Future<T>(Function<Result<T, osStatus_t>(Time), void*>([] (Receiver* receiver, Time timeout) -> Result<T, osStatus_t> { 
             if (receiver == nullptr)
-                return osError;
+                return Err(osError);
 
-            void* res = nullptr;
             receiver->is_waiting = true;
-
-            auto status = receiver->result.pop(res, timeout);
+            auto [res, err] = receiver->result.pop().wait(timeout);
             receiver->is_waiting = false;
 
-            if (status != osOK)
-                return status;
+            if (err)
+                return Err(*err);
             
             if constexpr (!etl::is_void_v<T>) {
-                T* ptr = reinterpret_cast<T*>(res);
+                T* ptr = reinterpret_cast<T*>(*res);
                 T value = etl::move(*ptr);
                 delete ptr;
 
-                return value;
+                return Ok(etl::move(value));
             } else {
-                return status;
+                return Ok();
             }
 
         }, receiver));
+    }
+}
+
+namespace Project::etl::task {
+    inline Future<void> sleep(Time timeout) {
+        return [timeout] (Time) -> Result<void, osStatus_t> {
+            auto res = osDelay(timeout.tick);
+            if (res == osOK) return Ok();
+            else return Err(res);
+        };
     }
 }
 

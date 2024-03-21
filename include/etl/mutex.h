@@ -1,9 +1,57 @@
 #ifndef ETL_MUTEX_H
 #define ETL_MUTEX_H
 
-#include "etl/thread.h"
+#include "etl/time.h"
+#include "etl/result.h"
 
 namespace Project::etl {
+
+    /// @class LockGuard
+    /// @brief RAII wrapper for mutex locking.
+    /// 
+    /// This class provides a convenient RAII (Resource Acquisition Is Initialization) wrapper
+    /// for locking mutexes. It automatically acquires the mutex upon construction and releases
+    /// it upon destruction, ensuring proper resource management.
+    /// 
+    /// @note Instances of this class are marked as nodiscard to ensure that the return value
+    /// of functions returning LockGuard instances is not ignored.
+    class [[nodiscard]] LockGuard {
+        osMutexId_t id; ///< The ID of the mutex being guarded.
+        bool lock; ///< Flag indicating whether the mutex is locked.
+
+    public:
+        /// @brief Constructs a LockGuard instance.
+        /// @param id The ID of the mutex to guard.
+        explicit LockGuard(osMutexId_t id) : id(id), lock(false) {}
+
+        /// @brief Move constructor for LockGuard.
+        /// @param other The LockGuard instance to move from.
+        LockGuard(LockGuard&& other) noexcept : id(etl::exchange(other.id, nullptr)), lock(etl::exchange(other.lock, false)) {}
+
+        /// @brief Destructor for LockGuard.
+        ~LockGuard() { if (lock) osMutexRelease(id); }
+
+        /// @brief Waits for the mutex to become available.
+        /// @param timeout The maximum time to wait for the mutex.
+        /// @return A Result object containing either a LockGuard instance if the mutex was acquired successfully,
+        ///         or an error code if the operation failed.
+        Result<LockGuard, osStatus_t> wait(Time timeout) {
+            auto status = osMutexAcquire(id, timeout.tick); 
+            if (status == osOK) {
+                lock = true;
+                return Ok(etl::move(*this));
+            } else {
+                return Err(status);
+            }
+        }
+
+        /// @brief Waits indefinitely for the mutex to become available.
+        /// @return A Result object containing either a LockGuard instance if the mutex was acquired successfully,
+        ///         or an error code if the operation failed.
+        Result<LockGuard, osStatus_t> await() {
+            return wait(etl::time::infinite);
+        }
+    };
 
     /// FreeRTOS mutex interface.
     /// @note requires cmsis os v2, USE_TRACE_FACILITY, SUPPORT_STATIC_ALLOCATION, SUPPORT_DYNAMIC_ALLOCATION
@@ -25,6 +73,7 @@ namespace Project::etl {
 
         /// construct from mutex
         explicit MutexInterface(osMutexId_t id) : id(id) {
+            auto a = LockGuard(id);
             referenceCounterInc();
         }
 
@@ -72,23 +121,13 @@ namespace Project::etl {
             if (count() > 0)
                 return osOK;
             
-            unlock(); 
             return osMutexDelete(etl::exchange(id, nullptr)); 
         }
 
         /// name as null terminated string
-        const char* getName() { return osMutexGetName(id); }  
+        const char* getName() { return osMutexGetName(id); }
 
-        /// lock mutex
-        /// @param timeout default = timeInfinite
-        /// @return osStatus
-        /// @note cannot be called from ISR
-        osStatus_t lock(etl::Time timeout = etl::time::infinite) { return osMutexAcquire(id, timeout.tick); }
-
-        /// unlock mutex
-        /// @return osStatus
-        /// @note cannot be called from ISR
-        osStatus_t unlock() { return osMutexRelease(id); }
+        auto lock() { return LockGuard(id); }
 
         /// get thread that owns this mutex
         /// @return thread object
@@ -157,35 +196,6 @@ namespace Project::etl {
 
     /// return reference to the moved dynamic mutex
     inline auto mutex(MutexInterface&& mtx) { return MutexInterface(etl::move(mtx)); }
-
-    /// lock mutex when entering a scope and unlock when exiting
-    struct MutexScope {
-        osMutexId_t id;
-
-        explicit MutexScope(osMutexId_t mutex, etl::Time timeout = etl::time::infinite) : id(mutex) {
-            osMutexAcquire(id, timeout.tick);
-        }
-
-        ~MutexScope() { osMutexRelease(id); }
-    };
-
-    /// lock scope
-    /// @return mutex scope object
-    /// @note cannot be called from ISR
-    [[nodiscard]] 
-    inline auto lockScope(MutexInterface& mutex) { return MutexScope(mutex.get()); }
-
-    /// lock scope
-    /// @return mutex scope object
-    /// @note cannot be called from ISR
-    [[nodiscard]] 
-    inline auto lockScope(Mutex& mutex) { return MutexScope(mutex.get()); }
-
-    /// lock scope
-    /// @return mutex scope object
-    /// @note cannot be called from ISR
-    [[nodiscard]] 
-    inline auto lockScope(osMutexId_t mutex) { return MutexScope(mutex); }
 }
 
 #endif //ETL_MUTEX_H

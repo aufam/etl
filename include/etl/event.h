@@ -1,36 +1,23 @@
 #ifndef ETL_EVENT_H
 #define ETL_EVENT_H
 
-#include "FreeRTOS.h"
-#include "cmsis_os2.h"
-#include "etl/utility.h"
-#include "etl/time.h"
+#include "etl/future.h"
+
+namespace Project::etl::detail {
+    inline Result<uint32_t, osStatus_t> eventResult(uint32_t flags) {
+        switch (flags) {
+            case osFlagsErrorTimeout:   return etl::Err(osErrorTimeout);
+            case osFlagsErrorResource:  return etl::Err(osErrorResource);
+            case osFlagsErrorParameter: return etl::Err(osErrorParameter);
+            case osFlagsErrorISR:       return etl::Err(osErrorISR);
+            case osFlagsError:          return etl::Err(osError);
+            default: if (flags & osFlagsError) return etl::Err(osError);
+        }
+        return etl::Ok(flags);
+    }
+}
 
 namespace Project::etl {
-
-    // provides a convenient way to manage and manipulate flags represented by a 32-bit unsigned integer
-    class FlagManager {
-        uint32_t flags;
-    
-    public:
-        // construct a FlagManager object with the specified initial set of flags
-        FlagManager(uint32_t flags) : flags(flags) {}
-
-        // return true if osFlagsError flag is not set
-        explicit operator bool() const { return !(flags & osFlagsError); }
-
-        // return true if osFlagsError flag is not set and the specified flags are set
-        bool operator&(uint32_t other) const { return operator bool() && (flags & other); }
-
-        // return true if osFlagsError flag is not set and the specified flags are the same as this flags
-        bool operator==(uint32_t other) const { return operator bool() && (flags == other); }
-
-        bool operator!=(uint32_t other) const { return !operator ==(other); }
-
-        // return raw flags
-        uint32_t get() const { return flags; }
-    };
-
     /// FreeRTOS event interface.
     /// @note requires cmsis os v2, USE_TRACE_FACILITY, SUPPORT_STATIC_ALLOCATION, SUPPORT_DYNAMIC_ALLOCATION
     /// @note should not be declared as const
@@ -109,23 +96,24 @@ namespace Project::etl {
         /// @param flags specifies the flags that shall be set
         /// @return flags after setting or error code if highest bit set
         /// @note can be called from ISR
-        FlagManager setFlags(uint32_t flags) { return osEventFlagsSet(id, flags); }
+        // FlagManager setFlags(uint32_t flags) { return osEventFlagsSet(id, flags); }
+
+        Result<uint32_t, osStatus_t> setFlags(uint32_t flags) { return detail::eventResult(osEventFlagsSet(id, flags)); }
 
         /// reset the specified flags of this event
         /// @param flags specifies the flags that shall be reset
         /// @return flags before resetting or error code if highest bit set
         /// @note can be called from ISR
-        FlagManager resetFlags(uint32_t flags) { return osEventFlagsClear(id, flags); }
+        Result<uint32_t, osStatus_t> resetFlags(uint32_t flags) { return detail::eventResult(osEventFlagsClear(id, flags)); }
 
         /// get the flags of this event
         /// @return current event's flags
         /// @note can be called from ISR
-        FlagManager getFlags() { return osEventFlagsGet(id); }
+        Result<uint32_t, osStatus_t> getFlags() { return detail::eventResult(osEventFlagsGet(id)); }
 
         struct WaitFlagsArgs {
             uint32_t flags;
             uint32_t option = osFlagsWaitAny;
-            Time timeout = time::infinite;
             bool doReset = true;
         };
 
@@ -133,38 +121,33 @@ namespace Project::etl {
         /// @param args
         ///     - .flags specifies the flags to wait for
         ///     - .option osFlagsWaitAny (default) or osFlagsWaitAll
-        ///     - .timeout default = time::infinite
         ///     - .doReset specifies wether reset the flags or not, default = true
-        /// @return flags before resetting or error code if highest bit set
-        /// @note can be called from ISR if timeout == time::immediate
-        FlagManager waitFlags(WaitFlagsArgs args) { 
-            if (!args.doReset) args.option |= osFlagsNoClear;
-            return osEventFlagsWait(id, args.flags, args.option, args.timeout.tick); 
+        /// @return future flags before resetting or error code if highest bit set
+        /// @note cannot be called from ISR
+        Future<uint32_t> fetchFlags(WaitFlagsArgs args) { 
+            return [this, args] (Time timeout) mutable -> Result<uint32_t, osStatus_t> {
+                if (!args.doReset) args.option |= osFlagsNoClear;
+                return detail::eventResult(osEventFlagsWait(id, args.flags, args.option, timeout.tick)); 
+            };
         }
 
         struct WaitFlagsAnyArgs {
-            Time timeout = time::infinite;
             bool doReset = true;
         };
 
         /// wait for any flags of this event to become signaled
         /// @param args
-        ///     - .timeout default = time::infinite
         ///     - .doReset specifies wether reset the flags or not, default = true
         /// @return flags before resetting or error code if highest bit set
-        /// @note can be called from ISR if timeout == 0
-        FlagManager waitFlagsAny(WaitFlagsAnyArgs args = {.timeout=time::infinite, .doReset=true}) { 
-            uint32_t flags = (1u << 24) - 1; // all possible flags
-            uint32_t option = osFlagsWaitAny;
-            if (!args.doReset) option |= osFlagsNoClear;
-            return osEventFlagsWait(id, flags, option, args.timeout.tick); 
+        /// @note cannot be called from ISR
+        Future<uint32_t> fetchFlagsAny(WaitFlagsAnyArgs args = {.doReset=true}) { 
+            return [this, args] (Time timeout) mutable -> Result<uint32_t, osStatus_t> {
+                const uint32_t flags = (1u << 24) - 1; // all possible flags
+                uint32_t option = osFlagsWaitAny;
+                if (!args.doReset) option |= osFlagsNoClear;
+                return detail::eventResult(osEventFlagsWait(id, flags, option, timeout.tick)); 
+            };
         }
-
-        /// set operator
-        EventInterface& operator|(uint32_t flags) { setFlags(flags); return *this; }
-
-        /// reset operator
-        EventInterface& operator&(uint32_t flags) { resetFlags(flags); return *this; }
     };
 
     struct EventAttributes {

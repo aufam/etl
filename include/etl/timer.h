@@ -97,7 +97,7 @@ namespace Project::etl {
         /// start or restart the timer
         /// @return osStatus
         /// @note cannot be called from ISR
-        osStatus_t start(uint32_t interval) { return osTimerStart(id, interval); }
+        osStatus_t start(etl::Time interval) { return osTimerStart(id, interval.tick); }
 
         /// start or restart the timer
         /// @return osStatus
@@ -154,7 +154,7 @@ namespace Project::etl {
             this->id = osTimerNew(attributes.function.fn, attributes.type, attributes.function.context, &attr);
             this->referenceCounterInc();
             if (attributes.startNow) 
-                this->start(attributes.interval.tick);
+                this->start(attributes.interval);
             
             return osOK;
         }
@@ -179,7 +179,7 @@ namespace Project::etl {
         attr.name = attributes.name;
         
         auto res = TimerInterface(osTimerNew(attributes.function.fn, attributes.type, attributes.function.context, &attr));
-        if (attributes.startNow) res.start(attributes.interval.tick);
+        if (attributes.startNow) res.start(attributes.interval);
 
         return etl::move(res); 
     }

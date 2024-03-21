@@ -1,10 +1,7 @@
 #ifndef ETL_QUEUE_H
 #define ETL_QUEUE_H
 
-#include "FreeRTOS.h"
-#include "cmsis_os2.h"
-#include "etl/array.h"
-#include "etl/time.h"
+#include "etl/future.h"
 
 namespace Project::etl {
 
@@ -86,55 +83,42 @@ namespace Project::etl {
         /// get queue pointer
         osMessageQueueId_t get() { return id; }
 
-        /// push an item to the queue
-        /// @param[in] item the item
-        /// @param[in] timeout default timeImmediate
-        /// @param[in] prio priority level, default 0 (lowest)
-        /// @return osStatus
-        /// @note can be called from ISR if timeout == 0
-        osStatus_t push(const_reference item, etl::Time timeout = etl::time::immediate, uint8_t prio = 0) { 
-            uint8_t buffer[sizeof(T)];
-            new (buffer) T(item);
-            return osMessageQueuePut(id, buffer, prio, timeout.tick); 
+        /// @brief Pushes an item onto the message queue.
+        /// @param item The item to push onto the queue.
+        /// @return A Future representing the asynchronous result of the operation.
+        ///         The Future will contain either void on success or an error code on failure.
+        template <typename U>
+        Future<void> push(U&& item) {
+            return [this, item=etl::forward<U>(item)] (Time timeout) mutable -> Result<void, osStatus_t> {
+                alignas(T) uint8_t buffer[sizeof(T)];
+                new (buffer) T(etl::forward<U>(item));
+                auto status = osMessageQueuePut(id, buffer, 0, timeout.tick); 
+                
+                if (status == osOK) {
+                    return etl::Ok();
+                } else {
+                    return etl::Err(status);
+                }
+            };
         }
 
-        osStatus_t push(reference item, etl::Time timeout = etl::time::immediate, uint8_t prio = 0) { 
-            uint8_t buffer[sizeof(T)];
-            new (buffer) T(etl::move(item));
-            return osMessageQueuePut(id, buffer, prio, timeout.tick); 
-        }
-        
-        /// pop first item out from the queue
-        /// @param[out] item first item from queue
-        /// @param[in] timeout default timeImmediate
-        /// @param[out] prio pointer to priority level, default null (ignore)
-        /// @return osStatus
-        /// @note can be called from ISR if timeout == 0
-        osStatus_t pop(reference item, etl::Time timeout = etl::time::immediate, uint8_t* prio = nullptr) { 
-            uint8_t buffer[sizeof(T)];
-            auto res = osMessageQueueGet(id, buffer, prio, timeout.tick); 
-            if (res == osOK) {
-                auto ptr = reinterpret_cast<T*>(buffer);
-                item = etl::move(*ptr);
-                ptr->~T(); 
-            }
-            return res;
-        }
-
-        /// pop first item out from the queue
-        /// @param[in] timeout wait in tick, default 0
-        /// @param[out] prio pointer to priority level, default null (ignore)
-        /// @return the first item
-        /// @note can be called from ISR if timeout == 0
-        T pop(etl::Time timeout = etl::time::immediate, uint8_t *prio = nullptr) {
-            uint8_t buffer[sizeof(T)];
-            if (osMessageQueueGet(id, buffer, prio, timeout.tick) == osOK) {
-                auto ptr = reinterpret_cast<T*>(buffer);
-                T res = etl::move(*ptr);
-                ptr->~T(); 
-                return res;
-            }
-            return T{};
+        /// @brief Pops an item from the message queue.
+        /// @return A Future representing the asynchronous result of the operation.
+        ///         The Future will contain either the popped item on success or an error code on failure.
+        Future<T> pop() {
+            return [this] (Time timeout) -> Result<T, osStatus_t> {
+                alignas(T) uint8_t buffer[sizeof(T)];
+                auto status = osMessageQueueGet(id, buffer, nullptr, timeout.tick);
+                
+                if (status == osOK) {
+                    auto ptr = reinterpret_cast<T*>(buffer);
+                    T res = etl::move(*ptr);
+                    ptr->~T(); 
+                    return Ok(etl::move(res));
+                } else {
+                    return Err(status);
+                }
+            };
         }
 
         /// get the capacity
@@ -156,7 +140,15 @@ namespace Project::etl {
         /// reset the queue
         /// @return osStatus
         /// @note cannot be called from ISR
-        osStatus_t clear() { return osMessageQueueReset(id); }
+        void clear() { 
+            alignas(T) uint8_t buffer[sizeof(T)];
+            while (len() > 0) {
+                auto status = osMessageQueueGet(id, buffer, nullptr, 0);                
+                if (status == osOK) {
+                    reinterpret_cast<T*>(buffer)->~T();
+                }
+            }
+        }
 
         /// return pointer of the data
         /// @note can be called from ISR
@@ -196,17 +188,38 @@ namespace Project::etl {
         /// push operator
         /// @param[in] item the first item
         /// @note can be called from ISR
-        QueueInterface<T>& operator<<(const_reference item) { push(item); return *this; }
+        QueueInterface<T>& operator<<(const_reference item) { 
+            alignas(T) uint8_t buffer[sizeof(T)];
+            new (buffer) T(item);
+            osMessageQueuePut(id, buffer, 0, 0); 
+            return *this; 
+        }
 
         /// push operator
         /// @param[in] item the first item
         /// @note can be called from ISR
-        QueueInterface<T>& operator<<(reference item) { push(item); return *this; }
+        QueueInterface<T>& operator<<(reference item) { 
+            alignas(T) uint8_t buffer[sizeof(T)];
+            new (buffer) T(etl::move(item));
+            osMessageQueuePut(id, buffer, 0, 0); 
+            return *this; 
+        }
 
         /// pop operator
         /// @param[out] item the first item
         /// @note can be called from ISR
-        QueueInterface<T>& operator>>(reference item) { pop(item); return *this; }
+        QueueInterface<T>& operator>>(reference item) { 
+            alignas(T) uint8_t buffer[sizeof(T)];
+            auto status = osMessageQueueGet(id, buffer, nullptr, 0);
+            
+            if (status == osOK) {
+                auto ptr = reinterpret_cast<T*>(buffer);
+                item = etl::move(*ptr);
+                ptr->~T(); 
+            }
+            
+            return *this; 
+        }
 
     };
 
@@ -222,7 +235,7 @@ namespace Project::etl {
     template <class T, size_t N>
     class Queue : public QueueInterface<T> {
         StaticQueue_t controlBlock = {};
-        uint8_t buffer[sizeof(T) * N] = {};
+        uint8_t buffer[sizeof(T) * N] = {}; // is this ok?
 
     public:
         /// default constructor
