@@ -291,7 +291,6 @@ namespace Project::etl {
     template <> struct is_array<const volatile StringView> : true_type {};
 
     template <> struct remove_extent<StringView> { typedef char type; };
-    template <> struct remove_extent<const StringView> { typedef char type; };
     template <> struct remove_extent<volatile StringView> { typedef char type; };
     template <> struct remove_extent<const volatile StringView> { typedef char type; };
 
