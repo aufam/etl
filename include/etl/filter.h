@@ -13,9 +13,13 @@ namespace Project::etl {
     public:
         constexpr Filter(Sequence sequence, UnaryPredicate fn) : sequence(sequence), fn(fn) {}
 
-        constexpr Filter begin() const { return *this; }
-        constexpr Filter end()   const { return *this; }
-        constexpr Filter iter()  const { return *this; }
+        constexpr const Filter& begin() const& { return *this; }
+        constexpr const Filter& end()   const& { return *this; }
+        constexpr const Filter& iter()  const& { return *this; }
+
+        constexpr Filter begin() && { return etl::move(*this); }
+        constexpr Filter end()   && { return etl::move(*this); }
+        constexpr Filter iter()  && { return etl::move(*this); }
 
         constexpr explicit operator bool() const { return bool(sequence); }
 
@@ -31,11 +35,23 @@ namespace Project::etl {
             return *sequence;
         }
 
-        constexpr auto operator()() {   
-            using R = remove_reference_t<decltype(*sequence)>;
-            auto valid = operator bool();
-            R res = valid ? operator*() : R{};
-            if (valid) operator++();
+        constexpr decltype(auto) operator()() {
+            using R = decltype(operator*());
+            if (!operator bool()) {
+                if constexpr (etl::is_reference_v<R>) {
+                    // undefined behaviour
+                    return *static_cast<etl::add_pointer_t<etl::remove_reference_t<R>>>(nullptr);
+                } else if constexpr (etl::has_empty_constructor_v<R>) {
+                    // avoid segfault
+                    return R();
+                } else {
+                    // segfault
+                    return R(*static_cast<R*>(nullptr));
+                }
+            }
+
+            decltype(auto) res = operator*();
+            operator++();
             return res;
         }
     };
@@ -59,7 +75,7 @@ namespace Project::etl {
 
     /// pipe operator to apply filter function to a sequence
     template <typename Sequence, typename UnaryPredicate> constexpr auto
-    operator|(Sequence&& seq, const FilterFunction<UnaryPredicate>& fn) { return etl::filter(etl::forward<Sequence>(seq), fn.fn); }
+    operator|(Sequence&& seq, FilterFunction<UnaryPredicate> fn) { return etl::filter(etl::forward<Sequence>(seq), etl::move(fn.fn)); }
 
     /// remove extent
     template <typename Sequence, typename UnaryPredicate>

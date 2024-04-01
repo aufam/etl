@@ -13,9 +13,13 @@ namespace Project::etl {
     public:
         constexpr Transform(Sequence sequence, UnaryFunction fn) : sequence(sequence), fn(fn) {}
 
-        constexpr Transform begin() const { return *this; }
-        constexpr Transform end()   const { return *this; }
-        constexpr Transform iter()  const { return *this; }
+        constexpr const Transform& begin() const& { return *this; }
+        constexpr const Transform& end()   const& { return *this; }
+        constexpr const Transform& iter()  const& { return *this; }
+
+        constexpr Transform&& begin() && { return etl::move(*this); }
+        constexpr Transform&& end()   && { return etl::move(*this); }
+        constexpr Transform&& iter()  && { return etl::move(*this); }
 
         constexpr explicit operator bool() const { return bool(sequence); }
 
@@ -25,12 +29,24 @@ namespace Project::etl {
 
         constexpr decltype(auto) operator*() { return fn(*sequence); }
 
-        constexpr auto operator()() { 
-            using R = remove_reference_t<decltype(fn(*sequence))>;
-            auto valid = operator bool();
-            R res = valid ? operator*() : R{};
-            if (valid) operator++();
-            return res;
+        constexpr decltype(auto) operator()() { 
+            using R = decltype(operator*());
+            if (!operator bool()) {
+                if constexpr (etl::is_reference_v<R>) {
+                    // undefined behaviour
+                    return *static_cast<etl::add_pointer_t<etl::remove_reference_t<R>>>(nullptr);
+                } else if constexpr (etl::has_empty_constructor_v<R>) {
+                    // avoid segfault
+                    return R();
+                } else {
+                    // segfault
+                    return R(*static_cast<R*>(nullptr));
+                }
+            }
+
+            decltype(auto) res = operator*(); // return type: int
+            operator++();
+            return res; // inconsistent deduction for auto return type: ‘int&’ and then ‘int’
         }
     };
 
@@ -51,7 +67,7 @@ namespace Project::etl {
 
     /// pipe operator to apply transform function to a sequence
     template <typename Sequence, typename UnaryFunction> constexpr auto
-    operator|(Sequence&& seq, const TransformFunction<UnaryFunction>& fn) { return etl::transform(etl::forward<Sequence>(seq), fn.fn); }
+    operator|(Sequence&& seq, TransformFunction<UnaryFunction> fn) { return etl::transform(etl::forward<Sequence>(seq), etl::move(fn.fn)); }
 
     /// remove extent
     template <typename Sequence, typename UnaryFunction>

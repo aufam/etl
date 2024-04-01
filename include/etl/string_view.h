@@ -330,6 +330,9 @@ namespace Project::etl {
             if (index < 0) return nullptr;
             return argv[index];
          }
+
+         template <size_t I>
+         StringView get() const { return operator[](I); }
     };
 
     template <size_t N>
@@ -395,6 +398,9 @@ namespace Project::etl {
             if (index < 0) return nullptr;
             return argv[index];
          }
+
+         template <size_t I>
+         StringView get() const { return operator[](I); }
     };
 
     template <size_t N>
@@ -408,5 +414,21 @@ namespace Project::etl::literals {
         return StringView(text, length);
     }
 }
+
+template <size_t N>
+struct std::tuple_size<Project::etl::StringSplit<N>> : Project::etl::integral_constant<size_t, N> {};
+
+template <size_t Index, size_t N>
+struct std::tuple_element<Index, Project::etl::StringSplit<N>> {
+    using type = Project::etl::StringView;
+};
+
+template <size_t N>
+struct std::tuple_size<Project::etl::StringMatch<N>> : Project::etl::integral_constant<size_t, N> {};
+
+template <size_t Index, size_t N>
+struct std::tuple_element<Index, Project::etl::StringMatch<N>> {
+    using type = Project::etl::StringView;
+};
 
 #endif //ETL_STRING_VIEW_H

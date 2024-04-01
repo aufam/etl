@@ -140,14 +140,18 @@ namespace Project::etl {
         /// reset the queue
         /// @return osStatus
         /// @note cannot be called from ISR
-        void clear() { 
+        etl::Result<void, osStatus_t> clear() { 
             alignas(T) uint8_t buffer[sizeof(T)];
             while (len() > 0) {
                 auto status = osMessageQueueGet(id, buffer, nullptr, 0);                
                 if (status == osOK) {
                     reinterpret_cast<T*>(buffer)->~T();
+                } else {
+                    return etl::Err(status);
                 }
             }
+
+            return etl::Ok();
         }
 
         /// return pointer of the data

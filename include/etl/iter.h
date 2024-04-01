@@ -18,9 +18,13 @@ namespace Project::etl {
             , last(last)
             , step(step) {}
 
-        constexpr Iter begin() const { return *this; }
-        constexpr Iter end()   const { return *this; }
-        constexpr Iter iter()  const { return *this; }
+        constexpr const Iter& begin() const& { return *this; }
+        constexpr const Iter& end()   const& { return *this; }
+        constexpr const Iter& iter()  const& { return *this; }
+
+        constexpr Iter begin() && { return etl::move(*this); }
+        constexpr Iter end()   && { return etl::move(*this); }
+        constexpr Iter iter()  && { return etl::move(*this); }
 
         constexpr size_t len() const {
             if constexpr (has_operator_minus_v<Iterator>) {
@@ -63,11 +67,23 @@ namespace Project::etl {
             return *first; 
         }
 
-        constexpr auto operator()() {
-            using R = remove_reference_t<decltype(*first)>;
-            auto valid = operator bool();
-            R res = valid ? *first : R{};
-            if (valid) operator++();
+        constexpr decltype(auto) operator()() {
+            using R = decltype(operator*());
+            if (!operator bool()) {
+                if constexpr (etl::is_reference_v<R>) {
+                    // undefined behaviour
+                    return *static_cast<etl::add_pointer_t<etl::remove_reference_t<R>>>(nullptr);
+                } else if constexpr (etl::has_empty_constructor_v<R>) {
+                    // avoid segfault
+                    return R();
+                } else {
+                    // segfault
+                    return R(*static_cast<R*>(nullptr));
+                }
+            }
+
+            decltype(auto) res = operator*();
+            operator++();
             return res;
         }
 
