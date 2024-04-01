@@ -15,9 +15,13 @@ namespace Project::etl {
     public:
         constexpr explicit Enumerate(Sequence seq, int cnt = 0) : sequence(seq), cnt(cnt) {}
  
-        constexpr Enumerate begin() const { return *this; }
-        constexpr Enumerate end()   const { return *this; }
-        constexpr Enumerate iter()  const { return *this; }
+        constexpr const Enumerate& begin() const& { return *this; }
+        constexpr const Enumerate& end()   const& { return *this; }
+        constexpr const Enumerate& iter()  const& { return *this; }
+
+        constexpr Enumerate begin() && { return etl::move(*this); }
+        constexpr Enumerate end()   && { return etl::move(*this); }
+        constexpr Enumerate iter()  && { return etl::move(*this); }
 
         constexpr explicit operator bool() const { return bool(sequence); }
 
@@ -29,10 +33,19 @@ namespace Project::etl {
         constexpr auto operator*() const { return etl::Tuple<int, add_const_t<decltype(*sequence)>>{cnt, *sequence}; }
         
         constexpr auto operator()() {
-            using R = etl::Tuple<int, remove_reference_t<decltype(*sequence)>>;
-            auto valid = operator bool();
-            auto res = valid ? R{cnt, *sequence} : R{};
-            if (valid) operator++();
+            using R = decltype(operator*());
+            if (!operator bool()) {
+                if constexpr (etl::has_empty_constructor_v<R>) {
+                    // avoid segfault
+                    return R();
+                } else {
+                    // segfault
+                    return *static_cast<R*>(nullptr);
+                }
+            }
+
+            auto res = operator*();
+            operator++();
             return res;
         }
     };

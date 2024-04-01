@@ -93,9 +93,10 @@ namespace Project::etl {
     /// python-like next
     template <typename Sequence> constexpr decltype(auto)
     next(Sequence& gen) { return gen(); }
-    
+
+    /// python-like next
     template <typename Sequence> constexpr decltype(auto)
-    next(const Sequence& gen) { return gen(); }
+    next(Sequence&& gen) { return gen(); }
 
     /// get the address of an object
     template <typename T> constexpr T*

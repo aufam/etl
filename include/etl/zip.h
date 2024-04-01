@@ -14,9 +14,13 @@ namespace Project::etl {
     public:
         constexpr explicit Zip(Sequences... seq) : sequences{seq...} {}
 
-        constexpr Zip begin() const { return *this; }
-        constexpr Zip end()   const { return *this; }
-        constexpr Zip iter()  const { return *this; }
+        constexpr const Zip& begin() const& { return *this; }
+        constexpr const Zip& end()   const& { return *this; }
+        constexpr const Zip& iter()  const& { return *this; }
+
+        constexpr Zip begin() && { return etl::move(*this); }
+        constexpr Zip end()   && { return etl::move(*this); }
+        constexpr Zip iter()  && { return etl::move(*this); }
 
         constexpr explicit operator bool() const { return bool_helper_<0>(); }
 
@@ -56,11 +60,20 @@ namespace Project::etl {
 
         template <size_t... i>
         constexpr auto next_helper_(index_sequence<i...>) {
-            using R = Tuple<remove_reference_t<decltype(*etl::get<i>(sequences))>...>;
-            auto valid = operator bool();
-            auto res = valid ? R { *etl::get<i>(sequences)... } : R{}; 
-            if (valid) operator++(); 
-            return res; 
+            using R = decltype(operator*());
+            if (!operator bool()) {
+                if constexpr (etl::has_empty_constructor_v<R>) {
+                    // avoid segfault
+                    return R();
+                } else {
+                    // segfault
+                    return *static_cast<R*>(nullptr);
+                }
+            }
+
+            auto res = R { *etl::get<i>(sequences)... };
+            operator++();
+            return res;
         }
     };
 

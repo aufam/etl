@@ -15,11 +15,15 @@ namespace Project::etl {
     public:
         constexpr Range(T start, T stop, U step) : start(start), stop(stop), step(step) {}
 
-        constexpr Range begin() const { return *this; }
-        constexpr Range end()   const { return *this; }
+        constexpr const Range& begin() const& { return *this; }
+        constexpr const Range& end()   const& { return *this; }
+        constexpr const Range& iter()  const& { return *this; }
 
-        constexpr Range iter()      const { return *this; }
-        constexpr Range reversed()  const { return Range(stop - step, start - step, -step); }
+        constexpr Range begin() && { return etl::move(*this); }
+        constexpr Range end()   && { return etl::move(*this); }
+        constexpr Range iter()  && { return etl::move(*this); }
+
+        constexpr Range reversed()     const  { return Range(stop - step, start - step, -step); }
 
         constexpr size_t len() const { return operator bool() ? (stop - start) / step : 0; }
 
@@ -58,9 +62,18 @@ namespace Project::etl {
 
         /// next operator
         constexpr T operator()() { 
-            auto valid = operator bool();
-            auto res = valid ? start : T();
-            if (valid) operator++();
+            if (!operator bool()) {
+                if constexpr (etl::has_empty_constructor_v<T>) {
+                    // avoid segfault
+                    return T();
+                } else {
+                    // undefined behaviour
+                    return *static_cast<T*>(nullptr);
+                }
+            }
+
+            T res = operator*();
+            operator++();
             return res;
         }
     };

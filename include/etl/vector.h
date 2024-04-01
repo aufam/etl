@@ -292,8 +292,25 @@ namespace Project::etl {
             nItems = 0;
         }
 
+        /// set n items, n must be less than n items, capacity remains the same
+        void resize(size_t n) {
+            for (size_t i = n; i < nItems; ++i) 
+                buf[i].~T();
+            
+            if (n < nItems) nItems = n;
+        }
+
         /// shrink the capacity to fit the number of items
         bool shrink() { return reserve(nItems); }
+
+        /// fill the gap with value, the nItems will be the same as capacity 
+        template <typename U, typename = enable_if_t<is_convertible_v<decay_t<U>, T>>>
+        void fill(U&& value) {
+            while (nItems < capacity) {
+                new(buf + nItems) T(etl::forward<U>(value));
+                ++nItems;
+            }
+        }
 
         /// slice operator
         Iter<iterator> operator()(int start, int stop, int step = 1) { 
@@ -415,7 +432,7 @@ namespace Project::etl {
 
     /// create vector with variadic template function with default allocator, the type can be implicitly specified
     template <typename T, typename... Ts> auto
-    vector(T&& val, Ts&&...vals) { return Vector<T> { etl::forward<T>(val), T{etl::forward<Ts>(vals)}... }; }
+    vector(T&& val, Ts&&...vals) { return Vector<etl::decay_t<T>> { etl::forward<T>(val), T(etl::forward<Ts>(vals))... }; }
 
     /// create vector from initializer list
     template <typename T, typename A = etl::Allocator<T>> auto
@@ -430,10 +447,10 @@ namespace Project::etl {
     vectorize(Sequence&& seq) {
         auto res = vector<T, A>();
 
-        if constexpr (has_len_v<remove_reference_t<Sequence>>)
+        if constexpr (etl::has_len_v<remove_reference_t<Sequence>>)
             res.reserve(etl::len(seq));
 
-        if constexpr (is_lvalue_reference_v<Sequence>) {
+        if constexpr (etl::is_lvalue_reference_v<Sequence>) {
             for (decltype(auto) item : seq)
                 res += item;
         } else {
@@ -448,7 +465,8 @@ namespace Project::etl {
     /// convert any sequence to a vector with default allocator
     template <typename Sequence> auto
     vectorize(Sequence&& seq) {
-        using T = decay_t<decltype(*etl::begin(etl::declval<Sequence>()))>;
+        using Iterator = etl::decay_t<decltype(etl::begin(etl::declval<etl::decay_t<Sequence>>()))>;
+        using T = etl::decay_t<decltype(*etl::declval<Iterator>())>;
         return vectorize<T>(etl::forward<Sequence>(seq));
     }
 

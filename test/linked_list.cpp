@@ -118,7 +118,9 @@ TEST(LinkedList, Iter) {
     EXPECT_EQ(c.len(), 2);
     EXPECT_EQ(c(), 2);
     EXPECT_EQ(c(), 3);
-    EXPECT_EQ(c(), 0); // invalid
+
+    var& d = c();
+    EXPECT_EQ(&d, nullptr); // null deref
 } 
 
 TEST(LinkedList, Mutable) {

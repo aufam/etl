@@ -127,6 +127,19 @@ TEST(Vector, String) {
     EXPECT_EQ(a[1], "456");
 }
 
+TEST(Vector, Resize) {
+    int num = 10;
+    var a = vector(num, 2, 3, 4);
+    a.reserve(5);
+    a.resize(2);
+    EXPECT_EQ(a.len(), 2);
+    EXPECT_EQ(a.size(), 5);
+    EXPECT_EQ(a, vector(10, 2));
+
+    a.fill(0);
+    EXPECT_EQ(a, vector(10, 2, 0, 0, 0));
+}
+
 TEST(Vector, Vectorize) {
     val a = vectorize(range(10));
     EXPECT_EQ(a, range(10));
