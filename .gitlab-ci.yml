@@ -11,8 +11,9 @@ build:
     - mkdir -p build
     - cmake -B build
     - cmake --build build
-    - export GTEST_ROOT=$CI_PROJECT_DIR/.dependencies/googletest/build
-    - export GTEST_INCLUDE_DIR=$CI_PROJECT_DIR/.dependencies/googletest/include
+    - cmake --build build --target install
+    # - export GTEST_ROOT=$CI_PROJECT_DIR/.dependencies/googletest/build
+    # - export GTEST_INCLUDE_DIR=$CI_PROJECT_DIR/.dependencies/googletest/googletest/include
   script:
     - cd $CI_PROJECT_DIR
     - mkdir -p build
@@ -20,7 +21,7 @@ build:
     - cmake --build build
   artifacts:
     paths:
-      - $CI_PROJECT_DIR/.dependencies/
+      # - $CI_PROJECT_DIR/.dependencies/
       - $CI_PROJECT_DIR/build/
 
 test:
