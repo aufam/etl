@@ -4,8 +4,15 @@ build:
   stage: build
   before_script:
     - apt update && apt -y install cmake
-    - mkdir build
+    - git clone https://github.com/google/googletest
+    - cd googletest
+    - mkdir -p build
+    - cmake -B build
+    - cmake --build build
+    - cmake --build build --target install
+    - cd ..
   script:
+    - mkdir -p build
     - cmake -B build -DBUILD_TESTS=ON
     - cmake --build build
 
