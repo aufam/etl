@@ -16,7 +16,7 @@ build:
     - cmake -B build -DBUILD_TESTS=ON
     - cmake --build build
   artifacts:
-    cache:
+    paths:
       - googletest
       - build
 
