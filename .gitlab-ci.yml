@@ -12,10 +12,11 @@ build:
     - cmake -B build
     - cmake --build build
     - export GTEST_ROOT=$CI_PROJECT_DIR/.dependencies/googletest/build
+    - export GTEST_INCLUDE_DIR=$CI_PROJECT_DIR/.dependencies/googletest/include
   script:
     - cd $CI_PROJECT_DIR
     - mkdir -p build
-    - cmake -B build -DBUILD_TESTS=ON -DGTEST_ROOT=$GTEST_ROOT
+    - cmake -B build -DBUILD_TESTS=ON -DGTEST_ROOT=$GTEST_ROOT -DGTEST_INCLUDE_DIR=$GTEST_INCLUDE_DIR
     - cmake --build build
   artifacts:
     paths:
