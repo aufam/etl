@@ -1,0 +1,22 @@
+image: gcc
+
+build:
+  stage: build
+  before_script:
+    - apt update && apt -y install cmake
+    - mkdir build
+  script:
+    - cmake -B build -DBUILD_TESTS=ON
+    - cmake --build build
+
+test:
+  stage: test
+  script:
+    - ./build/test/test_all
+
+deploy:
+  stage: deploy
+  script: 
+      - cmake --build build --target install
+  environment: production
+
