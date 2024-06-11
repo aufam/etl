@@ -4,6 +4,16 @@
 #include "etl/async_task.h"
 
 namespace Project::etl {
+    template <typename F, typename... Args>
+    auto async(F&& fn, Args&&... args) {
+        return Tasks::self->launch(etl::forward<F>(fn), etl::forward<Args>(args)...);
+    }
+
+    template <auto method, typename Class, typename... Args>
+    auto async(Class* self, Args&&... args) {
+        return Tasks::self->launch(etl::bind<method>(self), etl::forward<Args>(args)...);
+    }
+
     template <typename T> class Async;
 
     template <typename R, typename... Args>
@@ -19,16 +29,6 @@ namespace Project::etl {
     private:
         std::function<R(Args...)> fn;
     };
-
-    template <typename F, typename... Args>
-    auto async(F&& fn, Args&&... args) {
-        return Tasks::self->launch(etl::forward<F>(fn), etl::forward<Args>(args)...);
-    }
-
-    template <auto method, typename Class, typename... Args>
-    auto async(Class* self, Args&&... args) {
-        return Tasks::self->launch(etl::bind<method>(self), etl::forward<Args>(args)...);
-    }
 }
 
 #endif

@@ -16,24 +16,15 @@
 #endif
 
 namespace Project::etl {
-    template <typename F, typename... Args>
-    auto async(F&& fn, Args&&... args);
-
     class Tasks {
     public:
-        struct LaunchArgs {
-            bool ignore_result = false;
-            etl::Time timeout = etl::time::infinite;
-            std::function<void()> abort_fn = nullptr;
-        };
-
         void init();
         int resources();
         void terminate();
 
-    private:
         static Tasks *self;
-
+        
+    private:
         struct Sender {
             uint8_t mempool[32];
             etl::Function<void*(), void*> promise;
@@ -41,8 +32,27 @@ namespace Project::etl {
         };
 
         struct Receiver {
-            etl::Queue<void*, 1> result;
-            bool is_waiting = false;
+            Promise<void*> promise;
+
+            template <typename T>
+            Result<T, osStatus_t> wait(Time timeout) {
+                auto res = promise.wait(timeout);
+                if (res.is_err())
+                    return Err(res.unwrap_err());
+                
+                if constexpr (!etl::is_void_v<T>) {
+                    T* ptr = reinterpret_cast<T*>(res.unwrap());
+                    T value = etl::move(*ptr);
+                    delete ptr;
+
+                    return Ok(etl::move(value));
+                } else {
+                    return Ok();
+                }
+            }
+
+            template <typename T>
+            Future<T> get_future() { return etl::bind<&Receiver::wait<T>>(this); }
         };
 
         int select_channel();
@@ -52,12 +62,7 @@ namespace Project::etl {
         Sender senders[ETL_ASYNC_N_CHANNELS];
         Receiver receivers[ETL_ASYNC_N_CHANNELS];
 
-        template <typename F, typename... Args>
-        friend auto async(F&& fn, Args&&... args);
-
-        template <auto method, typename Class, typename... Args>
-        friend auto async(Class* self, Args&&... args);
-
+    public:
         template <typename F, typename... Args>
         auto launch(F&& fn, Args&&... args);
     };
@@ -98,28 +103,7 @@ namespace Project::etl {
 
         etl::ignore = threads[channel].setFlags(1 << channel);
 
-        return Future<T>(Function<Result<T, osStatus_t>(Time), void*>([] (Receiver* receiver, Time timeout) -> Result<T, osStatus_t> { 
-            if (receiver == nullptr)
-                return Err(osError);
-
-            receiver->is_waiting = true;
-            auto [res, err] = receiver->result.pop().wait(timeout);
-            receiver->is_waiting = false;
-
-            if (err)
-                return Err(*err);
-            
-            if constexpr (!etl::is_void_v<T>) {
-                T* ptr = reinterpret_cast<T*>(*res);
-                T value = etl::move(*ptr);
-                delete ptr;
-
-                return Ok(etl::move(value));
-            } else {
-                return Ok();
-            }
-
-        }, receiver));
+        return receiver->get_future<T>();
     }
 }
 

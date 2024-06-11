@@ -24,9 +24,10 @@ namespace Project::etl {
         constexpr Vector() : Vector(nullptr, 0, 0) {}
 
         /// construct and set the capacity
-        explicit Vector(size_t capacity) : Vector() {
+        explicit Vector(size_t capacity, bool _n_items_eq_capacity = false) : Vector() {
             buf = allocate(capacity);
             if (buf) this->capacity = capacity;
+            if (_n_items_eq_capacity) this->nItems = this->capacity;
         }
 
         /// construct from initializer list
@@ -442,13 +443,19 @@ namespace Project::etl {
     template <typename T, typename A = etl::Allocator<T>> auto
     vector_reserve(size_t capacity) { return Vector<T, A>(capacity); }
 
+    /// create uninitialized vector of an integral type, the length will be equal to the capacity
+    template <typename T, typename A = etl::Allocator<T>, typename = enable_if_t<etl::is_integral_v<T>>> auto
+    vector_allocate(size_t capacity) { return Vector<T, A>(capacity, true); }
+
     /// convert any sequence to a vector
     template <typename T, typename A = etl::Allocator<T>, typename Sequence> auto
-    vectorize(Sequence&& seq) {
+    vectorize(Sequence&& seq, size_t capacity = 0) {
         auto res = vector<T, A>();
 
         if constexpr (etl::has_len_v<remove_reference_t<Sequence>>)
-            res.reserve(etl::len(seq));
+            capacity = etl::max(etl::len(seq), capacity);
+
+        res.reserve(capacity);
 
         if constexpr (etl::is_lvalue_reference_v<Sequence>) {
             for (decltype(auto) item : seq)
@@ -464,10 +471,10 @@ namespace Project::etl {
         
     /// convert any sequence to a vector with default allocator
     template <typename Sequence> auto
-    vectorize(Sequence&& seq) {
+    vectorize(Sequence&& seq, size_t capacity = 0) {
         using Iterator = etl::decay_t<decltype(etl::begin(etl::declval<etl::decay_t<Sequence>>()))>;
         using T = etl::decay_t<decltype(*etl::declval<Iterator>())>;
-        return vectorize<T>(etl::forward<Sequence>(seq));
+        return vectorize<T>(etl::forward<Sequence>(seq), capacity);
     }
 
     /// type traits

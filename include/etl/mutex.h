@@ -1,8 +1,7 @@
 #ifndef ETL_MUTEX_H
 #define ETL_MUTEX_H
 
-#include "etl/time.h"
-#include "etl/result.h"
+#include "etl/this_thread.h"
 
 namespace Project::etl {
 
@@ -24,12 +23,14 @@ namespace Project::etl {
         /// @param id The ID of the mutex to guard.
         explicit LockGuard(osMutexId_t id) : id(id), lock(false) {}
 
+        LockGuard(const LockGuard& other) = delete;
+
         /// @brief Move constructor for LockGuard.
         /// @param other The LockGuard instance to move from.
         LockGuard(LockGuard&& other) noexcept : id(etl::exchange(other.id, nullptr)), lock(etl::exchange(other.lock, false)) {}
 
         /// @brief Destructor for LockGuard.
-        ~LockGuard() { if (lock) osMutexRelease(id); }
+        ~LockGuard() { unlock(); }
 
         /// @brief Waits for the mutex to become available.
         /// @param timeout The maximum time to wait for the mutex.
@@ -51,7 +52,14 @@ namespace Project::etl {
         Result<LockGuard, osStatus_t> await() {
             return wait(etl::time::infinite);
         }
+
+        void unlock() {
+            if (lock) osMutexRelease(id);
+            lock = false;
+        }
     };
+
+    inline void unlock(Result<LockGuard, osStatus_t>& lock) { if (lock.is_ok()) lock.unwrap().unlock(); }
 
     /// FreeRTOS mutex interface.
     /// @note requires cmsis os v2, USE_TRACE_FACILITY, SUPPORT_STATIC_ALLOCATION, SUPPORT_DYNAMIC_ALLOCATION
@@ -73,7 +81,6 @@ namespace Project::etl {
 
         /// construct from mutex
         explicit MutexInterface(osMutexId_t id) : id(id) {
-            auto a = LockGuard(id);
             referenceCounterInc();
         }
 
@@ -132,7 +139,7 @@ namespace Project::etl {
         /// get thread that owns this mutex
         /// @return thread object
         /// @note cannot be called from ISR
-        auto getOwner() { return etl::ThreadInterface(osMutexGetOwner(id)); }
+        auto getOwner() { return osMutexGetOwner(id); }
     };
 
     struct MutexAttributes {

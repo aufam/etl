@@ -10,22 +10,17 @@ namespace Project::etl {
         int prio = osPriorityAboveNormal;
         for (auto& thd: threads)
             thd.init({.function=etl::bind<&Tasks::execute>(this), .prio=(osPriority_t) prio++});
-
-        for (auto& receiver: receivers)
-            receiver.result.init();
     }
 
     void Tasks::execute() {
         while (true) {
             auto flag = osThreadFlagsWait(0xFFFFFF, osFlagsWaitAny, osWaitForever);
-            if (flag & osFlagsError) {
+            if (flag & osFlagsError)
                 break;
-            }
 
             auto channel = etl::count_trailing_zeros(flag);
-            if (channel >= ETL_ASYNC_N_CHANNELS) {
+            if (channel >= ETL_ASYNC_N_CHANNELS)
                 break;
-            }
 
             auto sender = &senders[channel];
             auto receiver = &receivers[channel];
@@ -33,10 +28,11 @@ namespace Project::etl {
             auto result = sender->promise();
             sender->closure();
 
-            if (receiver->is_waiting)
-                receiver->result.push(result).await();
-            
-            receiver->is_waiting = false;
+            if (receiver->promise.valid())
+                receiver->promise.set(result);
+            else
+                ::free(result);
+
             ::memset(sender->mempool, 0, sizeof(sender->mempool));
             sender->promise = nullptr;
             sender->closure = nullptr;
@@ -62,7 +58,7 @@ namespace Project::etl {
     int Tasks::select_channel() {
         int i = 0;
         for (; i < ETL_ASYNC_N_CHANNELS; ++i) {
-            if (!senders[i].promise && receivers[i].result.len() == 0)
+            if (!senders[i].promise)
                 break;
         }
 

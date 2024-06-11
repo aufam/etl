@@ -5,15 +5,11 @@
 
 namespace Project::etl::detail {
     inline Result<uint32_t, osStatus_t> eventResult(uint32_t flags) {
-        switch (flags) {
-            case osFlagsErrorTimeout:   return etl::Err(osErrorTimeout);
-            case osFlagsErrorResource:  return etl::Err(osErrorResource);
-            case osFlagsErrorParameter: return etl::Err(osErrorParameter);
-            case osFlagsErrorISR:       return etl::Err(osErrorISR);
-            case osFlagsError:          return etl::Err(osError);
-            default: if (flags & osFlagsError) return etl::Err(osError);
-        }
-        return etl::Ok(flags);
+        auto status = flagsToStatus(flags);
+        if (status.is_err())
+            return Err(status.unwrap_err());
+        
+        return Ok(flags);
     }
 }
 
