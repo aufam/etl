@@ -42,94 +42,94 @@ namespace Project::etl {
 
         /// Constructs a Result object from an Ok variant.
         template <typename U, typename = enable_if_t<etl::is_convertible_v<U, T>>>
-        Result(const Ok<U>& value) : variant(Ok<T>(static_cast<T>(value.data))) {}
+        constexpr Result(const Ok<U>& value) : variant(Ok<T>(static_cast<T>(value.data))) {}
 
         /// Constructs a Result object from an Err variant.
         template <typename U, typename = enable_if_t<etl::is_convertible_v<U, E>>>
-        Result(const Err<U>& value) : variant(Err<E>(static_cast<E>(value.data))) {}
+        constexpr Result(const Err<U>& value) : variant(Err<E>(static_cast<E>(value.data))) {}
 
         /// Constructs a Result object from an Ok variant.
         template <typename U, typename = enable_if_t<etl::is_convertible_v<U, T>>>
-        Result(Ok<U>&& value) : variant(Ok<T>(static_cast<T>(etl::move(value.data)))) {}
+        constexpr Result(Ok<U>&& value) : variant(Ok<T>(static_cast<T>(etl::move(value.data)))) {}
 
         /// Constructs a Result object from an Err variant.
         template <typename U, typename = enable_if_t<etl::is_convertible_v<U, E>>>
-        Result(Err<U>&& value) : variant(Err<E>(static_cast<E>(etl::move(value.data)))) {}
+        constexpr Result(Err<U>&& value) : variant(Err<E>(static_cast<E>(etl::move(value.data)))) {}
 
-        Result(const Result& other) = default;
-        Result(Result&& other) = default;
+        constexpr Result(const Result& other) = default;
+        constexpr Result(Result&& other) = default;
 
         /// copy constructor
         template <typename U, typename = enable_if_t<etl::is_convertible_v<U, T>>>
-        Result(const Result<U, E>& other) : variant() {
+        constexpr Result(const Result<U, E>& other) : variant() {
             if (other.is_ok()) variant = Ok<T>(static_cast<T>(other.unwrap()));
             if (other.is_err()) variant = Err<E>(static_cast<E>(other.unwrap_err()));
         }
 
         /// move constructor
         template <typename U, typename = enable_if_t<etl::is_convertible_v<U, T>>>
-        Result(Result<U, E>&& other) : variant() {
+        constexpr Result(Result<U, E>&& other) : variant() {
             if (other.is_ok()) variant = Ok<T>(static_cast<T>(etl::move(other.unwrap())));
             if (other.is_err()) variant = Err<E>(static_cast<E>(etl::move(other.unwrap_err())));
         }
 
         /// check if the result is ok
-        bool is_ok() const { return variant.index() == 1; }
+        constexpr bool is_ok() const { return variant.index() == 1; }
 
         /// check if the result is error
-        bool is_err() const { return variant.index() == 2; }
+        constexpr bool is_err() const { return variant.index() == 2; }
 
         /// unwrap ok value
-        T& unwrap() & { return std::get<Ok<T>>(variant).data; }
+        constexpr T& unwrap() & { return std::get<Ok<T>>(variant).data; }
 
         /// unwrap ok value
-        T&& unwrap() && { return etl::move(std::get<Ok<T>>(variant).data); }
+        constexpr T&& unwrap() && { return etl::move(std::get<Ok<T>>(variant).data); }
         
         /// unwrap ok value
-        const T& unwrap() const& { return std::get<Ok<T>>(variant).data; }
+        constexpr const T& unwrap() const& { return std::get<Ok<T>>(variant).data; }
 
         /// unwrap ok value
-        const T&& unwrap() const&& { return etl::move(std::get<Ok<T>>(variant).data); }
+        constexpr const T&& unwrap() const&& { return etl::move(std::get<Ok<T>>(variant).data); }
 
         /// unwrap ok value or return default value
         template <typename U>
-        T unwrap_or(U&& value) && { 
+        constexpr T unwrap_or(U&& value) && { 
             return variant.index() == 1 ? etl::move(std::get<Ok<T>>(variant).data) : static_cast<T>(etl::forward<U>(value)); 
         }
 
         /// unwrap ok value or return default value
         template <typename U>
-        T unwrap_or(U&& value) const& { 
+        constexpr T unwrap_or(U&& value) const& { 
             return variant.index() == 1 ? std::get<Ok<T>>(variant).data : static_cast<T>(etl::forward<U>(value)); 
         }
 
         /// unwrap err value
-        E& unwrap_err() & { return std::get<Err<E>>(variant).data; }
+        constexpr E& unwrap_err() & { return std::get<Err<E>>(variant).data; }
 
         /// unwrap err value
-        E&& unwrap_err() && { return etl::move(std::get<Err<E>>(variant).data); }
+        constexpr E&& unwrap_err() && { return etl::move(std::get<Err<E>>(variant).data); }
         
         /// unwrap err value
-        const E& unwrap_err() const& { return std::get<Err<E>>(variant).data; }
+        constexpr const E& unwrap_err() const& { return std::get<Err<E>>(variant).data; }
 
         /// unwrap err value
-        const E&& unwrap_err() const&& { return etl::move(std::get<Err<E>>(variant).data); }
+        constexpr const E&& unwrap_err() const&& { return etl::move(std::get<Err<E>>(variant).data); }
 
         /// unwrap err value or return default value
         template <typename U>
-        E unwrap_err_or(U&& value) && { 
+        constexpr E unwrap_err_or(U&& value) && { 
             return variant.index() == 2 ? etl::move(std::get<Err<E>>(variant).data) : static_cast<E>(etl::forward<U>(value)); 
         }
 
         /// unwrap err value or return default value
         template <typename U>
-        E unwrap_err_or(U&& value) const& { 
+        constexpr E unwrap_err_or(U&& value) const& { 
             return variant.index() == 2 ? std::get<Err<E>>(variant).data : static_cast<E>(etl::forward<U>(value)); 
         }
 
         /// structured binding support
         template <size_t I>
-        auto get() & {
+        constexpr auto get() & {
             if constexpr (I == 0) {
                 return variant.index() == 1 ? Optional<T&>(unwrap()) : Optional<T&>();
             } else if constexpr (I == 1) {
@@ -139,7 +139,7 @@ namespace Project::etl {
 
         /// structured binding support
         template <size_t I>
-        auto get() && {
+        constexpr auto get() && {
             if constexpr (I == 0) {
                 return variant.index() == 1 ? Optional<T>(etl::move(unwrap())) : Optional<T>();
             } else if constexpr (I == 1) {
@@ -149,7 +149,7 @@ namespace Project::etl {
 
         /// structured binding support
         template <size_t I>
-        auto get() const& {
+        constexpr auto get() const& {
             if constexpr (I == 0) {
                 return variant.index() == 1 ? Optional<const T&>(unwrap()) : Optional<const T&>();
             } else if constexpr (I == 1) {
@@ -160,7 +160,7 @@ namespace Project::etl {
         /// @brief chain the result value after waiting the result
         /// @param fn callable with signature `R(T)`
         template<typename F, typename R = decltype(etl::declval<F>()(etl::declval<T>()))>
-        Result<R, E> then(F&& fn) && {
+        constexpr Result<R, E> then(F&& fn) && {
             switch (variant.index()) {
                 case 1: 
                     if constexpr (etl::is_void_v<R>) return (fn(std::move(unwrap())), Ok());
@@ -173,7 +173,7 @@ namespace Project::etl {
         /// @brief chain the result value after waiting the result
         /// @param fn callable with signature `R(T)`
         template<typename F, typename R = decltype(etl::declval<F>()(etl::declval<T>()))>
-        Result<R, E> then(F&& fn) const& {
+        constexpr Result<R, E> then(F&& fn) const& {
             switch (variant.index()) {
                 case 1: 
                     if constexpr (etl::is_void_v<R>) return (fn(unwrap()), Ok());
@@ -186,7 +186,7 @@ namespace Project::etl {
         /// @brief chain the result value after waiting the result
         /// @param fn callable with signature `Result<R, E>(T)`
         template<typename F, typename R = decltype(etl::declval<F>()(etl::declval<T>()))>
-        R and_then(F&& fn) && {
+        constexpr R and_then(F&& fn) && {
             switch (variant.index()) {
                 case 1: return fn(etl::move(unwrap()));
                 case 2: return Err<E>(etl::move(unwrap_err()));
@@ -196,7 +196,7 @@ namespace Project::etl {
 
         /// @brief chain the result value after waiting the result
         template<typename F, typename R = decltype(etl::declval<F>()(etl::declval<T>()))>
-        R and_then(F&& fn) const& {
+        constexpr R and_then(F&& fn) const& {
             switch (variant.index()) {
                 case 1: return fn(unwrap());
                 case 2: return Err<E>(unwrap_err());
@@ -206,7 +206,7 @@ namespace Project::etl {
 
         /// Chains a function call on Err variant.
         template<typename F, typename R = decltype(etl::declval<F>()(etl::declval<E>()))>
-        Result<T, R> except(F&& fn) && {
+        constexpr Result<T, R> except(F&& fn) && {
             switch (variant.index()) {
                 case 2: return Err<R>(fn(etl::move(unwrap_err())));
                 case 1: return Ok<T>(etl::move(unwrap()));
@@ -216,7 +216,7 @@ namespace Project::etl {
 
         /// Chains a function call on Err variant.
         template<typename F, typename R = decltype(etl::declval<F>()(etl::declval<E>()))>
-        Result<T, R> except(F&& fn) const& {
+        constexpr Result<T, R> except(F&& fn) const& {
             switch (variant.index()) {
                 case 2: return Err<R>(fn(unwrap_err()));
                 case 1: return Ok<T>(unwrap());
@@ -226,7 +226,7 @@ namespace Project::etl {
 
         /// Chains a function call on Err variant.
         template<typename F, typename R = decltype(etl::declval<F>()(etl::declval<E>()))>
-        R or_except(F&& fn) && {
+        constexpr R or_except(F&& fn) && {
             switch (variant.index()) {
                 case 2: return fn(etl::move(unwrap_err()));
                 case 1: return Ok<T>(etl::move(unwrap()));
@@ -236,7 +236,7 @@ namespace Project::etl {
 
         /// Chains a function call on Err variant.
         template<typename F, typename R = decltype(etl::declval<F>()(etl::declval<E>()))>
-        R or_except(F&& fn) const& {
+        constexpr R or_except(F&& fn) const& {
             switch (variant.index()) {
                 case 2: return fn(unwrap_err());
                 case 1: return Ok<T>(unwrap());
@@ -245,25 +245,25 @@ namespace Project::etl {
         }
 
         template<typename F>
-        Result<T, E> finally(F&& fn) && {
+        constexpr Result<T, E> finally(F&& fn) && {
             fn();
             return etl::move(*this);
         }
 
         template<typename F>
-        const Result<T, E>& finally(F&& fn) const& {
+        constexpr const Result<T, E>& finally(F&& fn) const& {
             fn();
             return *this;
         }
 
         template<typename F>
-        Result<T, E>& finally(F&& fn) & {
+        constexpr Result<T, E>& finally(F&& fn) & {
             fn();
             return *this;
         }
 
     private:
-        Result() = default;
+        constexpr Result() = default;
 
         std::variant<None, Ok<T>, Err<E>> variant;
 
@@ -277,21 +277,21 @@ namespace Project::etl {
         using value_type = void;
         using error_type = E;
 
-        Result(const Ok<>&) : variant(Ok<>()) {}
+        constexpr Result(const Ok<>&) : variant(Ok<>()) {}
 
         /// Constructs a Result object from an Err variant.
         template <typename U, typename = enable_if_t<etl::is_convertible_v<U, E>>>
-        Result(const Err<U>& value) : variant(value) {}
+        constexpr Result(const Err<U>& value) : variant(value) {}
 
         /// Constructs a Result object from an Err variant.
         template <typename U, typename = enable_if_t<etl::is_convertible_v<U, E>>>
-        Result(Err<U>&& value) : variant(Err<E>(static_cast<E>(etl::move(value.data)))) {}
+        constexpr Result(Err<U>&& value) : variant(Err<E>(static_cast<E>(etl::move(value.data)))) {}
 
-        Result(const Result& other) = default;
-        Result(Result&& other) = default;
+        constexpr Result(const Result& other) = default;
+        constexpr Result(Result&& other) = default;
 
         template <typename U>
-        Result(const Result<U, E>& other) : variant() {
+        constexpr Result(const Result<U, E>& other) : variant() {
             switch (other.variant.index()) {
                 case 1: variant = Ok<>(); return;
                 case 2: variant = Err<E>(other.unwrap_err()); return;
@@ -300,7 +300,7 @@ namespace Project::etl {
         }
 
         template <typename U>
-        Result(Result<U, E>&& other) : variant() {
+        constexpr Result(Result<U, E>&& other) : variant() {
             switch (other.variant.index()) {
                 case 1: variant = Ok<>(); return;
                 case 2: variant = Err<E>(etl::move(other.unwrap_err())); return;
@@ -309,33 +309,33 @@ namespace Project::etl {
         }
 
         /// check if the result is ok
-        bool is_ok() const { return variant.index() == 1; }
+        constexpr bool is_ok() const { return variant.index() == 1; }
 
         /// check if the result is error
-        bool is_err() const { return variant.index() == 2; }
+        constexpr bool is_err() const { return variant.index() == 2; }
 
-        void unwrap() const { return; }
+        constexpr void unwrap() const { return; }
 
-        E& unwrap_err() & { return std::get<Err<E>>(variant).data; }
+        constexpr E& unwrap_err() & { return std::get<Err<E>>(variant).data; }
 
-        E&& unwrap_err() && { return etl::move(std::get<Err<E>>(variant).data); }
+        constexpr E&& unwrap_err() && { return etl::move(std::get<Err<E>>(variant).data); }
         
-        const E& unwrap_err() const& { return std::get<Err<E>>(variant).data; }
+        constexpr const E& unwrap_err() const& { return std::get<Err<E>>(variant).data; }
 
-        const E&& unwrap_err() const&& { return etl::move(std::get<Err<E>>(variant).data); }
+        constexpr const E&& unwrap_err() const&& { return etl::move(std::get<Err<E>>(variant).data); }
 
         template <typename U>
-        E unwrap_err_or(U&& value) && { 
+        constexpr E unwrap_err_or(U&& value) && { 
             return variant.index() == 2 ? etl::move(std::get<Err<E>>(variant).data) : static_cast<E>(etl::forward<U>(value)); 
         }
 
         template <typename U>
-        E unwrap_err_or(U&& value) const& { 
+        constexpr E unwrap_err_or(U&& value) const& { 
             return variant.index() == 2 ? std::get<Err<E>>(variant).data : static_cast<E>(etl::forward<U>(value)); 
         }
         
         template <size_t I>
-        auto get() & {
+        constexpr auto get() & {
             if constexpr (I == 0) {
                 return variant.index() == 1;
             } else if constexpr (I == 1) {
@@ -344,7 +344,7 @@ namespace Project::etl {
         }
         
         template <size_t I>
-        auto get() && {
+        constexpr auto get() && {
             if constexpr (I == 0) {
                 return variant.index() == 1;
             } else if constexpr (I == 1) {
@@ -353,7 +353,7 @@ namespace Project::etl {
         }
 
         template <size_t I>
-        auto get() const& {
+        constexpr auto get() const& {
             if constexpr (I == 0) {
                 return variant.index() == 1;
             } else if constexpr (I == 1) {
@@ -362,7 +362,7 @@ namespace Project::etl {
         }
 
         template<typename F, typename R = decltype(etl::declval<F>()())>
-        Result<R, E> then(F&& fn) && {
+        constexpr Result<R, E> then(F&& fn) && {
             switch (variant.index()) {
                 case 1: if constexpr (etl::is_void_v<R>) return (fn(), Ok());
                         else return Ok<R>(fn());
@@ -372,7 +372,7 @@ namespace Project::etl {
         }
 
         template<typename F, typename R = decltype(etl::declval<F>()())>
-        Result<R, E> then(F&& fn) const& {
+        constexpr Result<R, E> then(F&& fn) const& {
             switch (variant.index()) {
                 case 1: if constexpr (etl::is_void_v<R>) return (fn(), Ok());
                         else return Ok<R>(fn());
@@ -382,7 +382,7 @@ namespace Project::etl {
         }
 
         template<typename F, typename R = decltype(etl::declval<F>()())>
-        R and_then(F&& fn) && {
+        constexpr R and_then(F&& fn) && {
             switch (variant.index()) {
                 case 1: return fn();
                 case 2: return Err<E>(etl::move(unwrap_err()));
@@ -391,7 +391,7 @@ namespace Project::etl {
         }
 
         template<typename F, typename R = decltype(etl::declval<F>()())>
-        R and_then(F&& fn) const& {
+        constexpr R and_then(F&& fn) const& {
             switch (variant.index()) {
                 case 1: return fn();
                 case 2: return Err<E>(unwrap_err());
@@ -400,7 +400,7 @@ namespace Project::etl {
         }
 
         template<typename F, typename R = decltype(etl::declval<F>()(etl::declval<E>()))>
-        Result<void, R> except(F&& fn) && {
+        constexpr Result<void, R> except(F&& fn) && {
             switch (variant.index()) {
                 case 2: return Err<R>(fn(etl::move(unwrap_err())));
                 case 1: return Ok();
@@ -409,7 +409,7 @@ namespace Project::etl {
         }
 
         template<typename F, typename R = decltype(etl::declval<F>()(etl::declval<E>()))>
-        Result<void, R> except(F&& fn) const& {
+        constexpr Result<void, R> except(F&& fn) const& {
             switch (variant.index()) {
                 case 2: return Err<R>(fn(unwrap_err()));
                 case 1: return Ok();
@@ -418,7 +418,7 @@ namespace Project::etl {
         }
 
         template<typename F, typename R = decltype(etl::declval<F>()(etl::declval<E>()))>
-        R or_except(F&& fn) && {
+        constexpr R or_except(F&& fn) && {
             switch (variant.index()) {
                 case 2: return fn(etl::move(unwrap_err()));
                 case 1: return Ok();
@@ -427,7 +427,7 @@ namespace Project::etl {
         }
 
         template<typename F, typename R = decltype(etl::declval<F>()(etl::declval<E>()))>
-        R or_except(F&& fn) const& {
+        constexpr R or_except(F&& fn) const& {
             switch (variant.index()) {
                 case 2: return fn(unwrap_err());
                 case 1: return Ok();
@@ -436,25 +436,25 @@ namespace Project::etl {
         }
 
         template<typename F>
-        Result<void, E> finally(F&& fn) && {
+        constexpr Result<void, E> finally(F&& fn) && {
             fn();
             return etl::move(*this);
         }
 
         template<typename F>
-        const Result<void, E>& finally(F&& fn) const& {
+        constexpr const Result<void, E>& finally(F&& fn) const& {
             fn();
             return *this;
         }
 
         template<typename F>
-        Result<void, E>& finally(F&& fn) & {
+        constexpr Result<void, E>& finally(F&& fn) & {
             fn();
             return *this;
         }
 
     private:
-        Result() {}
+        constexpr Result() {}
 
         std::variant<None, Ok<>, Err<E>> variant;
 
@@ -478,7 +478,7 @@ namespace Project::etl {
 #define ETL_RESULT_ARITHMETICS(op) \
     template <typename R, typename U, typename = etl::enable_if_t< \
         etl::is_etl_result_v<etl::decay_t<R>> && etl::is_arithmetic_v<etl::decay_t<U>> \
-    >> auto operator op (R&& res, U&& other) { \
+    >> constexpr auto operator op (R&& res, U&& other) { \
         using result_type = result_value_t<etl::decay_t<R>>; \
         if constexpr (etl::is_reference_v<result_value_t<etl::decay_t<R>>>) { \
             return res.then([other] (result_type value) -> decltype(auto) { return value op other; }); \
@@ -488,7 +488,7 @@ namespace Project::etl {
     } \
     template <typename R, typename U, typename = etl::enable_if_t< \
         etl::is_etl_result_v<etl::decay_t<R>> && etl::is_arithmetic_v<etl::decay_t<U>> \
-    >> auto operator op (U&&other, R&& res) { \
+    >> constexpr auto operator op (U&&other, R&& res) { \
         using result_type = result_value_t<etl::decay_t<R>>; \
         return res.then([other] (result_type value) mutable -> decltype(auto) { return other op value; }); \
     }
