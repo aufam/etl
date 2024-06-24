@@ -144,7 +144,7 @@ namespace Project::etl {
     template <typename Iterator, typename UnaryFunction> constexpr auto
     foreach(Iterator first, Iterator last, UnaryFunction&& fn) {
         for (; first != last; ++first) fn(*first);
-        return fn;
+        return first;
     }
 
     /// applies function fn(item) to each element
