@@ -166,6 +166,19 @@ namespace Project::etl {
     optional(Args&&... args) { 
         return Optional<T>(T(etl::forward<Args>(args)...));
     }
+
+    /// type traits
+    template <typename T> struct is_optional : false_type {};
+    template <typename T> struct is_optional<Optional<T>> : true_type {};
+    template <typename T> struct is_optional<const Optional<T>> : true_type {};
+    template <typename T> struct is_optional<volatile Optional<T>> : true_type {};
+    template <typename T> struct is_optional<const volatile Optional<T>> : true_type {};
+    template <typename T> inline constexpr bool is_optional_v = is_optional<T>::value;
+
+    template <typename T> struct remove_extent<Optional<T>> { typedef T type; };
+    template <typename T> struct remove_extent<const Optional<T>> { typedef T type; };
+    template <typename T> struct remove_extent<volatile Optional<T>> { typedef T type; };
+    template <typename T> struct remove_extent<const volatile Optional<T>> { typedef T type; };
 }
 
 #endif // ETL_OPTIONAL_H

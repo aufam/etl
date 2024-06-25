@@ -11,6 +11,8 @@ namespace Project::etl {
         T* ptr;
     
     public:
+        typedef T type;
+
         /// empty constructor
         constexpr Ref() : ptr(nullptr) {}
 
@@ -63,6 +65,19 @@ namespace Project::etl {
     template <typename T> void ref(const T&&) = delete;
 
     template <typename T> void ref_const(const T&&) = delete;
+
+    /// type traits
+    template <typename T> struct is_ref : false_type {};
+    template <typename T> struct is_ref<Ref<T>> : true_type {};
+    template <typename T> struct is_ref<const Ref<T>> : true_type {};
+    template <typename T> struct is_ref<volatile Ref<T>> : true_type {};
+    template <typename T> struct is_ref<const volatile Ref<T>> : true_type {};
+    template <typename T> inline constexpr bool is_ref_v = is_ref<T>::value;
+
+    template <typename T> struct remove_extent<Ref<T>> { typedef T type; };
+    template <typename T> struct remove_extent<const Ref<T>> { typedef T type; };
+    template <typename T> struct remove_extent<volatile Ref<T>> { typedef T type; };
+    template <typename T> struct remove_extent<const volatile Ref<T>> { typedef T type; };
 }
 
 #endif //ETL_REF_H
