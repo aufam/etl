@@ -1,4 +1,6 @@
 #include "etl/json.h"
+#include "etl/json_serialize.h"
+#include "etl/json_deserialize.h"
 #include "gtest/gtest.h"
 
 using namespace Project::etl;
@@ -77,4 +79,76 @@ TEST(JSON, StructuredBinding) {
     EXPECT_EQ(names[3], "Derek");
 
     EXPECT_EQ(json.len(), 4);
+}
+
+struct Bar {
+    float num;
+    bool is_true;
+};
+
+JSON_DEFINE(Bar, 
+    JSON_ITEM("num", num), 
+    JSON_ITEM("is_true", is_true)
+)
+struct Foo {
+    int num;
+    std::string text;
+    Bar bar;
+};
+
+JSON_DEFINE(Foo, 
+    JSON_ITEM("num", num), 
+    JSON_ITEM("text", text),
+    JSON_ITEM("bar", bar)
+)
+
+TEST(JSON, Serialize) {
+    json::List_<json::Map> l {
+        12345, 
+        3.14, 
+        "test"sv,
+        json::Map {
+            {"num", 42},
+            {"dynamic_string", std::string("dynamic")},
+        },
+    };
+
+    Foo foo {
+        .num = 42,
+        .text = "test",
+        .bar = {
+            // {"num", 3.14},
+            // {"is_true", false},
+            .num = 3.14,
+            .is_true = false,
+        }
+    };
+
+    EXPECT_EQ(json::serialize(l), "[12345,3.1400,\"test\",{\"num\":42,\"dynamic_string\":\"dynamic\"}]");
+    EXPECT_EQ(json::serialize(foo), "{\"num\":42,\"text\":\"test\",\"bar\":{\"num\":3.14,\"is_true\":false}}");
+}
+
+TEST(JSON, Deserialize) {
+    auto foo = json::deserialize<Foo>(R"({
+        "num": 24, 
+        "text": "test",
+        "bar": {
+            "num": 3.14, 
+            "is_true": true
+        }
+    })").unwrap();
+    const Foo expect = {.num=24, .text="test", .bar={.num=3.14, .is_true=true}};
+
+    EXPECT_EQ(foo.num, 24);
+    EXPECT_EQ(foo.text, "test");
+    EXPECT_EQ(foo.bar.num, 3.14f);
+    EXPECT_EQ(foo.bar.is_true, true);
+
+    constexpr auto bar = json::deserialize<Bar>(R"({
+        "num": 3.14, 
+        "is_true": false
+    })").unwrap();
+
+    EXPECT_EQ(bar.num, 3.14f);
+    EXPECT_EQ(bar.is_true, false);
 }
