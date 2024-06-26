@@ -25,10 +25,24 @@ namespace Project::etl::json {
     using List = List_<>;
 
     template<typename ...Ts>
-    using Map_ = etl::UnorderedMap<std::string, std::variant<JSON_BASIC_TYPES, Ts...>>;
+    using Map_ = etl::UnorderedMap<etl::StringView, std::variant<JSON_BASIC_TYPES, Ts...>>;
     using Map = Map_<>;
 
     #undef JSON_BASIC_TYPES
+}
+
+namespace Project::etl::detail {
+    template <typename T> struct is_variant : false_type {};
+    template <typename... T> struct is_variant<std::variant<T...>> : true_type {};
+    template <typename T> inline constexpr bool is_variant_v = is_variant<T>::value;
+
+    template <typename T> struct is_getter : false_type {};
+    template <typename T, typename GF> struct is_getter<etl::Getter<T, GF>> : true_type {};
+    template <typename T> inline constexpr bool is_getter_v = is_getter<T>::value;
+
+    template <typename T> struct is_getter_setter : false_type {};
+    template <typename T, typename GF, typename SF> struct is_getter_setter<etl::GetterSetter<T, GF, SF>> : true_type {};
+    template <typename T> inline constexpr bool is_getter_setter_v = is_getter_setter<T>::value;
 }
 
 
@@ -36,13 +50,11 @@ namespace Project::etl::json {
 
 #define JSON_DEFINE_SERIALIZER(MODEL, ...) \
 namespace Project::etl::json { \
+    template <> \
     size_t size_max(const MODEL& m) { \
         return detail::json_max_size_variadic(__VA_ARGS__); \
     } \
     template <> \
-    size_t size_max(Ref<const MODEL> m) { \
-        return size_max(*m); \
-    } \
     std::string serialize(const MODEL& m) { \
         std::string res; \
         res.reserve(size_max(m)); \
@@ -50,10 +62,6 @@ namespace Project::etl::json { \
         detail::json_append_variadic(res, __VA_ARGS__); \
         res.back() = '}'; \
         return res; \
-    } \
-    template <> \
-    std::string serialize(Ref<const MODEL> m) { \
-        return serialize(*m); \
     } \
 }
 
