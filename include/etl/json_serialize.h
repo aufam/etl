@@ -4,227 +4,175 @@
 #include "etl/json_size_max.h"
 
 namespace Project::etl::detail {
-    template <typename K, typename V>
-    void json_append(std::string& res, const K& key, const V& value);
+    template <typename SB, typename S>
+    void string_append(SB& buf, const S& other);
 
-    template <typename... Ts>
-    void json_append_variadic(std::string& res, etl::Pair<const char*, const Ts&>... pairs);
+    template <typename S, typename K, typename V>
+    void json_append(S& res, const K& key, const V& value);
+
+    template <typename S, typename... Ts>
+    void json_append_variadic(S& res, etl::Pair<const char*, const Ts&>... pairs);
 
     template <typename... Ts>
     size_t json_max_size_variadic(etl::Pair<const char*, const Ts&>... pairs);
 }
 
 namespace Project::etl::json {
-    // prototypes
-    template <typename T> std::string serialize(const etl::Vector<T>&);
-    template <typename T> std::string serialize(const etl::LinkedList<T>&);
-    template <typename T> std::string serialize(const etl::Map<std::string, T>&);
-    template <typename T> std::string serialize(const etl::UnorderedMap<std::string, T>&);
-    template <typename T> std::string serialize(const etl::Optional<T>&);
-    template <typename... Ts> std::string serialize(const std::variant<Ts...>&);
-    template <typename T, typename F> std::string serialize(const etl::Getter<T, F>&);
-    template <typename T, typename GF, typename SF> std::string serialize(const etl::GetterSetter<T, GF, SF>&);
-    template <typename T> std::string serialize(etl::Ref<T>);
+    template <typename T, typename R = std::string> 
+    R serialize(const T& value) {
+        static_assert(etl::is_same_v<R, std::string> || etl::is_string_v<R>, "Return type must be of type std::string or etl::String<N>");
 
-    // null
-    inline std::string serialize(etl::None) {
-        return "null";
-    }
-
-    inline std::string serialize(std::nullptr_t) {
-        return "null";
-    }
-
-    // bool
-    inline std::string serialize(bool value) {
-        return value ? "true" : "false";
-    }
-
-    // number
-    template <typename T, typename = etl::enable_if_t<etl::is_integral_v<T>>>
-    std::string serialize(T value) {
-        return std::to_string(value);
-    }
-
-    inline std::string serialize(float value) {
-        if (std::isnan(value) || std::isinf(value)) return "null";
-        const size_t n = size_max(value);
-        std::string res(n, '\0');
-        const auto m = std::snprintf(&res[0], n + 1, "%.2f", value);
-        res.resize(m);
-        return res;
-    }
-
-    inline std::string serialize(double value) {
-        if (std::isnan(value) || std::isinf(value)) return "null";
-        const size_t n = size_max(value);
-        std::string res(n, '\0');
-        const auto m = std::snprintf(&res[0], n + 1, "%.4lf", value);
-        res.resize(m);
-        return res;
-    }
-
-    inline std::string serialize(long double value) {
-        if (std::isnan(value) || std::isinf(value)) return "null";
-        const size_t n = size_max(value);
-        std::string res(n, '\0');
-        const auto m = std::snprintf(&res[0], n + 1, "%.6Lf", value);
-        res.resize(m);
-        return res;
-    }
-
-    // string
-    inline std::string serialize(const std::string& value) {
-        std::string res;
-        res.reserve(size_max(value));
-        res += '\"';
-        res += value;
-        res += '\"';
-        return res;
-    }
-
-    inline std::string serialize(std::string_view value) {
-        std::string res;
-        res.reserve(size_max(value));
-        res += '\"';
-        res += value;
-        res += '\"';
-        return res;
-    }
-
-    template <size_t N>
-    std::string serialize(const etl::String<N>& value) {
-        std::string res;
-        res.reserve(size_max(value));
-        res += '\"';
-        res += std::string(value.data(), value.len());
-        res += '\"';
-        return res;
-    }
-
-    inline std::string serialize(etl::StringView value) {
-        std::string res;
-        res.reserve(size_max(value));
-        res += '\"';
-        res += std::string(value.data(), value.len());
-        res += '\"';
-        return res;
-    }
-
-    inline std::string serialize(const char* value) {
-        std::string res;
-        res.reserve(size_max(value));
-        res += '\"';
-        res += std::string(value);
-        res += '\"';
-        return res;
-    }
-
-    // list
-    template <typename T>
-    std::string serialize(const etl::Vector<T>& value) {
-        if (value.len() == 0) return "[]";
-        std::string res;
-        res.reserve(size_max(value));
-        res += '[';
-        for (auto& item : value) {
-            res += serialize(item);
-            res += ',';
+        if constexpr (is_same_v<T, etl::None> || is_same_v<T, std::nullptr_t>) {
+            return "null";
+        } 
+        else if constexpr (is_same_v<T, bool>) {
+            return value ? "true" : "false";
         }
-        res.back() = ']';
-        return res;
-    }
-
-    template <typename T>
-    std::string serialize(const etl::LinkedList<T>& value) {
-        if (value.len() == 0) return "[]";
-        std::string res;
-        res.reserve(size_max(value));
-        res += '[';
-        for (auto& item : value) {
-            res += serialize(item);
-            res += ',';
+        else if constexpr (etl::is_integral_v<T>) {
+            auto res = std::to_string(value);
+            if constexpr (etl::is_same_v<R, std::string>)
+                return res;
+            else 
+                return res.c_str();
         }
-        res.back() = ']';
-        return res;
-    }
+        else if constexpr (etl::is_floating_point_v<T>) {
+            if (std::isnan(value) || std::isinf(value)) return "null";
+            const char* format;
+            if constexpr (etl::is_same_v<T, float>)
+                format = "%.2f";
+            else if constexpr (etl::is_same_v<T, double>)
+                format = "%.4lf";
+            else
+                format = "%.6Lf";
 
-    // dict
-    template <typename T>
-    std::string serialize(const etl::Map<std::string, T>& value) {
-        if (value.len() == 0) return "{}";
-        std::string res;
-        res.reserve(size_max(value));
-        res += '{';
-        for (auto [k, v] : value) {
-            detail::json_append(res, k, v);
+            size_t n = size_max(value);
+
+            if constexpr (etl::is_same_v<R, std::string>) {
+                std::string res(n, '\0');
+                const auto m = ::snprintf(&res[0], n + 1, format, value);
+                res.resize(m);
+                return res;
+            } else {
+                n = etl::min(n + 1, T::size());
+                R res;
+                ::snprintf(&res[0], n, format, value);
+                return res;
+            }
         }
-        res.back() = '}';
-        return res;
-    }
-
-    template <typename T>
-    std::string serialize(const etl::UnorderedMap<std::string, T>& value) {
-        if (value.len() == 0) return "{}";
-        std::string res;
-        res.reserve(size_max(value));
-        res += '{';
-        for (auto [k, v] : value) {
-            detail::json_append(res, k, v);
+        else if constexpr (etl::is_same_v<T, std::string> || etl::is_same_v<T, std::string_view> 
+            || etl::is_string_v<T> || etl::is_same_v<T, etl::StringView> || etl::is_same_v<T, const char*>
+        ) {
+            if constexpr (etl::is_same_v<R, std::string>) {
+                std::string res;
+                res.reserve(size_max(value));
+                res += '\"';
+                detail::string_append(res, value);
+                res += '\"';
+                return res;
+            } else {
+                R res;
+                res += '\"';
+                detail::string_append(res, value);
+                res += '\"';
+                return res;
+            }
         }
-        res.back() = '}';
-        return res;
-    }
+        else if constexpr (etl::is_linked_list_v<T> || etl::is_vector_v<T>) {
+            const size_t n = size_max(value); 
+            if (n == 2) return "[]";
 
-    // variant
-    template <typename ...Ts>
-    std::string serialize(const std::variant<Ts...>& value) {
-        return std::visit([&](const auto& item) -> std::string {
-            return serialize(item);
-        }, value);
-    }
+            if constexpr (etl::is_same_v<R, std::string>) {
+                std::string res;
+                res.reserve(n);
+                res += '[';
+                for (auto& item : value) {
+                    res += serialize<etl::decay_t<decltype(item)>, R>(item);
+                    res += ',';
+                }
+                res.back() = ']';
+                return res;
+            } else {
+                R res;
+                res += '[';
+                for (auto& item : value) {
+                    res += serialize<etl::decay_t<decltype(item)>, R>(item);
+                    res += ',';
+                }
+                res.back() = ']';
+                return res;
+            }
+        }
+        else if constexpr (etl::is_map_v<T> || etl::is_unordered_map_v<T>) {
+            const size_t n = size_max(value); 
+            if (n == 2) return "{}";
 
-    // null or else
-    template <typename T>
-    std::string serialize(const etl::Optional<T>& value) {
-        return value ? serialize(*value) : "null";
-    }
-
-    // getter
-    template <typename T, typename F>
-    std::string serialize(const etl::Getter<T, F>& value) {
-        return serialize(value.get());
-    }
-
-    // getter setter
-    template <typename T, typename GF, typename SF>
-    std::string serialize(const etl::GetterSetter<T, GF, SF>& value) {
-        return serialize(value.get());
-    }
-
-    template <typename T> 
-    std::string serialize(etl::Ref<T> value) {
-        return value ? serialize(*value) : "null";
+            if constexpr (etl::is_same_v<R, std::string>) {
+                std::string res;
+                res.reserve(n);
+                res += '{';
+                for (auto& [k, v] : value) {
+                    detail::json_append(res, k, v);
+                }
+                res.back() = '}';
+                return res;
+            } else { 
+                R res;
+                res += '{';
+                for (auto& [k, v] : value) {
+                    detail::json_append(res, k, v);
+                }
+                res.back() = '}';
+                return res;
+            }
+        }
+        else if constexpr (detail::is_variant_v<T>) {
+            return std::visit([&](const auto& item) -> R {
+                return serialize<etl::decay_t<decltype(item)>, R>(item);
+            }, value);
+        }
+        else if constexpr (etl::is_optional_v<T> || etl::is_ref_v<T>) {
+            return value ? serialize<etl::decay_t<decltype(*value)>, R>(*value) : "null";
+        }
+        else if constexpr (detail::is_getter_v<T> || detail::is_getter_setter_v<T>) {
+            return serialize<etl::decay_t<decltype(value.get())>, R>(value.get());
+        }
     }
 }
 
 namespace Project::etl::detail {
-    template <typename K, typename V>
-    void json_append(std::string& res, const K& key, const V& value) {
+    template <typename SB, typename S>
+    void string_append(SB& buf, const S& other) {
+        if constexpr (etl::is_same_v<SB, std::string>) {
+            if constexpr (etl::is_same_v<S, std::string> || etl::is_same_v<S, std::string_view> || etl::is_same_v<S, const char*>) {
+                buf += other;
+            } else if constexpr (etl::is_string_v<S> || etl::is_same_v<S, etl::StringView>) {
+                buf += std::string_view(other.data(), other.len());
+            }
+        } else if constexpr (etl::is_string_v<SB>) { 
+            if constexpr (etl::is_same_v<S, std::string> || etl::is_same_v<S, std::string_view>) {
+                buf += etl::string_view(other.data(), other.size());
+            } else if constexpr (etl::is_string_v<S> || etl::is_same_v<S, etl::StringView> || etl::is_same_v<S, const char*>) {
+                buf += other;
+            }
+        }
+    }
+
+    template <typename S, typename K, typename V>
+    void json_append(S& res, const K& key, const V& value) {
         res += '\"';
-        res += key;
+        string_append(res, key);
         res += '\"';
         res += ':';
-        res += json::serialize(value);
+        res += json::serialize<V, S>(value);
         res += ',';
     }
 
-    template <typename... Ts>
-    void json_append_variadic(std::string& res, etl::Pair<const char*, const Ts&>... pairs) {
+    template <typename S, typename... Ts>
+    void json_append_variadic(S& res, etl::Pair<const char*, const Ts&>... pairs) {
         if constexpr (sizeof...(pairs) == 0) {
             res += '}';
         } else {
-            (json_append(res, pairs.x, etl::ref_const(pairs.y)), ...);
+            (json_append(res, pairs.x, pairs.y), ...);
         }
     }
 
@@ -234,7 +182,7 @@ namespace Project::etl::detail {
             return 2;
         } else {
             size_t res = 2;
-            res += ((json::size_max(pairs.x) + 1 + json::size_max(etl::ref_const(pairs.y)) + 1) + ...);
+            res += ((json::size_max(pairs.x) + 1 + json::size_max(pairs.y) + 1) + ...);
             return res;
         }
     }

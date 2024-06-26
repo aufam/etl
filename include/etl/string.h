@@ -140,6 +140,14 @@ namespace Project::etl {
         }
 
         /// append operator from other const char*
+        constexpr String& operator+=(StringView other) {
+            size_t i = 0, l = len(), r = rem();
+            for (; i < r && i < other.len(); i++) str[l + i] = other[i];
+            str[l + i] = '\0';
+            return *this;
+        }
+
+        /// append operator from other const char*
         constexpr String& operator+=(const char* other) {
             size_t i = 0, l = len(), r = rem();
             for (; i < r && other[i] != '\0'; i++) str[l + i] = other[i];
