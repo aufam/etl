@@ -77,7 +77,9 @@ namespace Project::etl::json {
                 return res;
             }
         }
-        else if constexpr (etl::is_linked_list_v<T> || etl::is_vector_v<T>) {
+        else if constexpr (etl::is_linked_list_v<T> || etl::is_vector_v<T> || etl::is_array_v<T> || 
+            detail::is_std_list_v<T> || detail::is_std_vector_v<T> || detail::is_std_array_v<T>
+        ) {
             const size_t n = size_max(value); 
             if (n == 2) return "[]";
 
@@ -130,11 +132,8 @@ namespace Project::etl::json {
                 return serialize<etl::decay_t<decltype(item)>, R>(item);
             }, value);
         }
-        else if constexpr (etl::is_optional_v<T> || etl::is_ref_v<T>) {
+        else if constexpr (etl::is_optional_v<T> || etl::is_ref_v<T> || detail::is_std_optional_v<T>) {
             return value ? serialize<etl::decay_t<decltype(*value)>, R>(*value) : "null";
-        }
-        else if constexpr (detail::is_getter_v<T> || detail::is_getter_setter_v<T>) {
-            return serialize<etl::decay_t<decltype(value.get())>, R>(value.get());
         }
     }
 }

@@ -3,13 +3,19 @@
 
 #include "etl/string.h"
 #include "etl/optional.h"
+#include "etl/array.h"
 #include "etl/vector.h"
 #include "etl/linked_list.h"
 #include "etl/map.h"
 #include "etl/unordered_map.h"
-#include "etl/getter_setter.h"
 #include "etl/ref.h"
 #include <string>
+#include <optional>
+#include <array>
+#include <vector>
+#include <list>
+#include <map>
+#include <unordered_map>
 #include <variant>
 #include <cmath>
 #include <tuple>
@@ -32,17 +38,39 @@ namespace Project::etl::json {
 }
 
 namespace Project::etl::detail {
+    template <typename T> struct is_std_array : false_type {};
+    template <typename T, size_t N> struct is_std_array<std::array<T, N>> : true_type {};
+    template <typename T> inline constexpr bool is_std_array_v = is_std_array<T>::value;
+
+    template <typename T> struct is_std_vector : false_type {};
+    template <typename T> struct is_std_vector<std::vector<T>> : true_type {};
+    template <typename T> inline constexpr bool is_std_vector_v = is_std_vector<T>::value;
+
+    template <typename T> struct is_std_list : false_type {};
+    template <typename T> struct is_std_list<std::list<T>> : true_type {};
+    template <typename T> inline constexpr bool is_std_list_v = is_std_list<T>::value;
+
+    template <typename T> struct is_std_map : false_type {};
+    template <typename K, typename V> struct is_std_map<std::map<K, V>> : true_type {};
+    template <typename T> inline constexpr bool is_std_map_v = is_std_map<T>::value;
+
+    template <typename T> struct is_std_unordered_map : false_type {};
+    template <typename K, typename V> struct is_std_unordered_map<std::unordered_map<K, V>> : true_type {};
+    template <typename T> inline constexpr bool is_std_unordered_map_v = is_std_unordered_map<T>::value;
+    
+    template <typename T> struct is_std_optional : false_type {};
+    template <typename T> struct is_std_optional<std::optional<T>> : true_type {};
+    template <typename T> inline constexpr bool is_std_optional_v = is_std_optional<T>::value;
+
     template <typename T> struct is_variant : false_type {};
     template <typename... T> struct is_variant<std::variant<T...>> : true_type {};
     template <typename T> inline constexpr bool is_variant_v = is_variant<T>::value;
 
-    template <typename T> struct is_getter : false_type {};
-    template <typename T, typename GF> struct is_getter<etl::Getter<T, GF>> : true_type {};
-    template <typename T> inline constexpr bool is_getter_v = is_getter<T>::value;
-
-    template <typename T> struct is_getter_setter : false_type {};
-    template <typename T, typename GF, typename SF> struct is_getter_setter<etl::GetterSetter<T, GF, SF>> : true_type {};
-    template <typename T> inline constexpr bool is_getter_setter_v = is_getter_setter<T>::value;
+    template <typename T> struct json_map;
+    template <typename K, typename V> struct json_map<etl::Map<K, V>> { typedef K key; typedef V value; };
+    template <typename K, typename V> struct json_map<etl::UnorderedMap<K, V>> { typedef K key; typedef V value; };
+    template <typename K, typename V> struct json_map<std::map<K, V>> { typedef K key; typedef V value; };
+    template <typename K, typename V> struct json_map<std::unordered_map<K, V>> { typedef K key; typedef V value; };
 }
 
 
@@ -68,8 +96,7 @@ namespace Project::etl::json { \
 #define JSON_DEFINE_DESERIALIZER(MODEL, ...) \
 namespace Project::etl::json { \
     template <> \
-    constexpr etl::Result<void, const char*> deserialize(etl::StringView j, MODEL& m) { \
-        auto js = etl::Json::parse(j); \
+    constexpr etl::Result<void, const char*> deserialize(const etl::Json& js, MODEL& m) { \
         if (js.error_message()) return etl::Err(js.error_message().data()); \
         if (!js.is_dictionary()) return etl::Err("JSON is not a map"); \
         return detail::json_deserialize_variadic(js, __VA_ARGS__); \
