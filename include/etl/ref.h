@@ -25,7 +25,7 @@ namespace Project::etl {
         /// disable rvalue constructor
         Ref(T&& t) = delete;
 
-        constexpr explicit operator bool() { return bool(ptr); }
+        constexpr explicit operator bool() const { return bool(ptr); }
 
         /// dereference operator
         constexpr const T& operator*() const { return *ptr; }

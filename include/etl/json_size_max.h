@@ -58,9 +58,6 @@ namespace Project::etl::json {
         else if constexpr (etl::is_optional_v<T> || etl::is_ref_v<T>) {
             return value ? size_max(*value) : 4;
         }
-        else if constexpr (detail::is_getter_v<T> || detail::is_getter_setter_v<T>) {
-            return size_max(value.get());
-        }
     }
 
     inline size_t size_max(const char* value) {
