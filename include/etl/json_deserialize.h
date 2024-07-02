@@ -4,6 +4,7 @@
 #include "etl/json_types.h"
 #include "etl/json.h"
 #include "etl/result.h"
+#include "etl/string_view.h"
 
 
 namespace Project::etl::json {
@@ -152,6 +153,16 @@ namespace Project::etl::json {
     template <typename T>
     constexpr etl::Result<void, const char*> deserialize(etl::StringView j, T& res) {
         return deserialize<T>(etl::Json::parse(j), res);
+    }
+
+    template <typename T>
+    constexpr etl::Result<T, const char*> deserialize(const char* j) {
+        return deserialize<T>(etl::StringView(j));
+    }
+
+    template <typename T>
+    constexpr etl::Result<void, const char*> deserialize(const char* j, T& res) {
+        return deserialize<T>(etl::StringView(j), res);
     }
 
     template <typename T>
