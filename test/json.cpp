@@ -117,8 +117,6 @@ TEST(JSON, Serialize) {
         .num = 42,
         .text = "test",
         .bar = {
-            // {"num", 3.14},
-            // {"is_true", false},
             .num = 3.14,
             .is_true = false,
         }
