@@ -3,19 +3,6 @@
 
 #include "etl/type_traits.h"
 
-void* operator new(size_t size);
-void* operator new(size_t size, uint8_t* ptr);
-
-void operator delete(void *ptr);
-void operator delete(void *ptr, size_t);
-
-extern "C" {
-void* malloc(size_t size);
-void* calloc(size_t nItems, size_t itemSize);
-void* realloc(void* ptr, size_t newSize);
-void free(void* ptr);
-}
-
 namespace Project::etl {
 
     /// moves to rvalue
@@ -141,11 +128,20 @@ namespace Project::etl {
     template <typename T, typename = enable_if_t<etl::is_compound_v<T>>> constexpr bool
     operator!=(None, const T& value) { return !operator==(value, etl::none); }
 
-    struct Ignore {
+    inline static constexpr struct {
         template <typename T>
         constexpr void operator=(T&&) const {}
-    };
-    inline static constexpr Ignore ignore;
+    } ignore;
+
+    inline static constexpr struct {
+        template <typename T>
+        constexpr auto operator|(T&& o) const { return etl::move(o); }
+    } mv;
+
+    inline static constexpr struct {
+        template <typename T>
+        constexpr auto operator|(T&& o) const { return o; }
+    } cp;
 }
 
 #endif // ETL_UTILITY_BASIC_H

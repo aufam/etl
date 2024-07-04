@@ -44,6 +44,9 @@
 #define namespace_start(name) namespace Project::name {
 #define namespace_end }
 
+using ::Project::etl::mv;
+using ::Project::etl::cp;
+
 #endif // ETL_ENABLE_EXTRA_KEYWORDS
 
 
