@@ -39,11 +39,6 @@ namespace Project::etl {
     private:
         std::function<T()> fn;
     };
-
-    inline static constexpr struct Await {
-        template <typename T>
-        T operator|(const Future<T>& future) const { return future.wait(); }
-    } await;
 }
 
 #endif
