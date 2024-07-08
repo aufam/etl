@@ -142,6 +142,11 @@ namespace Project::etl {
         template <typename T>
         constexpr auto operator|(T&& o) const { return o; }
     } cp;
+
+    inline static constexpr struct {
+        template <typename T>
+        auto operator|(T&& o) const { return o.await(); }
+    } await;
 }
 
 #endif // ETL_UTILITY_BASIC_H

@@ -10,6 +10,7 @@
  * - define ETL_DISABLE_MORE_KEYWORDS to disable non-standard keywords
  */
 
+#include "etl/future.h"
 #include "etl/utility.h" // pair, triple, len, next, iter, enumerate, zip, range
 #include "etl/string.h"
 #include <ciso646>       // or, and, not, not_eq
@@ -44,9 +45,6 @@
 #define namespace_start(name) namespace Project::name {
 #define namespace_end }
 
-using ::Project::etl::mv;
-using ::Project::etl::cp;
-
 #endif // ETL_ENABLE_EXTRA_KEYWORDS
 
 
@@ -64,6 +62,10 @@ using ::Project::etl::cp;
 
 #define lambda []       // capture-less lambda expression
 #define _ dummy__[[maybe_unused]] // unused variable
+
+using ::Project::etl::mv;
+using ::Project::etl::cp;
+using ::Project::etl::await;
 
 #endif // ETL_DISABLE_MORE_KEYWORDS
 
