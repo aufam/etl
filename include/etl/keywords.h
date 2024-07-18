@@ -66,6 +66,7 @@
 using ::Project::etl::mv;
 using ::Project::etl::cp;
 using ::Project::etl::await;
+using ::Project::etl::defer;
 
 #endif // ETL_DISABLE_MORE_KEYWORDS
 

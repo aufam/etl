@@ -147,6 +147,26 @@ namespace Project::etl {
         template <typename T>
         auto operator|(T&& o) const { return o.await(); }
     } await;
+    
+    /// manages cleanup actions on scope exit using RAII principles.
+    template <typename Callable>
+    class [[nodiscard]] Defer {
+        Callable onExit;
+    
+    public:
+        Defer(Callable&& onExit) : onExit(etl::forward<Callable>(onExit)) {}
+        ~Defer() { onExit(); }
+
+        Defer(const Defer&) = delete;             // No copy constructor
+        Defer& operator=(const Defer&) = delete;  // No copy assignment
+        Defer(Defer&&) = delete;                  // No move constructor
+        Defer& operator=(Defer&&) = delete;       // No move assignment
+    };
+
+    inline static constexpr struct {
+        template <typename F>
+        auto operator|(F&& fn) const { return Defer<etl::decay_t<F>>(etl::forward<F>(fn)); }
+    } defer;
 }
 
 #endif // ETL_UTILITY_BASIC_H
