@@ -2,6 +2,7 @@
 #define ETL_RESULT_H
 
 #include "etl/optional.h"
+#include <tuple>
 #include <variant>
 
 namespace Project::etl {
