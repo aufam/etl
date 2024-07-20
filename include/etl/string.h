@@ -297,6 +297,13 @@ namespace Project::etl {
     sum_element(const String<N>&) = delete;
 
     /// type traits
+    template <typename T> struct is_etl_string : false_type {};
+    template <size_t N> struct is_etl_string<String<N>> : true_type {};
+    template <size_t N> struct is_etl_string<const String<N>> : true_type {};
+    template <size_t N> struct is_etl_string<volatile String<N>> : true_type {};
+    template <size_t N> struct is_etl_string<const volatile String<N>> : true_type {};
+    template <typename T> inline constexpr bool is_etl_string_v = is_etl_string<T>::value;
+
     template <size_t N> struct is_string<String<N>> : true_type {};
     template <size_t N> struct is_string<const String<N>> : true_type {};
     template <size_t N> struct is_string<volatile String<N>> : true_type {};
@@ -306,7 +313,7 @@ namespace Project::etl {
     template <size_t N> struct is_array<const String<N>> : true_type {};
     template <size_t N> struct is_array<volatile String<N>> : true_type {};
     template <size_t N> struct is_array<const volatile String<N>> : true_type {};
-
+    
     template <size_t N> struct remove_extent<String<N>> { typedef char type; };
     template <size_t N> struct remove_extent<const String<N>> { typedef char type; };
     template <size_t N> struct remove_extent<volatile String<N>> { typedef char type; };

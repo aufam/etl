@@ -78,11 +78,11 @@ namespace Project::etl::detail {
 
 #define JSON_DEFINE_SERIALIZER(MODEL, ...) \
 namespace Project::etl::json { \
-    template <> \
+    template <> inline \
     size_t size_max(const MODEL& m) { \
         return detail::json_max_size_variadic(__VA_ARGS__); \
     } \
-    template <> \
+    template <> inline \
     std::string serialize(const MODEL& m) { \
         std::string res; \
         res.reserve(size_max(m)); \
@@ -95,7 +95,7 @@ namespace Project::etl::json { \
 
 #define JSON_DEFINE_DESERIALIZER(MODEL, ...) \
 namespace Project::etl::json { \
-    template <> \
+    template <> inline \
     constexpr etl::Result<void, const char*> deserialize(const etl::Json& js, MODEL& m) { \
         if (js.error_message()) return etl::Err(js.error_message().data()); \
         if (!js.is_dictionary()) return etl::Err("JSON is not a map"); \

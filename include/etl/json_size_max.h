@@ -33,7 +33,7 @@ namespace Project::etl::json {
         else if constexpr (etl::is_same_v<T, std::string> || etl::is_same_v<T, std::string_view>) {
             return value.size() + 2;
         }
-        else if constexpr (etl::is_string_v<T> || etl::is_same_v<T, etl::StringView>) {
+        else if constexpr (etl::is_etl_string_v<T> || etl::is_same_v<T, etl::StringView>) {
             return value.len() + 2;
         }
         else if constexpr (etl::is_linked_list_v<T> || etl::is_vector_v<T>) {
