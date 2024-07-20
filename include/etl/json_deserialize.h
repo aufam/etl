@@ -44,7 +44,7 @@ namespace Project::etl::json {
             if (!js.is_string()) return etl::Err("JSON is not a string");
             res = js.to_string();
         }
-        else if constexpr (etl::is_string_v<T>) {
+        else if constexpr (etl::is_etl_string_v<T>) {
             if (!js.is_string()) return etl::Err("JSON is not a string");
             auto sv = js.to_string();
             res("%.*s", sv.len(), sv.data());

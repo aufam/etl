@@ -20,7 +20,7 @@ namespace Project::etl::detail {
 namespace Project::etl::json {
     template <typename T, typename R = std::string> 
     R serialize(const T& value) {
-        static_assert(etl::is_same_v<R, std::string> || etl::is_string_v<R>, "Return type must be of type std::string or etl::String<N>");
+        static_assert(etl::is_same_v<R, std::string> || etl::is_etl_string_v<R>, "Return type must be of type std::string or etl::String<N>");
 
         if constexpr (is_same_v<T, etl::None> || is_same_v<T, std::nullptr_t>) {
             return "null";
@@ -60,7 +60,7 @@ namespace Project::etl::json {
             }
         }
         else if constexpr (etl::is_same_v<T, std::string> || etl::is_same_v<T, std::string_view> 
-            || etl::is_string_v<T> || etl::is_same_v<T, etl::StringView> || etl::is_same_v<T, const char*>
+            || etl::is_etl_string_v<T> || etl::is_same_v<T, etl::StringView> || etl::is_same_v<T, const char*>
         ) {
             if constexpr (etl::is_same_v<R, std::string>) {
                 std::string res;
@@ -144,13 +144,13 @@ namespace Project::etl::detail {
         if constexpr (etl::is_same_v<SB, std::string>) {
             if constexpr (etl::is_same_v<S, std::string> || etl::is_same_v<S, std::string_view> || etl::is_same_v<S, const char*>) {
                 buf += other;
-            } else if constexpr (etl::is_string_v<S> || etl::is_same_v<S, etl::StringView>) {
+            } else if constexpr (etl::is_etl_string_v<S> || etl::is_same_v<S, etl::StringView>) {
                 buf += std::string_view(other.data(), other.len());
             }
-        } else if constexpr (etl::is_string_v<SB>) { 
+        } else if constexpr (etl::is_etl_string_v<SB>) { 
             if constexpr (etl::is_same_v<S, std::string> || etl::is_same_v<S, std::string_view>) {
                 buf += etl::string_view(other.data(), other.size());
-            } else if constexpr (etl::is_string_v<S> || etl::is_same_v<S, etl::StringView> || etl::is_same_v<S, const char*>) {
+            } else if constexpr (etl::is_etl_string_v<S> || etl::is_same_v<S, etl::StringView> || etl::is_same_v<S, const char*>) {
                 buf += other;
             }
         }
