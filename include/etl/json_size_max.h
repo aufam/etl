@@ -36,14 +36,18 @@ namespace Project::etl::json {
         else if constexpr (etl::is_etl_string_v<T> || etl::is_same_v<T, etl::StringView>) {
             return value.len() + 2;
         }
-        else if constexpr (etl::is_linked_list_v<T> || etl::is_vector_v<T>) {
+        else if constexpr (etl::is_linked_list_v<T> || etl::is_vector_v<T> || etl::is_array_v<T> || 
+            detail::is_std_list_v<T> || detail::is_std_vector_v<T> || detail::is_std_array_v<T>
+        ) {
             size_t cnt = 2;
             for (auto& item : value) {
                 cnt += size_max(item) + 1;
             }
             return cnt;
         }
-        else if constexpr (etl::is_map_v<T> || etl::is_unordered_map_v<T>) {
+        else if constexpr (etl::is_map_v<T> || etl::is_unordered_map_v<T> || 
+            detail::is_std_map_v<T> || detail::is_std_unordered_map_v<T>
+        ) {
             size_t cnt = 2;
             for (const auto &[k, v] : value) {
                 cnt += size_max(k) + 1 + size_max(v) + 1;
@@ -55,8 +59,10 @@ namespace Project::etl::json {
                 return size_max(item);
             }, value);
         }
-        else if constexpr (etl::is_optional_v<T> || etl::is_ref_v<T>) {
+        else if constexpr (etl::is_optional_v<T> || etl::is_ref_v<T> || detail::is_std_optional_v<T>) {
             return value ? size_max(*value) : 4;
+        } else {
+            return 0;
         }
     }
 

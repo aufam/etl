@@ -104,7 +104,9 @@ namespace Project::etl::json {
                 return res;
             }
         }
-        else if constexpr (etl::is_map_v<T> || etl::is_unordered_map_v<T>) {
+        else if constexpr (etl::is_map_v<T> || etl::is_unordered_map_v<T> || 
+            detail::is_std_map_v<T> || detail::is_std_unordered_map_v<T>
+        ) {
             const size_t n = size_max(value); 
             if (n == 2) return "{}";
 
