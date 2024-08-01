@@ -462,11 +462,6 @@ namespace Project::etl {
             return *this;
         }
 
-        template<typename F>
-        constexpr void expect(F&& fn) && {
-            except([&fn](E err) { fn(err); return err; }).unwrap();
-        }
-
         template<typename F, typename R = decltype(etl::declval<F>()(etl::declval<E>()))>
         constexpr void expect(F&& fn) && {
             if (variant.index() == 2) {
