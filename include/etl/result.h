@@ -263,9 +263,12 @@ namespace Project::etl {
             return *this;
         }
 
-        template<typename F>
-        constexpr T expect(F&& fn) && {
-            return except([&fn](E err) { fn(err); return err; }).unwrap();
+        template<typename F, typename R = decltype(etl::declval<F>()(etl::declval<E>()))>
+        constexpr T&& expect(F&& fn) && {
+            if (variant.index() == 2) {
+                fn(etl::move(unwrap_err()));
+            }
+            return etl::move(unwrap()); // throws std::bad_variant_access when err
         }
 
     private:
@@ -461,7 +464,14 @@ namespace Project::etl {
 
         template<typename F>
         constexpr void expect(F&& fn) && {
-            return except([&fn](E err) { fn(err); return err; }).unwrap();
+            except([&fn](E err) { fn(err); return err; }).unwrap();
+        }
+
+        template<typename F, typename R = decltype(etl::declval<F>()(etl::declval<E>()))>
+        constexpr void expect(F&& fn) && {
+            if (variant.index() == 2) {
+                fn(etl::move(unwrap_err()));
+            }
         }
 
     private:
