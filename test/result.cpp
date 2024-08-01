@@ -1,6 +1,7 @@
 #include "etl/result.h"
 #include "etl/placeholder.h"
 #include "gtest/gtest.h"
+#include <variant>
 #include "etl/keywords.h"
 
 using namespace etl;
@@ -63,4 +64,24 @@ TEST(Result, Move) {
         auto res = fn();
         printf("Some work\n");
     }
+}
+
+TEST(Result, Expect) {
+    auto division = [](int a, int b) -> Result<int, bool> {
+        if (b == 0) {
+            return Err(true);
+        } else {
+            return Ok(a / b);
+        }
+    };
+
+    bool is_err = false;
+    auto a = division(10, 2).expect([&](bool) { is_err = true; });
+    EXPECT_EQ(a, 5);
+    EXPECT_FALSE(is_err);
+
+    EXPECT_THROW({
+        auto b = division(10, 0).expect([&](bool err) { is_err = err; });
+    }, std::bad_variant_access);
+    EXPECT_TRUE(is_err);
 }

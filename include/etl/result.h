@@ -263,6 +263,11 @@ namespace Project::etl {
             return *this;
         }
 
+        template<typename F>
+        constexpr T expect(F&& fn) && {
+            return except([&fn](E err) { fn(err); return err; }).unwrap();
+        }
+
     private:
         constexpr Result() = default;
 
@@ -452,6 +457,11 @@ namespace Project::etl {
         constexpr Result<void, E>& finally(F&& fn) & {
             fn();
             return *this;
+        }
+
+        template<typename F>
+        constexpr void expect(F&& fn) && {
+            return except([&fn](E err) { fn(err); return err; }).unwrap();
         }
 
     private:
