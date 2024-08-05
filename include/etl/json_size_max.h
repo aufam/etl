@@ -40,7 +40,7 @@ namespace Project::etl::json {
             detail::is_std_list_v<T> || detail::is_std_vector_v<T> || detail::is_std_array_v<T>
         ) {
             size_t cnt = 2;
-            for (auto& item : value) {
+            for (const auto& item : value) {
                 cnt += size_max(item) + 1;
             }
             return cnt;
