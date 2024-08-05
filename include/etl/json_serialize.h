@@ -87,7 +87,7 @@ namespace Project::etl::json {
                 std::string res;
                 res.reserve(n);
                 res += '[';
-                for (auto& item : value) {
+                for (const auto& item : value) {
                     res += serialize<etl::decay_t<decltype(item)>, R>(item);
                     res += ',';
                 }
@@ -96,7 +96,7 @@ namespace Project::etl::json {
             } else {
                 R res;
                 res += '[';
-                for (auto& item : value) {
+                for (const auto& item : value) {
                     res += serialize<etl::decay_t<decltype(item)>, R>(item);
                     res += ',';
                 }
@@ -114,7 +114,7 @@ namespace Project::etl::json {
                 std::string res;
                 res.reserve(n);
                 res += '{';
-                for (auto& [k, v] : value) {
+                for (const auto& [k, v] : value) {
                     detail::json_append(res, k, v);
                 }
                 res.back() = '}';
@@ -122,7 +122,7 @@ namespace Project::etl::json {
             } else { 
                 R res;
                 res += '{';
-                for (auto& [k, v] : value) {
+                for (const auto& [k, v] : value) {
                     detail::json_append(res, k, v);
                 }
                 res.back() = '}';
