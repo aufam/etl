@@ -18,14 +18,23 @@ namespace Project::etl::json {
             return size_max(value / 10);
         }
         else if constexpr (etl::is_floating_point_v<T>) {
+            bool is_neg;
             size_t decimal;
-            if constexpr (etl::is_same_v<T, float>)
+            if constexpr (etl::is_same_v<T, float>) {
+                is_neg = (*reinterpret_cast<const uint32_t*>(&value) & 0x80000000) != 0;
                 decimal = 3;
-            else if constexpr (etl::is_same_v<T, double>)
+            }
+            else if constexpr (etl::is_same_v<T, double>) {
+                float f = value;
+                is_neg = (*reinterpret_cast<const uint32_t*>(&f) & 0x80000000) != 0;
                 decimal = 5;
-            else
+            }
+            else {
+                float f = value;
+                is_neg = (*reinterpret_cast<const uint32_t*>(&f) & 0x80000000) != 0;
                 decimal = 7;
-            return size_max(ssize_t(value)) + decimal;
+            }
+            return is_neg ? size_max(ssize_t(-value)) + decimal + 1 : size_max(ssize_t(value)) + decimal;
         }
         else if constexpr (etl::is_same_v<T, const char*>) {
             return ::strlen(value) + 2;
