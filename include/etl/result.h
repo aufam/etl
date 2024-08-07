@@ -74,6 +74,20 @@ namespace Project::etl {
             if (other.is_err()) variant = Err<E>(static_cast<E>(etl::move(other.unwrap_err())));
         }
 
+        /// copy constructor
+        template <typename U, typename = enable_if_t<etl::is_convertible_v<U, E>>>
+        constexpr Result(const Result<T, U>& other) : variant() {
+            if (other.is_ok()) variant = Ok<T>(static_cast<T>(other.unwrap()));
+            if (other.is_err()) variant = Err<E>(static_cast<E>(other.unwrap_err()));
+        }
+
+        /// move constructor
+        template <typename U, typename = enable_if_t<etl::is_convertible_v<U, E>>>
+        constexpr Result(Result<T, U>&& other) : variant() {
+            if (other.is_ok()) variant = Ok<T>(static_cast<T>(etl::move(other.unwrap())));
+            if (other.is_err()) variant = Err<E>(static_cast<E>(etl::move(other.unwrap_err())));
+        }
+
         /// check if the result is ok
         constexpr bool is_ok() const { return variant.index() == 1; }
 
@@ -315,6 +329,20 @@ namespace Project::etl {
                 case 2: variant = Err<E>(etl::move(other.unwrap_err())); return;
                 default: return;
             }
+        }
+        
+        /// copy constructor
+        template <typename T, typename U, typename = enable_if_t<etl::is_convertible_v<U, E>>>
+        constexpr Result(const Result<T, U>& other) : variant() {
+            if (other.is_ok()) variant = Ok<>();
+            if (other.is_err()) variant = Err<E>(static_cast<E>(other.unwrap_err()));
+        }
+
+        /// move constructor
+        template <typename T, typename U, typename = enable_if_t<etl::is_convertible_v<U, E>>>
+        constexpr Result(Result<T, U>&& other) : variant() {
+            if (other.is_ok()) variant = Ok<>();
+            if (other.is_err()) variant = Err<E>(static_cast<E>(etl::move(other.unwrap_err())));
         }
 
         /// check if the result is ok
