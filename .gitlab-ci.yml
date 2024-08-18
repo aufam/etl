@@ -1,32 +1,23 @@
 image: gcc
 
+stages:
+  - build
+  - test
+
 build:
   stage: build
   before_script:
     - apt update && apt -y install cmake
-    - mkdir .dependencies
-    - cd .dependencies
-    - git clone https://github.com/google/googletest
-    - cd googletest
-    - mkdir -p build
-    - cmake -B build
-    - cmake --build build
-    - cmake --build build --target install
-    # - export GTEST_ROOT=$CI_PROJECT_DIR/.dependencies/googletest/build
-    # - export GTEST_INCLUDE_DIR=$CI_PROJECT_DIR/.dependencies/googletest/googletest/include
   script:
-    - cd $CI_PROJECT_DIR
     - mkdir -p build
-    - cmake -B build -DBUILD_TESTS=ON -DGTEST_ROOT=$GTEST_ROOT -DGTEST_INCLUDE_DIR=$GTEST_INCLUDE_DIR
+    - cmake -B build -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Debug
     - cmake --build build
   artifacts:
     paths:
-      # - $CI_PROJECT_DIR/.dependencies/
-      - $CI_PROJECT_DIR/build/
+      - build/
 
 test:
   stage: test
   script:
-    - $CI_PROJECT_DIR/build/test/test_all
-
-
+    - cd build
+    - ctest -j10 -C Debug --output-on-failure -R ^
