@@ -81,7 +81,7 @@ TEST(Result, Expect) {
     EXPECT_FALSE(is_err);
 
     EXPECT_THROW({
-        auto b = division(10, 0).expect([&](bool err) { is_err = err; });
+        auto b [[maybe_unused]] = division(10, 0).expect([&](bool err) { is_err = err; });
     }, std::bad_variant_access);
     EXPECT_TRUE(is_err);
 }

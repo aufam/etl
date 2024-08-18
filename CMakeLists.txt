@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.7)
-set(CMAKE_CXX_STANDARD 17)
 
 # project config
 file(READ version.txt ETL_VERSION)
@@ -15,24 +14,24 @@ message("BUILD_TESTS : ${BUILD_TESTS}")
 message("BUILD_DOCS  : ${BUILD_DOCS}")
 
 # build library
-add_library(${PROJECT_NAME} INTERFACE)
+add_library(etl INTERFACE)
 
-target_include_directories(${PROJECT_NAME} INTERFACE
+target_include_directories(etl INTERFACE
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
 
-target_compile_options(${PROJECT_NAME} INTERFACE 
+target_compile_options(etl INTERFACE 
         $<$<COMPILE_LANGUAGE:CXX>:-Wno-literal-suffix>)
 
-target_compile_definitions(${PROJECT_NAME} INTERFACE 
+target_compile_definitions(etl INTERFACE 
         -DETL_VERSION="${PROJECT_VERSION}"
         -DETL_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}
         -DETL_VERSION_MINOR=${PROJECT_VERSION_MINOR}
         -DETL_VERSION_PATCH=${PROJECT_VERSION_PATCH})
 
 # install target
-install(TARGETS ${PROJECT_NAME}
-        EXPORT ${PROJECT_NAME}Targets
+install(TARGETS etl
+        EXPORT etlTargets
         LIBRARY DESTINATION lib COMPONENT Runtime
         ARCHIVE DESTINATION lib COMPONENT Development
         RUNTIME DESTINATION bin COMPONENT Runtime
@@ -42,21 +41,21 @@ install(TARGETS ${PROJECT_NAME}
 # config version
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
-        "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+        "${PROJECT_BINARY_DIR}/etlConfigVersion.cmake"
         VERSION ${ETL_VERSION}
         COMPATIBILITY AnyNewerVersion)
 
 # config file
 configure_package_config_file(
-        "${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
-        "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-        INSTALL_DESTINATION lib/cmake/${PROJECT_NAME})
+        "${PROJECT_SOURCE_DIR}/cmake/etlConfig.cmake.in"
+        "${PROJECT_BINARY_DIR}/etlConfig.cmake"
+        INSTALL_DESTINATION lib/cmake/etl)
 
 # install config
-install(EXPORT ${PROJECT_NAME}Targets DESTINATION lib/cmake/${PROJECT_NAME})
-install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-        "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-        DESTINATION lib/cmake/${PROJECT_NAME})
+install(EXPORT etlTargets DESTINATION lib/cmake/etl)
+install(FILES "${PROJECT_BINARY_DIR}/etlConfigVersion.cmake"
+        "${PROJECT_BINARY_DIR}/etlConfig.cmake"
+        DESTINATION lib/cmake/etl)
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION include)
 
 # uninstall all

@@ -14,7 +14,12 @@ target_include_directories(test_all PRIVATE
 	${GTEST_SOURCE_DIR}/include ${GTEST_SOURCE_DIR}
 )
 
-target_compile_options(test_all PRIVATE -g -Wno-literal-suffix -Wall -Wextra -Wno-unused-variable -Wno-missing-field-initializers)
+target_compile_options(test_all PRIVATE 
+    -g 
+    -Wall -Wextra 
+    -Wno-literal-suffix 
+    -Wno-missing-field-initializers
+)
 
 target_link_libraries(test_all PRIVATE
 	m

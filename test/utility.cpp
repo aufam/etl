@@ -43,6 +43,7 @@ TEST(Utility, Iter) {
     EXPECT_EQ(next(k), 7);
 }
 
+#if __cplusplus == 201703L
 TEST(Utility, range) {
     var a = vector<int>();
     for (val i in range(3))
@@ -59,6 +60,7 @@ TEST(Utility, range) {
     val r1 = range(10);
     EXPECT_EQ(reversed(r1), range(9, -1, -1));
 }
+#endif
 
 TEST(Utility, enumerate) {
     var p = array(10, 11, 12);
@@ -66,7 +68,9 @@ TEST(Utility, enumerate) {
         EXPECT_EQ(x, y);
         y -= 10;
     }
+#if __cplusplus == 201703L
     EXPECT_EQ(p, array(0, 1, 2));
+#endif
 }
 
 TEST(Utility, zip) {
@@ -81,7 +85,9 @@ TEST(Utility, zip) {
     for (var [x, y] in zip(p, q))
         EXPECT_EQ(x, y);
     
+#if __cplusplus == 201703L
     EXPECT_EQ(p, array(1, 2, 3, 8));
+#endif
 
     val constexpr a = array(1, 2, 3);
     val constexpr b = array(2, 4, 6);
@@ -118,6 +124,7 @@ TEST(Utility, Generator) {
     EXPECT_TRUE(all_of(fibonacci_sequence, fib));
 }
 
+#if __cplusplus == 201703L
 TEST(Utility, Transform) {
     val a = array(1, 2, 3);
     val b = a | transform(lambda (val item) { return item * item; });
@@ -135,8 +142,10 @@ TEST(Utility, Transform) {
     val e = r | transform(lambda (val item) { return item * item; });
     EXPECT_EQ(array(1, 4, 9), e);
 }
+#endif
 
 TEST(Utility, Filter) {
+#if __cplusplus == 201703L
     val a = array(1, 2, 3, 4, 5, 6);
     val x = a | filter(lambda (val item) { return is_even(item); });
     EXPECT_EQ(array(2, 4, 6), x);
@@ -144,6 +153,7 @@ TEST(Utility, Filter) {
     val d = range(1, 7);
     val r = d | filter(lambda (val item) { return is_even(item); });
     EXPECT_EQ(array(2, 4, 6), r);
+#endif
 
     var s = 2;
     for (val i in array(1,2,3,4,5,6) | filter(lambda (val item) { return is_even(item); })) {

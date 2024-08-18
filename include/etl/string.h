@@ -259,7 +259,7 @@ namespace Project::etl {
 
     /// overload
     template <size_t N> constexpr bool
-    operator==(const char* x, const String<N>& y) { return y == x; }
+    operator==(const char* x, const String<N>& y) { return y.compare(x) == 0; }
 
     /// overload
     template <size_t N> constexpr bool

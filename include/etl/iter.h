@@ -137,6 +137,7 @@ namespace Project::etl {
     template <typename T> struct remove_extent<volatile Iter<T>> { typedef remove_extent_t<Iter<T>> type; };
     template <typename T> struct remove_extent<const volatile Iter<T>> { typedef remove_extent_t<Iter<T>> type; };
 
+    #if __cplusplus == 201703L
     /// check if all elements of two sequences are the same
     template <typename Sequence1, typename Sequence2,
             typename = enable_if_t<
@@ -150,6 +151,10 @@ namespace Project::etl {
             typename = disable_if_t<
                 placeholder::is_arg_v<remove_reference_t<Sequence1>> ||
                 placeholder::is_arg_v<remove_reference_t<Sequence2>>
+            >,
+            typename = disable_if_t<
+                is_etl_json_v<remove_reference_t<Sequence1>> ||
+                is_etl_json_v<remove_reference_t<Sequence2>>
             >
     > constexpr bool
     operator==(Sequence1&& seq1, Sequence2&& seq2) {
@@ -163,6 +168,7 @@ namespace Project::etl {
         for (; bool(iter1) && bool(iter2); ++iter1, ++iter2) if (*iter1 != *iter2) return false;
         return !(bool(iter1) || bool(iter2));
     }
+    #endif
 }
 
 #endif // ETL_ITER_H

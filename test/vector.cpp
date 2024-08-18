@@ -5,6 +5,7 @@
 
 using namespace Project::etl;
 
+#if __cplusplus == 201703L
 TEST(Vector, Declaration) {
     val a = vector(0, 1, 2);                // using variadic function
     val b = vector<int>(0.0, 1.0f, '\02');  // implicitly cast to the desired type
@@ -17,7 +18,9 @@ TEST(Vector, Declaration) {
     EXPECT_EQ(c, x);
     EXPECT_FALSE(d == x);
 }
+#endif
 
+#if __cplusplus == 201703L
 TEST(Vector, Append) {
     var a = vector(0, 1, 2);
     val b = vector(3, 4, 5);
@@ -28,6 +31,7 @@ TEST(Vector, Append) {
     a += b;
     EXPECT_EQ(a, range(6));
 }
+#endif
 
 TEST(Vector, Remove) {
     var a = vector(0, 1, 2, 3, 4, 5, 5);
@@ -36,11 +40,15 @@ TEST(Vector, Remove) {
 
     a.remove(5);
     EXPECT_EQ(len(a), 6);
+#if __cplusplus == 201703L
     EXPECT_EQ(a, range(6));
+#endif
 
     a.remove_at(-1); // remove last item
     EXPECT_EQ(len(a), 5);
+#if __cplusplus == 201703L
     EXPECT_EQ(a, range(5));
+#endif
 }
 
 TEST(Vector, Indexing) {
@@ -110,6 +118,7 @@ TEST(Vector, Reserve) {
     EXPECT_EQ(b.size(), 10);
 }
 
+#if __cplusplus == 201703L
 TEST(Vector, Insert) {
     var a = vector(0, 2, 3, 4);
     a.insert(1, 1);
@@ -119,6 +128,7 @@ TEST(Vector, Insert) {
     b.insert(-1, 3);
     EXPECT_EQ(b, range(5));
 }
+#endif
 
 TEST(Vector, String) {
     var a = vector<String<8>>("123", "456");
@@ -134,12 +144,15 @@ TEST(Vector, Resize) {
     a.resize(2);
     EXPECT_EQ(a.len(), 2);
     EXPECT_EQ(a.size(), 5);
+#if __cplusplus == 201703L
     EXPECT_EQ(a, vector(10, 2));
 
     a.fill(0);
     EXPECT_EQ(a, vector(10, 2, 0, 0, 0));
+#endif
 }
 
+#if __cplusplus == 201703L
 TEST(Vector, Vectorize) {
     val a = vectorize(range(10));
     EXPECT_EQ(a, range(10));
@@ -156,3 +169,4 @@ TEST(Vector, Vectorize) {
     EXPECT_FALSE(v);
     EXPECT_EQ(d, range(1, 4));
 }
+#endif

@@ -15,26 +15,20 @@ namespace Project::etl::json {
         else if constexpr (etl::is_integral_v<T>) {
             if (value < 0) return size_max(-value) + 1;
             if (value < 10) return 1;
-            return size_max(value / 10);
+            return size_max(value / 10) + 1;
         }
         else if constexpr (etl::is_floating_point_v<T>) {
-            bool is_neg;
-            size_t decimal;
+            size_t scale;
             if constexpr (etl::is_same_v<T, float>) {
-                is_neg = (*reinterpret_cast<const uint32_t*>(&value) & 0x80000000) != 0;
-                decimal = 3;
+                scale = 100;
             }
             else if constexpr (etl::is_same_v<T, double>) {
-                float f = value;
-                is_neg = (*reinterpret_cast<const uint32_t*>(&f) & 0x80000000) != 0;
-                decimal = 5;
+                scale = 1000;
             }
             else {
-                float f = value;
-                is_neg = (*reinterpret_cast<const uint32_t*>(&f) & 0x80000000) != 0;
-                decimal = 7;
+                scale = 10000;
             }
-            return is_neg ? size_max(ssize_t(-value)) + decimal + 1 : size_max(ssize_t(value)) + decimal;
+            return size_max(ssize_t(value * scale)) + 1 + (std::abs(value) < 1.0);
         }
         else if constexpr (etl::is_same_v<T, const char*>) {
             return ::strlen(value) + 2;

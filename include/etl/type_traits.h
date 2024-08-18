@@ -547,7 +547,10 @@ namespace Project::etl {
     /// is_iterator
     template <typename T> struct is_iterator : bool_constant<has_prefix_increment_v<T> && has_operator_dereference_v<T>> {};
     template <typename T> inline constexpr bool is_iterator_v = is_iterator<T>::value;
-
+    
+    /// is_etl_json
+    template <typename T> struct is_etl_json : false_type {};
+    template <typename T> inline constexpr bool is_etl_json_v = is_etl_json<T>::value;
 }
 
 namespace Project::etl::placeholder {

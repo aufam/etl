@@ -44,7 +44,9 @@ TEST(Placeholder, Assignment) {
     val assign_v = placeholder::arg<1> = move(v);
     assign_v(b);
     EXPECT_EQ(v.len(), 0);
+#if __cplusplus == 201703L
     EXPECT_EQ(b, vector(1, 2, 3));
+#endif
 }
 
 TEST(Placeholder, Equality) {

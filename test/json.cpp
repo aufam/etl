@@ -122,7 +122,7 @@ TEST(JSON, Serialize) {
         }
     };
 
-    EXPECT_EQ(json::serialize(l), "[12345,3.1400,\"test\",{\"num\":42,\"dynamic_string\":\"dynamic\"}]");
+    EXPECT_EQ(json::serialize(l), "[12345,3.140,\"test\",{\"num\":42,\"dynamic_string\":\"dynamic\"}]");
     EXPECT_EQ(json::serialize(foo), "{\"num\":42,\"text\":\"test\",\"bar\":{\"num\":3.14,\"is_true\":false}}");
 }
 
@@ -135,18 +135,34 @@ TEST(JSON, Deserialize) {
             "is_true": true
         }
     })").unwrap();
-    const Foo expect = {.num=24, .text="test", .bar={.num=3.14, .is_true=true}};
 
     EXPECT_EQ(foo.num, 24);
     EXPECT_EQ(foo.text, "test");
     EXPECT_EQ(foo.bar.num, 3.14f);
     EXPECT_EQ(foo.bar.is_true, true);
 
-    constexpr auto bar = json::deserialize<Bar>(R"({
+    const auto bar = json::deserialize<Bar>(R"({
         "num": 3.14, 
         "is_true": false
     })").unwrap();
 
     EXPECT_EQ(bar.num, 3.14f);
     EXPECT_EQ(bar.is_true, false);
+}
+
+TEST(JSON, Float) {
+    auto a = json::size_max(0.1f);
+    auto b = json::size_max(1.12343f);
+    auto c = json::size_max(100.0f);
+    auto d = json::size_max(-3.14f);
+
+    EXPECT_EQ(a, 4);
+    EXPECT_EQ(b, 4);
+    EXPECT_EQ(c, 6);
+    EXPECT_EQ(d, 5);
+
+    EXPECT_EQ(json::serialize(0.1f), "0.10");
+    EXPECT_EQ(json::serialize(1.3433f), "1.34");
+    EXPECT_EQ(json::serialize(100.0f), "100.00");
+    EXPECT_EQ(json::serialize(-3.14f), "-3.14");
 }

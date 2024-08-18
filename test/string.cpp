@@ -104,9 +104,13 @@ TEST(String, Constexpr) {
     EXPECT_EQ(c, 'a');
 
     constexpr val d = len(a); // or a.len()
+    EXPECT_EQ(d, 3);
     constexpr val e = a.rem();
+    EXPECT_EQ(e, 12);
     constexpr val f = a.front();
+    EXPECT_EQ(f, 'a');
     constexpr val g = a.back();
+    EXPECT_EQ(g, 'c');
 
     // size is deduced
     constexpr val s = string("Test ") + string("123 ") + string("abc");

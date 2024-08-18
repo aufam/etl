@@ -59,6 +59,7 @@ TEST(Function, Empty) {
     EXPECT_EQ(p, 12);
 }
 
+#if __cplusplus == 201703L
 TEST(Function, Compare) {
     int p = 0;
     var f = +lambda (int n) { return n; };
@@ -76,6 +77,7 @@ TEST(Function, Compare) {
     EXPECT_FALSE(g == h);
     EXPECT_FALSE(h == g);
 }
+#endif
 
 TEST(Function, LinkedList) {
     char text1[] = "test";

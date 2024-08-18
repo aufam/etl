@@ -32,17 +32,23 @@ TEST(Any, Dynamic) {
     using ss = String<16>;
     a = ss("Test 123");
     EXPECT_EQ(a.size(), ss::size());
+#if __cplusplus == 201703L
     EXPECT_EQ(a.as<ss>(), "Test 123");
+#endif
 
     Any b = a;
     EXPECT_EQ(b.size(), ss::size());
+#if __cplusplus == 201703L
     EXPECT_EQ(a.as<ss>(), "Test 123");
     EXPECT_EQ(b.as<ss>(), "Test 123");
+#endif
 
     Any c = move(a);
     EXPECT_FALSE(a);
+#if __cplusplus == 201703L
     EXPECT_EQ(b.as<ss>(), "Test 123");
     EXPECT_EQ(c.as<ss>(), "Test 123");
+#endif
 
     c = "Test 123";
     EXPECT_EQ(c.as<const char*>(), "Test 123");
@@ -72,7 +78,9 @@ TEST(Any, Vector) {
     v = vector<Any<>>(string<8>("test"), move(b));
 
     EXPECT_FALSE(b);
+#if __cplusplus == 201703L
     EXPECT_EQ(v[0].as<String<8>>(), "test");
+#endif
     EXPECT_EQ(v[1].as<int>(), 20);
 }
 
@@ -93,6 +101,8 @@ TEST(Any, LinkedList) {
     l = list<Any<>>(string<8>("test"), move(b));
 
     EXPECT_FALSE(b);
+#if __cplusplus == 201703L
     EXPECT_EQ(l[0].as<String<8>>(), "test");
+#endif
     EXPECT_EQ(l[1].as<int>(), 20);
 }

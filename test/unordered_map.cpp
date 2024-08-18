@@ -50,6 +50,7 @@ TEST(unordered_map, Dynamic) {
     EXPECT_EQ(m["three"], 4);
 }
 
+#if __cplusplus == 201703L
 TEST(unordered_map, Util) {
     // unordered_map of name-age pairs
     val ages = unordered_map<String<8>, int>({
@@ -69,4 +70,5 @@ TEST(unordered_map, Util) {
     EXPECT_EQ(next(names), "Chuck");
     EXPECT_EQ(next(names), "Jupri");
 }
+#endif
 

@@ -41,9 +41,9 @@ namespace Project::etl::json {
             if constexpr (etl::is_same_v<T, float>)
                 format = "%.2f";
             else if constexpr (etl::is_same_v<T, double>)
-                format = "%.4lf";
+                format = "%.3lf";
             else
-                format = "%.6Lf";
+                format = "%.4Lf";
 
             size_t n = size_max(value);
 

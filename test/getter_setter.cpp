@@ -63,7 +63,7 @@ TEST(GetterSetter, Class) {
     Process process { data }; // data getter and setter
 
     process.b = true; // more readable than `data.set_b(true)`
-    int i_now = process.i; // more readable than `int i_now = data.get_i()`
+    int i_now [[maybe_unused]] = process.i; // more readable than `int i_now = data.get_i()`
 
     EXPECT_EQ(process.i, 1);
 }

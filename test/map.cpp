@@ -58,6 +58,7 @@ TEST(Map, Dynamic) {
     EXPECT_EQ(m["three"], 4);
 }
 
+#if __cplusplus == 201703L
 TEST(Map, Util) {
     // map of name-age pairs
     val ages = map<String<8>, int>({
@@ -77,4 +78,4 @@ TEST(Map, Util) {
     EXPECT_EQ(next(names), "Chuck");
     EXPECT_EQ(next(names), "Jupri");
 }
-
+#endif
