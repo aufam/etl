@@ -173,10 +173,12 @@ namespace Project::etl {
     
     private:
         static constexpr size_t calculate_length(const char* text) {
-            if (text == nullptr) 
-                return 0;
-
-            return (*text == '\0') ? 0 : 1 + calculate_length(text + 1);
+            if (text == nullptr) return 0;
+            size_t length = 0;
+            while (text[length] != '\0') {
+                ++length;
+            }
+            return length;
         }
 
         constexpr int to_int_helper(int result = 0, size_t index = 0) const {
@@ -252,7 +254,7 @@ namespace Project::etl {
     };
 
     constexpr bool operator==(const char* str, const StringView& other) { 
-        return other == str;
+        return other.compare(str) == 0;
     }
     
     constexpr bool operator!=(const char* str, const StringView& other) { 

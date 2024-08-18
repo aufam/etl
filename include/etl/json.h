@@ -128,6 +128,8 @@ namespace Project::etl {
         Type parent_type = Type::UNKNOWN;
     };
 
+    template <> struct is_etl_json<Json> : true_type {};
+
     inline constexpr Json Json::parse(StringView text, Type parent_type) {
         StringView err = {};
         StringView next_text = {};
