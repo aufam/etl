@@ -248,23 +248,6 @@ namespace Project::etl {
     template <size_t N> constexpr auto 
     string_view(const String<N>& text) { return StringView(text.data(), text.len()); }
 
-    /// create string from 2 strings, size is s1.size() + s2.size() - 1
-    /// @warning string buffer might be unnecessarily large
-    template <size_t N, size_t M> constexpr auto
-    operator+(const String<N>& s1, const String<M>& s2) {
-        String<N + M -1> res = s1;
-        res += s2;
-        return res;
-    }
-
-    /// overload
-    template <size_t N> constexpr bool
-    operator==(const char* x, const String<N>& y) { return y.compare(x) == 0; }
-
-    /// overload
-    template <size_t N> constexpr bool
-    operator!=(const char* x, const String<N>& y) { return y != x; }
-
     /// cast reference from any pointer
     template <size_t N, typename T> constexpr auto&
     string_cast(T* text) { return *reinterpret_cast<conditional_t<is_const_v<T>, const String<N>*, String<N>*>>(text); }
@@ -318,6 +301,23 @@ namespace Project::etl {
     template <size_t N> struct remove_extent<const String<N>> { typedef char type; };
     template <size_t N> struct remove_extent<volatile String<N>> { typedef char type; };
     template <size_t N> struct remove_extent<const volatile String<N>> { typedef char type; };
+
+    /// create string from 2 strings, size is s1.size() + s2.size() - 1
+    /// @warning string buffer might be unnecessarily large
+    template <size_t N, size_t M> constexpr auto
+    operator+(const String<N>& s1, const String<M>& s2) {
+        String<N + M -1> res = s1;
+        res += s2;
+        return res;
+    }
+
+    /// overload
+    template <size_t N> constexpr bool
+    operator==(const char* x, const String<N>& y) { return StringView(x) == StringView(y); }
+
+    /// overload
+    template <size_t N> constexpr bool
+    operator!=(const char* x, const String<N>& y) { return y != x; }
 }
 
 namespace Project::etl::literals {
