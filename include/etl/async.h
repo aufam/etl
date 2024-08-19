@@ -6,12 +6,12 @@
 namespace Project::etl {
     template <typename F, typename... Args>
     auto async(F&& fn, Args&&... args) {
-        return Tasks::self->launch(etl::forward<F>(fn), etl::forward<Args>(args)...);
+        return task::launch(etl::forward<F>(fn), etl::forward<Args>(args)...);
     }
 
     template <auto method, typename Class, typename... Args>
     auto async(Class* self, Args&&... args) {
-        return Tasks::self->launch(etl::bind<method>(self), etl::forward<Args>(args)...);
+        return task::launch(etl::bind<method>(self), etl::forward<Args>(args)...);
     }
 
     template <typename T> class Async;
