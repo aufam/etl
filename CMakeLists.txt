@@ -1,4 +1,10 @@
+cmake_minimum_required(VERSION 3.14)
+
+# project config
 file(READ version.txt ETL_VERSION)
+project(etl VERSION ${ETL_VERSION})
+
+# some messages
 message("ETL_VERSION : ${ETL_VERSION}")
 
 # sources

@@ -253,14 +253,6 @@ namespace Project::etl {
         }
     };
 
-    constexpr bool operator==(const char* str, const StringView& other) { 
-        return other.compare(str) == 0;
-    }
-    
-    constexpr bool operator!=(const char* str, const StringView& other) { 
-        return other != str;
-    }
-
     /// create empty string view
     inline constexpr auto 
     string_view() { return StringView(); }
@@ -293,8 +285,17 @@ namespace Project::etl {
     template <> struct is_array<const volatile StringView> : true_type {};
 
     template <> struct remove_extent<StringView> { typedef char type; };
+    template <> struct remove_extent<const StringView> { typedef char type; };
     template <> struct remove_extent<volatile StringView> { typedef char type; };
     template <> struct remove_extent<const volatile StringView> { typedef char type; };
+
+    constexpr bool operator==(const char* str, const StringView& other) { 
+        return StringView(str) == other;
+    }
+    
+    constexpr bool operator!=(const char* str, const StringView& other) { 
+        return other != str;
+    }
 
     template <size_t N> 
     class StringSplit {
