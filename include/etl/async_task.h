@@ -11,6 +11,10 @@
 #define ETL_ASYNC_TASK_THREAD_SIZE 256
 #endif
 
+#ifndef ETL_ASYNC_TASK_SENDER_MEMPOOL_SIZE
+#define ETL_ASYNC_TASK_SENDER_MEMPOOL_SIZE=32
+#endif
+
 namespace Project::etl::task {
     Future<void> sleep(Time timeout);
     void init();
@@ -20,7 +24,7 @@ namespace Project::etl::task {
 
 namespace Project::etl::task::detail {
     struct Sender {
-        uint8_t mempool[32];
+        uint8_t mempool[ETL_ASYNC_TASK_SENDER_MEMPOOL_SIZE];
         etl::Function<void*(), void*> promise;
         etl::Function<void(), void*> closure;
     };
