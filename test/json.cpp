@@ -1,6 +1,7 @@
 #include "etl/json.h"
 #include "etl/json_serialize.h"
 #include "etl/json_deserialize.h"
+#include "etl/json_size_max.h"
 #include "gtest/gtest.h"
 
 using namespace Project::etl;
@@ -155,14 +156,20 @@ TEST(JSON, Float) {
     auto b = json::size_max(1.12343f);
     auto c = json::size_max(100.0f);
     auto d = json::size_max(-3.14f);
+    auto e = json::size_max(0.0f);
+    auto f = json::size_max(-0.0f);
 
     EXPECT_EQ(a, 4);
     EXPECT_EQ(b, 4);
     EXPECT_EQ(c, 6);
     EXPECT_EQ(d, 5);
+    EXPECT_EQ(e, 4);
+    EXPECT_EQ(f, 5);
 
     EXPECT_EQ(json::serialize(0.1f), "0.10");
     EXPECT_EQ(json::serialize(1.3433f), "1.34");
     EXPECT_EQ(json::serialize(100.0f), "100.00");
     EXPECT_EQ(json::serialize(-3.14f), "-3.14");
+    EXPECT_EQ(json::serialize(0.0f), "0.00");
+    EXPECT_EQ(json::serialize(-0.0f), "-0.00");
 }
