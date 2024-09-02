@@ -11,7 +11,7 @@ namespace Project::etl::json {
             return 4;
         } 
         else if constexpr (is_same_v<T, bool>) {
-            return 5;
+            return value ? 4 : 5;
         }
         else if constexpr (etl::is_integral_v<T>) {
             if (value < 0) return size_max(-value) + 1;
@@ -51,20 +51,24 @@ namespace Project::etl::json {
         else if constexpr (etl::is_linked_list_v<T> || etl::is_vector_v<T> || etl::is_array_v<T> || 
             detail::is_std_list_v<T> || detail::is_std_vector_v<T> || detail::is_std_array_v<T>
         ) {
-            size_t cnt = 2;
+            size_t cnt = 1;
+            bool is_empty = true;
             for (const auto& item : value) {
+                is_empty = false;
                 cnt += size_max(item) + 1;
             }
-            return cnt;
+            return cnt + is_empty;
         }
         else if constexpr (etl::is_map_v<T> || etl::is_unordered_map_v<T> || 
             detail::is_std_map_v<T> || detail::is_std_unordered_map_v<T>
         ) {
-            size_t cnt = 2;
+            size_t cnt = 1;
+            bool is_empty = true;
             for (const auto &[k, v] : value) {
+                is_empty = false;
                 cnt += size_max(k) + 1 + size_max(v) + 1;
             }
-            return cnt;
+            return cnt + is_empty;
         }
         else if constexpr (detail::is_variant_v<T>) {
             return std::visit([&](const auto& item) -> size_t {
