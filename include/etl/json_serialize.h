@@ -182,7 +182,7 @@ namespace Project::etl::detail {
         if constexpr (sizeof...(pairs) == 0) {
             return 2;
         } else {
-            size_t res = 2;
+            size_t res = 1;
             res += ((json::size_max(pairs.x) + 1 + json::size_max(pairs.y) + 1) + ...);
             return res;
         }
