@@ -5,6 +5,7 @@
 #include "etl/json.h"
 #include "etl/result.h"
 #include "etl/string_view.h"
+#include <optional>
 
 
 namespace Project::etl::json {
@@ -114,7 +115,7 @@ namespace Project::etl::json {
         } 
         else if constexpr (detail::is_std_optional_v<T>) {
             if (js.is_null()) {
-                res = etl::none;
+                res = std::nullopt;
             } else if (res) {
                 return deserialize<typename T::value_type>(js, *res);
             } else {
