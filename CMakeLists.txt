@@ -24,7 +24,7 @@ target_compile_definitions(etl PUBLIC
 
 # compile options
 target_compile_options(etl PUBLIC
-    -Wno-literal-suffix
+	$<$<COMPILE_LANGUAGE:CXX>:-Wno-literal-suffix>
 )
 
 # installation setup
