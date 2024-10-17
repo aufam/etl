@@ -12,7 +12,7 @@
 #endif
 
 #ifndef ETL_ASYNC_TASK_SENDER_MEMPOOL_SIZE
-#define ETL_ASYNC_TASK_SENDER_MEMPOOL_SIZE=32
+#define ETL_ASYNC_TASK_SENDER_MEMPOOL_SIZE 32
 #endif
 
 namespace Project::etl::task {

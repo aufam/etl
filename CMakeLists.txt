@@ -12,14 +12,19 @@ file(GLOB_RECURSE ETL_SOURCES src/*.*)
 add_library(etl ${ETL_SOURCES})
 
 # include dirs
-target_include_directories(etl PUBLIC 
+target_include_directories(etl PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include> 
+    $<INSTALL_INTERFACE:include>
 )
 
 # defines
-target_compile_definitions(etl PUBLIC 
+target_compile_definitions(etl PUBLIC
     -DETL_VERSION="${ETL_VERSION}"
+)
+
+# compile options
+target_compile_options(etl PUBLIC
+    -Wno-literal-suffix
 )
 
 # installation setup
