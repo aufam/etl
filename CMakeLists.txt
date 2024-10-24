@@ -1,34 +1,33 @@
 cmake_minimum_required(VERSION 3.14)
 
-# project config
-file(READ version.txt ETL_VERSION)
-project(etl VERSION ${ETL_VERSION})
+project(etl
+    VERSION     1.0.0
+    DESCRIPTION "Embedded Template Library"
+)
 
-# some messages
-message("ETL_VERSION : ${ETL_VERSION}")
+option(ETL_BUILD_DOCS "Build docs using Doxygen" OFF)
 
-# sources
+message(STATUS "ETL_VERSION   : ${ETL_VERSION}")
+message(STATUS "ETL_BUILD_DOCS: ${ETL_BUILD_DOCS}")
+
 file(GLOB_RECURSE ETL_SOURCES src/*.*)
 add_library(etl ${ETL_SOURCES})
 
-# include dirs
 target_include_directories(etl PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 
-# defines
 target_compile_definitions(etl PUBLIC
-    -DETL_VERSION="${ETL_VERSION}"
+    ETL_VERSION="${ETL_VERSION}"
 )
 
-# compile options
 target_compile_options(etl PUBLIC
 	$<$<COMPILE_LANGUAGE:CXX>:-Wno-literal-suffix>
 )
 
-# installation setup
-install(TARGETS etl
+install(
+    TARGETS etl
     EXPORT etlTargets
     LIBRARY DESTINATION lib COMPONENT Runtime
     ARCHIVE DESTINATION lib COMPONENT Development
@@ -37,10 +36,16 @@ install(TARGETS etl
     BUNDLE DESTINATION bin COMPONENT Runtime
 )
 
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION include)
-install(EXPORT etlTargets DESTINATION lib/cmake/etl)
+install(
+    DIRECTORY ${PROJECT_SOURCE_DIR}/include/
+    DESTINATION include
+)
 
-# config version
+install(
+    EXPORT etlTargets
+    DESTINATION lib/cmake/etl
+)
+
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
     "${PROJECT_BINARY_DIR}/etlConfigVersion.cmake"
