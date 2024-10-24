@@ -8,7 +8,7 @@ time computation and better readability.
 The C++ standard template library (STL) has well tested 
 functionality. but there are some parts that do not fit 
 well with limited resource requirements needed by embedded
-system. Also, most embedded C++ compilers do not support 
+systems. Also, most embedded C++ compilers do not support 
 the standard beyond C++03. 
 
 ETL is not meant to completely replace STL, but to complement
@@ -16,7 +16,7 @@ it. ETL also has some useful components that are not present
 in STL.
 
 ## Requirements
-* C++17
+* C++17 minimum
 * cmake minimum version 3.7
 
 ## Features
@@ -32,17 +32,15 @@ in STL.
 * No virtual functions
 * Templated compile time constants
 * Some useful [mathematics user-defined literals](include/etl/math.h)
-* [Complex number](include/etl/complex.h) with custom size
 * Additional [keywords](include/etl/keywords.h)
 
 ## Installation
 ```bash
 mkdir build
 cmake -B build
-make -C build
-sudo make install -C build
+cmake --build build
+sudo cmake --build build --target install
 ```
-All header files will be installed in /usr/local/include
 
 To uninstall:
 ```bash
@@ -67,20 +65,18 @@ include_directories(etl/include)
 Prerequisites:
 * [Google Test](https://github.com/google/googletest)
 ```bash
-cmake -DBUILD_TESTS=ON -B build
-make -C build
+cmake -DETL_BUILD_TESTS=ON -B build
+cmake --build build
 ```
 ### Run tests
 ```bash
-./build/test/test_all
+ctest --test-dir build --output-on-failure
 ```
 
 ## Build documentation
 Prerequisites:
 * [Doxygen](https://github.com/doxygen/doxygen.git)
 ```bash
-cmake -DBUILD_DOCS=ON -B build
-make -C build
+cmake -DETL_BUILD_DOCS=ON -B build
+cmake --build build
 ```
-Documentation will be generated in 
-[build/docs/html/index.html](build/docs/html/index.html)
