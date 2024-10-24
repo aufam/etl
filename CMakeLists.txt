@@ -7,7 +7,7 @@ project(etl
 
 option(ETL_BUILD_DOCS "Build docs using Doxygen" OFF)
 
-message(STATUS "ETL_VERSION   : ${ETL_VERSION}")
+message(STATUS "ETL_VERSION   : ${etl_VERSION}")
 message(STATUS "ETL_BUILD_DOCS: ${ETL_BUILD_DOCS}")
 
 file(GLOB_RECURSE ETL_SOURCES src/*.*)
