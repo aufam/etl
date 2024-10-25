@@ -277,12 +277,23 @@ namespace Project::etl {
             return *this;
         }
 
+        /// expect this result to be ok, otherwise execute fn
         template<typename F, typename R = decltype(etl::declval<F>()(etl::declval<E>()))>
         constexpr T&& expect(F&& fn) && {
             if (variant.index() == 2) {
                 fn(etl::move(unwrap_err()));
             }
             return etl::move(unwrap()); // throws std::bad_variant_access when err
+        }
+
+        template<typename U>
+        constexpr bool operator==(const Ok<U>& value) const {
+            return is_ok() && unwrap() == value.data;
+        }
+
+        template<typename U>
+        constexpr bool operator==(const Err<U>& value) const {
+            return is_err() && unwrap_err() == value.data;
         }
 
     private:
@@ -490,11 +501,21 @@ namespace Project::etl {
             return *this;
         }
 
+        /// expect this result to be ok, otherwise execute fn
         template<typename F, typename R = decltype(etl::declval<F>()(etl::declval<E>()))>
         constexpr void expect(F&& fn) && {
             if (variant.index() == 2) {
                 fn(etl::move(unwrap_err()));
             }
+        }
+
+        constexpr bool operator==(const Ok<void>&) const {
+            return is_ok();
+        }
+
+        template<typename U>
+        constexpr bool operator==(const Err<U>& value) const {
+            return is_err() && unwrap_err() == value.data;
         }
 
     private:
