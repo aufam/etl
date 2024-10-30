@@ -8,7 +8,9 @@ file(GLOB TEST_SRCS *.*)
 function(etl_create_test cpp_version)
     add_executable(test_${cpp_version} ${TEST_SRCS})
 
-    target_compile_features(test_${cpp_version} PRIVATE cxx_std_${cpp_version})
+    target_compile_features(test_${cpp_version} PRIVATE 
+        cxx_std_${cpp_version}
+    )
 
     target_link_libraries(test_${cpp_version} PRIVATE
         etl

@@ -5,33 +5,29 @@
 
 using namespace Project::etl;
 
-#if __cplusplus == 201703L
 TEST(Vector, Declaration) {
     val a = vector(0, 1, 2);                // using variadic function
     val b = vector<int>(0.0, 1.0f, '\02');  // implicitly cast to the desired type
     val c = vector({0, 1, 2});              // from initializer list
     val d = vector<int>();                  // empty vector
 
-    val x = {0, 1, 2};
+    val x = vector(0, 1, 2);
     EXPECT_EQ(a, x);
     EXPECT_EQ(b, x);
     EXPECT_EQ(c, x);
     EXPECT_FALSE(d == x);
 }
-#endif
 
-#if __cplusplus == 201703L
 TEST(Vector, Append) {
     var a = vector(0, 1, 2);
     val b = vector(3, 4, 5);
 
     val c = a + b;
-    EXPECT_EQ(c, range(6));
+    EXPECT_EQ(c, vectorize(range(6)));
 
     a += b;
-    EXPECT_EQ(a, range(6));
+    EXPECT_EQ(a, vectorize(range(6)));
 }
-#endif
 
 TEST(Vector, Remove) {
     var a = vector(0, 1, 2, 3, 4, 5, 5);
@@ -40,15 +36,11 @@ TEST(Vector, Remove) {
 
     a.remove(5);
     EXPECT_EQ(len(a), 6);
-#if __cplusplus == 201703L
-    EXPECT_EQ(a, range(6));
-#endif
+    EXPECT_EQ(a, vectorize(range(6)));
 
     a.remove_at(-1); // remove last item
     EXPECT_EQ(len(a), 5);
-#if __cplusplus == 201703L
-    EXPECT_EQ(a, range(5));
-#endif
+    EXPECT_EQ(a, vectorize(range(5)));
 }
 
 TEST(Vector, Indexing) {
@@ -118,17 +110,15 @@ TEST(Vector, Reserve) {
     EXPECT_EQ(b.size(), 10);
 }
 
-#if __cplusplus == 201703L
 TEST(Vector, Insert) {
     var a = vector(0, 2, 3, 4);
     a.insert(1, 1);
-    EXPECT_EQ(a, range(5));
+    EXPECT_EQ(a, vectorize(range(5)));
 
     var b = vector(0, 1, 2, 4);
     b.insert(-1, 3);
-    EXPECT_EQ(b, range(5));
+    EXPECT_EQ(b, vectorize(range(5)));
 }
-#endif
 
 TEST(Vector, String) {
     var a = vector<String<8>>("123", "456");
@@ -144,29 +134,25 @@ TEST(Vector, Resize) {
     a.resize(2);
     EXPECT_EQ(a.len(), 2);
     EXPECT_EQ(a.size(), 5);
-#if __cplusplus == 201703L
     EXPECT_EQ(a, vector(10, 2));
 
     a.fill(0);
     EXPECT_EQ(a, vector(10, 2, 0, 0, 0));
-#endif
 }
 
-#if __cplusplus == 201703L
 TEST(Vector, Vectorize) {
     val a = vectorize(range(10));
-    EXPECT_EQ(a, range(10));
+    EXPECT_EQ(a, vectorize(range(10)));
 
     val b = vectorize(a | transform(lambda (val item) { return item * 2; }));
-    EXPECT_EQ(b, range(0, 20, 2));
+    EXPECT_EQ(b, vectorize(range(0, 20, 2)));
 
     var v = vector(1, 2, 3);
     val c = vectorize(v); // copy
-    EXPECT_EQ(v, range(1, 4));
-    EXPECT_EQ(c, range(1, 4));
+    EXPECT_EQ(v, vectorize(range(1, 4)));
+    EXPECT_EQ(c, vectorize(range(1, 4)));
 
     val d = vectorize(move(v)); // move
     EXPECT_FALSE(v);
-    EXPECT_EQ(d, range(1, 4));
+    EXPECT_EQ(d, vectorize(range(1, 4)));
 }
-#endif

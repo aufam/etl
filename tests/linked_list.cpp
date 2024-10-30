@@ -1,4 +1,5 @@
 #include "etl/linked_list.h"
+#include "etl/vector.h"
 #include "gtest/gtest.h"
 #include "etl/keywords.h"
 
@@ -10,12 +11,10 @@ TEST(LinkedList, Declaration) {
     val c = list({0, 1, 2});               // from initializer list
     val d = list<int>();                   // empty list
 
-#if __cplusplus == 201703L
-    val x = {0, 1, 2};
+    val x = list(0, 1, 2);
     EXPECT_EQ(a, x);
     EXPECT_EQ(b, x);
     EXPECT_EQ(c, x);
-#endif
     EXPECT_EQ(len(a), 3);
     EXPECT_EQ(len(b), 3);
     EXPECT_EQ(len(c), 3);
@@ -28,9 +27,7 @@ TEST(LinkedList, Push) {
     a.push(2, 1);
     a.push_front(0);
 
-#if __cplusplus == 201703L
-    EXPECT_EQ(a, range(5));
-#endif
+    EXPECT_EQ(a, vectorize(range(5)));
     EXPECT_EQ(len(a), 5);
 }
 

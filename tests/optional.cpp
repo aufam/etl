@@ -10,21 +10,21 @@ using namespace Project::etl;
 TEST(Optional, Copy) {
     var a = optional(string<16>("test %d", 123));
     EXPECT_TRUE(a);
-#if __cplusplus == 201703L
+// #if __cplusplus == 201703L
     EXPECT_EQ(*a, "test 123");
-#endif
+// #endif
 
     a = "test 1234";
     EXPECT_TRUE(a);
-#if __cplusplus == 201703L
+// #if __cplusplus == 201703L
     EXPECT_EQ(*a, "test 1234");
-#endif
+// #endif
 
     a = none;
     EXPECT_FALSE(a);
-#if __cplusplus == 201703L
+// #if __cplusplus == 201703L
     EXPECT_EQ(a.get_value_or("None"), "None");
-#endif
+// #endif
 
     var b = optional(*a);
     EXPECT_FALSE(b);

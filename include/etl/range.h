@@ -8,7 +8,7 @@ namespace Project::etl {
     /// python-like range
     template <typename T>
     class Range {
-        typedef remove_unsigned_t<T> U;
+        typedef etl::remove_unsigned_t<T> U;
         T start, stop;
         U step;
 
@@ -23,7 +23,7 @@ namespace Project::etl {
         constexpr Range end()   && { return etl::move(*this); }
         constexpr Range iter()  && { return etl::move(*this); }
 
-        constexpr Range reversed()     const  { return Range(stop - step, start - step, -step); }
+        constexpr Range reversed() const { return Range(stop - step, start - step, -step); }
 
         constexpr size_t len() const { return operator bool() ? (stop - start) / step : 0; }
 
@@ -61,7 +61,7 @@ namespace Project::etl {
         constexpr T operator*() const { return start; }
 
         /// next operator
-        constexpr T operator()() { 
+        constexpr T operator()() {
             if (!operator bool()) {
                 if constexpr (etl::has_empty_constructor_v<T>) {
                     // avoid segfault
@@ -80,11 +80,11 @@ namespace Project::etl {
 
     /// create range object
     template <typename T> constexpr enable_if_t<is_arithmetic_v<T>, Range<T>>
-    range(T last) { return Range(T(0), last, remove_unsigned_t<T>(1)); }
+    range(T last) { return Range(T(0), last, etl::remove_unsigned_t<T>(1)); }
 
     /// create range object
     template <typename T> constexpr enable_if_t<is_arithmetic_v<T>, Range<T>>
-    range(T first, T last, remove_unsigned_t<T> step = 1) { return Range(first, last, step); }
+    range(T first, T last, etl::remove_unsigned_t<T> step = 1) { return Range(first, last, step); }
 }
 
 #endif // ETL_RANGE_H

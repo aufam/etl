@@ -1,7 +1,6 @@
 #include "etl/array.h"
 #include "etl/vector.h"
 #include "etl/linked_list.h"
-#include "etl/function.h"
 #include "etl/bit.h"
 #include "gtest/gtest.h"
 #include "etl/keywords.h"
@@ -9,6 +8,7 @@
 using namespace Project::etl;
 
 TEST(Utility, Iter) {
+    [[maybe_unused]] constexpr bool asjfdbi = trait_reverse_iterable<Vector<int>>::value;
     val a = array(1, 2, 3);
     var i = iter(a);
     EXPECT_EQ(next(i), 1);
@@ -43,7 +43,6 @@ TEST(Utility, Iter) {
     EXPECT_EQ(next(k), 7);
 }
 
-#if __cplusplus == 201703L
 TEST(Utility, range) {
     var a = vector<int>();
     for (val i in range(3))
@@ -60,7 +59,6 @@ TEST(Utility, range) {
     val r1 = range(10);
     EXPECT_EQ(reversed(r1), range(9, -1, -1));
 }
-#endif
 
 TEST(Utility, enumerate) {
     var p = array(10, 11, 12);
@@ -68,9 +66,8 @@ TEST(Utility, enumerate) {
         EXPECT_EQ(x, y);
         y -= 10;
     }
-#if __cplusplus == 201703L
+
     EXPECT_EQ(p, array(0, 1, 2));
-#endif
 }
 
 TEST(Utility, zip) {
@@ -85,9 +82,7 @@ TEST(Utility, zip) {
     for (var [x, y] in zip(p, q))
         EXPECT_EQ(x, y);
     
-#if __cplusplus == 201703L
     EXPECT_EQ(p, array(1, 2, 3, 8));
-#endif
 
     val constexpr a = array(1, 2, 3);
     val constexpr b = array(2, 4, 6);
@@ -124,36 +119,32 @@ TEST(Utility, Generator) {
     EXPECT_TRUE(all_of(fibonacci_sequence, fib));
 }
 
-#if __cplusplus == 201703L
 TEST(Utility, Transform) {
     val a = array(1, 2, 3);
     val b = a | transform(lambda (val item) { return item * item; });
-    EXPECT_EQ(array(1, 4, 9), b);
+    EXPECT_EQ(array(1, 4, 9), vectorize(b));
 
     val v = vector(1, 2, 3);
     val c = v | transform(lambda (val item) { return item * item; });
-    EXPECT_EQ(array(1, 4, 9), c);
+    EXPECT_EQ(array(1, 4, 9), vectorize(c));
 
     val l = list(1, 2, 3);
     val d = l | transform(lambda (val item) { return item * item; });
-    EXPECT_EQ(array(1, 4, 9), d);
+    EXPECT_EQ(array(1, 4, 9), vectorize(d));
 
     val r = range(1, 4);
     val e = r | transform(lambda (val item) { return item * item; });
-    EXPECT_EQ(array(1, 4, 9), e);
+    EXPECT_EQ(array(1, 4, 9), vectorize(e));
 }
-#endif
 
 TEST(Utility, Filter) {
-#if __cplusplus == 201703L
     val a = array(1, 2, 3, 4, 5, 6);
     val x = a | filter(lambda (val item) { return is_even(item); });
-    EXPECT_EQ(array(2, 4, 6), x);
+    EXPECT_EQ(array(2, 4, 6), vectorize(x));
 
     val d = range(1, 7);
     val r = d | filter(lambda (val item) { return is_even(item); });
-    EXPECT_EQ(array(2, 4, 6), r);
-#endif
+    EXPECT_EQ(array(2, 4, 6), vectorize(r));
 
     var s = 2;
     for (val i in array(1,2,3,4,5,6) | filter(lambda (val item) { return is_even(item); })) {

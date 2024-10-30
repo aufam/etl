@@ -28,10 +28,10 @@ namespace Project::etl {
 
         constexpr void operator++() { inc_helper_<0>(); }
 
-        constexpr auto operator*() { return deref_helper_(index_sequence_for<Sequences...>{}); }
-        constexpr auto operator*() const { return deref_helper_(index_sequence_for<Sequences...>{}); }
+        constexpr auto operator*() { return deref_helper_(etl::index_sequence_for<Sequences...>{}); }
+        constexpr auto operator*() const { return deref_helper_(etl::index_sequence_for<Sequences...>{}); }
 
-        constexpr auto operator()() { return next_helper_(index_sequence_for<Sequences...>{}); }
+        constexpr auto operator()() { return next_helper_(etl::index_sequence_for<Sequences...>{}); }
 
     private:
         template <size_t i>
@@ -49,13 +49,13 @@ namespace Project::etl {
         }
 
         template <size_t... i>
-        constexpr auto deref_helper_(index_sequence<i...>) { 
-            return Tuple<decltype(*etl::get<i>(sequences))...> { *etl::get<i>(sequences)... } ; 
+        constexpr auto deref_helper_(index_sequence<i...>) {
+            return Tuple<decltype(*etl::get<i>(sequences))...> { *etl::get<i>(sequences)... } ;
         }
 
         template <size_t... i>
-        constexpr auto deref_helper_(index_sequence<i...>) const { 
-            return Tuple<add_const_t<decltype(*etl::get<i>(sequences))>...> { *etl::get<i>(sequences)... } ; 
+        constexpr auto deref_helper_(index_sequence<i...>) const {
+            return Tuple<add_const_t<decltype(*etl::get<i>(sequences))>...> { *etl::get<i>(sequences)... } ;
         }
 
         template <size_t... i>
@@ -79,11 +79,11 @@ namespace Project::etl {
 
     /// create zip object from begin-end pair
     template <typename... Iterators> constexpr auto
-    zip(Pair<Iterators>... begin_end) { return Zip(etl::iter(begin_end.x, begin_end.y)...); }
+    zip(Pair<Iterators>... begin_end) { return etl::Zip(etl::iter(begin_end.x, begin_end.y)...); }
 
     /// create zip object from any sequence
     template <typename... Sequences> constexpr auto
-    zip(Sequences&&... seq) { return Zip(etl::iter(seq)...); }
+    zip(Sequences&&... seq) { return etl::Zip(etl::iter(seq)...); }
 }
 
 #endif // ETL_ZIP_H
