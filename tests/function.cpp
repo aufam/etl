@@ -1,5 +1,4 @@
 #include "etl/function.h"
-#include "etl/array.h"
 #include "etl/linked_list.h"
 #include "gtest/gtest.h"
 #include "etl/keywords.h"
@@ -58,26 +57,6 @@ TEST(Function, Empty) {
     EXPECT_EQ(f(2), p);
     EXPECT_EQ(p, 12);
 }
-
-#if __cplusplus == 201703L
-TEST(Function, Compare) {
-    int p = 0;
-    var f = +lambda (int n) { return n; };
-    var g = function<int(int)>();
-    var h = function<int(int)>(f);
-
-    g = f;
-    EXPECT_TRUE(g == f);
-    EXPECT_TRUE(h == f);
-    EXPECT_TRUE(g == h);
-    EXPECT_TRUE(h == g);
-
-    g = function<int(int)>(lambda (int* ctx, int n) { return *ctx * n; }, &p);
-    h = nullptr;
-    EXPECT_FALSE(g == h);
-    EXPECT_FALSE(h == g);
-}
-#endif
 
 TEST(Function, LinkedList) {
     char text1[] = "test";

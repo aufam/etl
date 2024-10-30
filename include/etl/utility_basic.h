@@ -166,13 +166,16 @@ namespace Project::etl {
 
     // TODO
     template <typename T, typename U> constexpr etl::enable_if_t<
-        etl::is_subscriptable_v<T> && etl::is_subscriptable_v<T> && etl::trait_len<T>::value && etl::trait_len<U>::value
+        etl::trait_iterable<T>::value && etl::trait_iterable<U>::value
     , bool> operator==(const T& t, const U& u) {
-        auto length = etl::len(t);
-        if (length != etl::len(u)) return false;
-        for (size_t i = 0; i < length; ++i) {
-            if (t[i] != u[i]) return false;
+        if constexpr (etl::trait_len<T>::value && etl::trait_len<U>::value) {
+            auto length = etl::len(t);
+            if (length != etl::len(u)) return false;
         }
+
+        auto a = etl::iter(t);
+        auto b = etl::iter(u);
+        for (; bool(a) && bool(b); ++a, ++b) if (*a != *b) return false;
         return true;
     }
 }

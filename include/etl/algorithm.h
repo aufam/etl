@@ -120,7 +120,12 @@ namespace Project::etl {
 
     /// check if all elements of two sequences are the same
     template <typename Sequence1, typename Sequence2> constexpr bool
-    compare_all(Sequence1&& seq1, Sequence2&& seq2) { return seq1 == seq2; }
+    compare_all(Sequence1&& seq1, Sequence2&& seq2) {
+        auto iter1 = etl::iter(seq1);
+        auto iter2 = etl::iter(seq2);
+        for (; bool(iter1) && bool(iter2); ++iter1, ++iter2) if (*iter1 != *iter2) return false;
+        return true;
+    }
 
     /// check if any elements of two sequences are the same
     template <typename Sequence1, typename Sequence2> constexpr bool

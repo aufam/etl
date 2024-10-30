@@ -1,6 +1,5 @@
 #include "etl/algorithm.h"
 #include "etl/array.h"
-#include "etl/function.h"
 #include "gtest/gtest.h"
 #include "etl/keywords.h"
 
@@ -28,11 +27,9 @@ TEST(Algorithm, AllAnyNone) {
     EXPECT_TRUE (any_of(b, range(1, 4)));
     EXPECT_FALSE(none_of(b, range(1, 4)));
 
-#if __cplusplus == 201703L
     EXPECT_FALSE(compare_all(a, b));
     EXPECT_TRUE (compare_any(a, b));
     EXPECT_FALSE(compare_none(a, b));
-#endif
 }
 
 TEST(Algorithm, ForeachFold) {
@@ -70,7 +67,6 @@ TEST(Algorithm, Count) {
     EXPECT_EQ(count_if(a, lambda (val &item) { return item == 1; }), 3);
 }
 
-#if __cplusplus == 201703L
 TEST(Algorithm, CopyReplace) {
     var a = array<int, 3>();
     val b = {0, 1, 2};
@@ -90,7 +86,6 @@ TEST(Algorithm, CopyReplace) {
     replace_if(a, lambda (val item) { return item < 10; }, 20);
     EXPECT_EQ(a, d);
 }
-#endif
 
 TEST(Algorithm, MaxMinSumClamp) {
     val a = {1, 2, 3};

@@ -88,33 +88,3 @@ endif()
 if (ETL_BUILD_DOCS)
     add_subdirectory(docs)
 endif()
-
-add_executable(test_tuple
-    tests/main.cpp
-    tests/tuple.cpp
-    tests/utility.cpp
-    tests/array.cpp
-    tests/vector.cpp
-    tests/linked_list.cpp
-    tests/map.cpp
-    tests/unordered_map.cpp
-    tests/algorithm.cpp
-)
-
-
-    target_compile_features(test_tuple PRIVATE 
-        cxx_std_17
-    )
-
-    target_link_libraries(test_tuple PRIVATE
-        etl
-        gtest
-        gtest_main
-    )
-
-    target_compile_options(test_tuple PRIVATE
-        -g
-        -Wall
-        -Wextra
-        -Wno-missing-field-initializers
-    )
