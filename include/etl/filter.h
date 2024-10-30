@@ -24,10 +24,10 @@ namespace Project::etl {
         constexpr explicit operator bool() const { return bool(sequence); }
 
         constexpr bool operator!=(const Filter&) const { return operator bool(); }
-        
+
         constexpr void operator++() { ++sequence; }
 
-        constexpr decltype(auto) operator*() { 
+        constexpr decltype(auto) operator*() {
             while (operator bool()) {
                 if (fn(*sequence)) return *sequence;
                 ++sequence;
@@ -59,12 +59,12 @@ namespace Project::etl {
     /// create filter object from iterator
     template <typename Iterator, typename UnaryPredicate> constexpr auto
     filter(Iterator first, Iterator last, UnaryPredicate&& fn, int step = 1) {
-        return Filter(etl::iter(first, last, step), etl::forward<UnaryPredicate>(fn));
+        return etl::Filter(etl::iter(first, last, step), etl::forward<UnaryPredicate>(fn));
     }
 
     /// create filter object from a sequence
     template <typename Sequence, typename UnaryPredicate> constexpr auto
-    filter(Sequence&& seq, UnaryPredicate&& fn) { return Filter(etl::iter(seq), etl::forward<UnaryPredicate>(fn)); }
+    filter(Sequence&& seq, UnaryPredicate&& fn) { return etl::Filter(etl::iter(seq), etl::forward<UnaryPredicate>(fn)); }
 
     template <typename UnaryPredicate>
     struct FilterFunction { UnaryPredicate fn; };
@@ -76,27 +76,6 @@ namespace Project::etl {
     /// pipe operator to apply filter function to a sequence
     template <typename Sequence, typename UnaryPredicate> constexpr auto
     operator|(Sequence&& seq, FilterFunction<UnaryPredicate> fn) { return etl::filter(etl::forward<Sequence>(seq), etl::move(fn.fn)); }
-
-    /// remove extent
-    template <typename Sequence, typename UnaryPredicate>
-    struct remove_extent<Filter<Sequence, UnaryPredicate>> {
-        typedef decltype(etl::next(etl::declval<Filter<Sequence, UnaryPredicate>>())) type;
-    };
-
-    template <typename Sequence, typename UnaryPredicate>
-    struct remove_extent<const Filter<Sequence, UnaryPredicate>> {
-        typedef remove_extent_t<Filter<Sequence, UnaryPredicate>> type;
-    };
-
-    template <typename Sequence, typename UnaryPredicate>
-    struct remove_extent<volatile Filter<Sequence, UnaryPredicate>> {
-        typedef remove_extent_t<Filter<Sequence, UnaryPredicate>> type;
-    };
-
-    template <typename Sequence, typename UnaryPredicate>
-    struct remove_extent<const volatile Filter<Sequence, UnaryPredicate>> {
-        typedef remove_extent_t<Filter<Sequence, UnaryPredicate>> type;
-    };
-} 
+}
 
 #endif // ETL_FILTER_H

@@ -452,7 +452,7 @@ namespace Project::etl {
     vectorize(Sequence&& seq, size_t capacity = 0) {
         auto res = vector<T, A>();
 
-        if constexpr (etl::has_len_v<remove_reference_t<Sequence>>)
+        if constexpr (etl::trait_len<Sequence>::value)
             capacity = etl::max(etl::len(seq), capacity);
 
         res.reserve(capacity);

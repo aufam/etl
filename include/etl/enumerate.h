@@ -14,7 +14,7 @@ namespace Project::etl {
 
     public:
         constexpr explicit Enumerate(Sequence seq, int cnt = 0) : sequence(seq), cnt(cnt) {}
- 
+
         constexpr const Enumerate& begin() const& { return *this; }
         constexpr const Enumerate& end()   const& { return *this; }
         constexpr const Enumerate& iter()  const& { return *this; }
@@ -26,12 +26,12 @@ namespace Project::etl {
         constexpr explicit operator bool() const { return bool(sequence); }
 
         constexpr bool operator!=(const Enumerate&) const { return operator bool(); }
-        
+
         constexpr void operator++() { ++sequence; ++cnt; }
 
         constexpr auto operator*() { return etl::Tuple<int, decltype(*sequence)>{cnt, *sequence}; }
         constexpr auto operator*() const { return etl::Tuple<int, add_const_t<decltype(*sequence)>>{cnt, *sequence}; }
-        
+
         constexpr auto operator()() {
             using R = decltype(operator*());
             if (!operator bool()) {
@@ -53,12 +53,12 @@ namespace Project::etl {
     /// create enumerate object from iterator
     template <typename Iterator> constexpr auto
     enumerate(Iterator first, Iterator last, int cnt = 0, int step = 1) {
-        return Enumerate(etl::iter(first, last, step), cnt);
+        return etl::Enumerate(etl::iter(first, last, step), cnt);
     }
 
     /// create enumerate object from a container
     template <typename Sequence> constexpr auto
-    enumerate(Sequence&& seq, int cnt = 0) { return Enumerate(etl::iter(seq), cnt); }
+    enumerate(Sequence&& seq, int cnt = 0) { return etl::Enumerate(etl::iter(seq), cnt); }
 }
 
 #endif // ETL_ENUMERATE_H

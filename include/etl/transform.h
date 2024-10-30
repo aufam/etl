@@ -24,12 +24,12 @@ namespace Project::etl {
         constexpr explicit operator bool() const { return bool(sequence); }
 
         constexpr bool operator!=(const Transform&) const { return operator bool(); }
-        
+
         constexpr void operator++() { ++sequence; }
 
         constexpr decltype(auto) operator*() { return fn(*sequence); }
 
-        constexpr decltype(auto) operator()() { 
+        constexpr decltype(auto) operator()() {
             using R = decltype(operator*());
             if (!operator bool()) {
                 if constexpr (etl::is_reference_v<R>) {
@@ -52,11 +52,13 @@ namespace Project::etl {
 
     /// create transform object from iterator
     template <typename Iterator, typename UnaryFunction> constexpr auto
-    transform(Iterator first, Iterator last, UnaryFunction&& fn, int step = 1) { return Transform(etl::iter(first, last, step), etl::forward<UnaryFunction>(fn)); }
+    transform(Iterator first, Iterator last, UnaryFunction&& fn, int step = 1) {
+        return etl::Transform(etl::iter(first, last, step), etl::forward<UnaryFunction>(fn));
+    }
 
     /// create transform object from a sequence
     template <typename Sequence, typename UnaryFunction> constexpr auto
-    transform(Sequence&& seq, UnaryFunction&& fn) { return Transform(etl::iter(seq), etl::forward<UnaryFunction>(fn)); }
+    transform(Sequence&& seq, UnaryFunction&& fn) { return etl::Transform(etl::iter(seq), etl::forward<UnaryFunction>(fn)); }
 
     template <typename UnaryFunction>
     struct TransformFunction { UnaryFunction fn; };
@@ -68,27 +70,6 @@ namespace Project::etl {
     /// pipe operator to apply transform function to a sequence
     template <typename Sequence, typename UnaryFunction> constexpr auto
     operator|(Sequence&& seq, TransformFunction<UnaryFunction> fn) { return etl::transform(etl::forward<Sequence>(seq), etl::move(fn.fn)); }
-
-    /// remove extent
-    template <typename Sequence, typename UnaryFunction>
-    struct remove_extent<Transform<Sequence, UnaryFunction>> {
-        typedef decltype(etl::next<Transform<Sequence, UnaryFunction>>(etl::declval<Transform<Sequence, UnaryFunction>>())) type;
-    };
-
-    template <typename Sequence, typename UnaryFunction>
-    struct remove_extent<const Transform<Sequence, UnaryFunction>> {
-        typedef remove_extent_t<Transform<Sequence, UnaryFunction>> type;
-    };
-
-    template <typename Sequence, typename UnaryFunction>
-    struct remove_extent<volatile Transform<Sequence, UnaryFunction>> {
-        typedef remove_extent_t<Transform<Sequence, UnaryFunction>> type;
-    };
-
-    template <typename Sequence, typename UnaryFunction>
-    struct remove_extent<const volatile Transform<Sequence, UnaryFunction>> {
-        typedef remove_extent_t<Transform<Sequence, UnaryFunction>> type;
-    };
-} 
+}
 
 #endif // ETL_TRANSFORM_H
