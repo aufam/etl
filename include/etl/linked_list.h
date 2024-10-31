@@ -47,7 +47,8 @@ namespace Project::etl {
 
         /// copy assignment
         LinkedList& operator=(const LinkedList& other) {
-            for (auto i : etl::range(other.len())) operator[](i) = other[i];
+            clear();
+            for (const auto& item : other) push(item);
             return *this;
         }
 
@@ -101,10 +102,7 @@ namespace Project::etl {
         /// @warning if i less than 0, it will iterate backward from the tail
         reference operator[](int i) {
             auto p = i >= 0 ? head + i : tail() + (i + 1);
-            if (p) return *p;
-            T dummy = {};
-            i >= 0 ? push_back(dummy) : push_front(dummy);
-            return i >= 0 ? back() : front();
+            return *p;
         }
 
         /// get i-th item by dereference
@@ -112,10 +110,7 @@ namespace Project::etl {
         /// @warning if i less than 0, it will iterate backward from the tail
         const_reference operator[](int i) const {
             auto p = i >= 0 ? const_iterator(head) + i : tail() + (i + 1);
-            if (p) return *p;
-            T dummy = {};
-            i >= 0 ? push_back(dummy) : push_front(dummy);
-            return i >= 0 ? back() : front();
+            return *p;
         }
 
         explicit operator bool() const { return bool(head); }

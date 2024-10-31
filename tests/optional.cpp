@@ -2,6 +2,7 @@
 #include "etl/string.h"
 #include "etl/vector.h"
 #include "etl/array.h"
+#include "etl/linked_list.h"
 #include "gtest/gtest.h"
 #include "etl/keywords.h"
 
@@ -36,6 +37,14 @@ TEST(Optional, Empty) {
     float* p = nullptr;
     float& r = *p;
     var a = optional<int&>(r);
-
     EXPECT_FALSE(a);
+
+    val arr = array(1, 2, 3);
+    EXPECT_FALSE(optional(arr[100]));
+
+    val vec = vector(1, 2, 3);
+    EXPECT_FALSE(optional(vec[100]));
+
+    val lst = list(1, 2, 3);
+    EXPECT_FALSE(optional(lst[100]));
 }

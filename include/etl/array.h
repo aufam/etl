@@ -11,8 +11,9 @@ namespace Project::etl {
         typedef T type[N];
         static constexpr T* ptr(const type& buf) noexcept { return const_cast<T*>(buf); }
         static constexpr T& ref(const type& buf, int i) noexcept {
-            if (i < 0) i = N + i; // allowing negative index
-            return const_cast<T&>(buf[i]);
+            if (i < 0) i = int(N) + i; // allowing negative index
+            if (i >= 0 && i < int(N)) return const_cast<T&>(buf[i]);
+            else return *static_cast<T*>(nullptr);
         }
     };
 
