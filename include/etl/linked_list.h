@@ -98,16 +98,14 @@ namespace Project::etl {
         const_reference back() const { return *tail(); }
 
         /// get i-th item by dereference
-        /// @warning if head + i = null, it will make new node and return its item
-        /// @warning if i less than 0, it will iterate backward from the tail
+        /// @warning the return reference might be null
         reference operator[](int i) {
             auto p = i >= 0 ? head + i : tail() + (i + 1);
             return *p;
         }
 
         /// get i-th item by dereference
-        /// @warning if head + i = null, it will make new node and return its item
-        /// @warning if i less than 0, it will iterate backward from the tail
+        /// @warning the return reference might be null
         const_reference operator[](int i) const {
             auto p = i >= 0 ? const_iterator(head) + i : tail() + (i + 1);
             return *p;
@@ -343,12 +341,12 @@ namespace Project::etl {
         
         /// dereference operator
         /// @warning make sure node is not null
-        auto& operator*() const {
+        decltype(auto) operator*() const {
             if constexpr (is_const_v<remove_pointer_t<U>>) {
-                const auto& it = *node->item;
+                const auto& it = node ? *node->item : *static_cast<const T*>(nullptr);
                 return it;
             } else {
-                auto& it = *node->item;
+                auto& it = node ? *node->item : *static_cast<T*>(nullptr);
                 return it;
             }
         }

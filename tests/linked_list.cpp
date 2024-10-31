@@ -126,7 +126,7 @@ TEST(LinkedList, Iter) {
 
 TEST(LinkedList, Mutable) {
     var a = list<int>();
-    for (int i = 0; i < 5; i++) a[i] = i;
+    for (int i = 0; i < 5; i++) a.push(i);
     a.front() = 100;
     a.back() = 200;
 
