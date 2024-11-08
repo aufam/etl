@@ -2,6 +2,7 @@
 #define ETL_JSON_SERIALIZE_H
 
 #include "etl/json_size_max.h"
+#include "etl/type_traits.h"
 
 namespace Project::etl::detail {
     template <typename SB, typename S>
@@ -18,6 +19,22 @@ namespace Project::etl::detail {
 }
 
 namespace Project::etl::json {
+    template <typename T> struct trait_json_serializer<T, etl::enable_if_t<etl::is_integral_v<T>>> : etl::true_type {
+        template <typename R = std::string>
+        static constexpr R serialize(const T& value) {
+            if constexpr (etl::is_same_v<T, bool>) {
+                return value ? "true" : "false";
+            }
+            else {
+                auto res = std::to_string(value);
+                if constexpr (etl::is_same_v<R, std::string>)
+                    return res;
+                else 
+                    return res.c_str();
+            }
+        }
+    };
+
     template <typename T, typename R = std::string> 
     R serialize(const T& value) {
         static_assert(etl::is_same_v<R, std::string> || etl::is_etl_string_v<R>, "Return type must be of type std::string or etl::String<N>");
@@ -136,6 +153,9 @@ namespace Project::etl::json {
         }
         else if constexpr (etl::is_optional_v<T> || etl::is_ref_v<T> || detail::is_std_optional_v<T>) {
             return value ? serialize<etl::decay_t<decltype(*value)>, R>(*value) : "null";
+        }
+        else {
+            static_assert(etl::always_false<void>::value, "JSON serializer for the type is not defined");
         }
     }
 }

@@ -558,6 +558,12 @@ namespace Project::etl {
     /// trait next()
     template <typename T, typename = void> struct trait_generator : etl::false_type {};
 
+    /// trait json serializer
+    template <typename T, typename = void> struct trait_json_serializer : etl::false_type {};
+
+    /// trait json deserializer
+    template <typename T, typename = void> struct trait_json_deserializer : etl::false_type {};
+
     // TODO
     template <typename T, typename U, typename = void> struct trait_eq : etl::false_type {};
 
