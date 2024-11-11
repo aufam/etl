@@ -26,7 +26,7 @@ namespace Project::etl {
     public:
         using type = E;
         static_assert(!etl::is_reference_v<type>, "Err must have no reference alternative.");
-        static_assert(!etl::is_void_v<E>, "Error variant can't be void");
+        static_assert(!etl::is_void_v<type>, "Error variant can't be void");
 
         type data;
         constexpr Err(E data) : data(etl::move(data)) {}
