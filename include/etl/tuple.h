@@ -31,7 +31,7 @@ namespace Project::etl {
     tuple(Ts&&... ts) { return etl::Tuple<Ts...> { etl::forward<Ts>(ts)... }; }
 
     /// forward_as_tuple
-    template <typename... Ts> constexpr etl::Tuple<Ts&&...>
+    template <typename... Ts> constexpr auto
     forward_as_tuple(Ts&&... ts) noexcept { return etl::Tuple<Ts&&...> { etl::forward<Ts>(ts)... }; }
 
     /// pair of values with possible different types

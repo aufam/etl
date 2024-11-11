@@ -22,7 +22,8 @@ TEST(Array, Declaration) {
 TEST(Array, Empty) {
     val a = array<int, 0>();
     EXPECT_FALSE(a);
-    EXPECT_EQ(a, none);
+    EXPECT_EQ(a.size(), 0);
+    EXPECT_EQ(a.len(), 0);
 }
 
 TEST(Array, Indexing) {

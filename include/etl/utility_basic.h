@@ -97,22 +97,23 @@ namespace Project::etl {
 
     /// none type
     inline static constexpr struct None {
-        template <typename T, typename = enable_if_t<etl::is_compound_v<T>>> constexpr operator T() const { return T{}; }
+        template <typename T> 
+        static constexpr bool is_valid_type_v = (etl::is_iterator_v<T> && etl::has_operator_bool_v<T>);
+
+        constexpr bool operator==(None) const { return true; }
+        constexpr bool operator!=(None) const { return false; }
     } none;
 
-    template <typename T> constexpr etl::enable_if_t<etl::is_compound_v<T>, bool>
-    operator==(const T& value, None) {
-        if constexpr (etl::detail::trait_has_empty<T>::value) return value.empty();
-        else return !bool(value);
-    }
+    template <typename T> constexpr etl::enable_if_t<etl::None::is_valid_type_v<T>, bool>
+    operator==(const T& value, None) { return !bool(value); }
 
-    template <typename T> constexpr etl::enable_if_t<etl::is_compound_v<T>, bool>
+    template <typename T> constexpr etl::enable_if_t<etl::None::is_valid_type_v<T>, bool>
     operator==(None, const T& value) { return operator==(value, etl::none); }
 
-    template <typename T> constexpr etl::enable_if_t<etl::is_compound_v<T>, bool>
+    template <typename T> constexpr etl::enable_if_t<etl::None::is_valid_type_v<T>, bool>
     operator!=(const T& value, None) { return !operator==(value, etl::none); }
 
-    template <typename T> constexpr etl::enable_if_t<etl::is_compound_v<T>, bool>
+    template <typename T> constexpr etl::enable_if_t<etl::None::is_valid_type_v<T>, bool>
     operator!=(None, const T& value) { return !operator==(value, etl::none); }
 
     inline static constexpr struct {

@@ -169,7 +169,7 @@ TEST(LinkedList, Move) {
     var b = move(a);
 
     EXPECT_EQ(len(a), 0);
-    EXPECT_EQ(a.begin(), null);
+    EXPECT_EQ(a.begin(), none);
 
     EXPECT_EQ(len(b), 3);
     EXPECT_EQ(b[0], 0);

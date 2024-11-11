@@ -499,6 +499,10 @@ namespace Project::etl {
     template <typename T> struct has_operator_dereference<T, etl::void_t<decltype(*etl::declval<T>())>> : etl::true_type {};
     template <typename T> inline constexpr bool has_operator_dereference_v = etl::has_operator_dereference<T>::value;
 
+    template <typename T, typename = void> struct has_operator_bool : etl::false_type {};
+    template <typename T> struct has_operator_bool<T, etl::void_t<decltype(bool(etl::declval<T>()))>> : etl::true_type {};
+    template <typename T> inline constexpr bool has_operator_bool_v = etl::has_operator_bool<T>::value;
+
     /// is_iterator
     template <typename T> struct is_iterator : etl::bool_constant<etl::has_prefix_increment_v<T> && etl::has_operator_dereference_v<T>> {};
     template <typename T> inline constexpr bool is_iterator_v = etl::is_iterator<T>::value;
@@ -552,7 +556,7 @@ namespace Project::etl {
     /// trait get<I>()
     template <typename I, typename T, typename = void> struct trait_get_from_type : etl::false_type {};
 
-    /// trait get<I>()
+    /// trait get<i, j>()
     template <size_t i, size_t j, typename T, typename = void> struct trait_tuple_slice : etl::false_type {};
 
     /// trait next()

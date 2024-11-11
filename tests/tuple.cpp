@@ -86,7 +86,7 @@ TEST(Tuple, Apply) {
     EXPECT_EQ(a, 0);
     EXPECT_EQ(b, 3);
 
-    apply([](A, int& n) { n = 4; }, std::move(t));
+    apply([](A, int& n) { n = 4; }, move(t));
     EXPECT_EQ(a, 1);
     EXPECT_EQ(b, 4);
 }

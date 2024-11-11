@@ -84,8 +84,8 @@ TEST(String, SplitString) {
     EXPECT_EQ(ss[0], "Test");
     EXPECT_EQ(ss[1], "123");
     EXPECT_EQ(ss[2], "abc");
-    EXPECT_EQ(ss[3], null);
-    EXPECT_EQ(ss[4], null);
+    EXPECT_EQ(ss[3], "");
+    EXPECT_EQ(ss[4], "");
     EXPECT_EQ(len(ss), 3);
 }
 

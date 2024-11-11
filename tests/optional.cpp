@@ -36,7 +36,7 @@ TEST(Optional, Move) {
 TEST(Optional, Empty) {
     float* p = nullptr;
     float& r = *p;
-    var a = optional<int&>(r);
+    var a = optional(r);
     EXPECT_FALSE(a);
 
     val arr = array(1, 2, 3);

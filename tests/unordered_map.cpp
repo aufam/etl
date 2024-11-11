@@ -9,15 +9,15 @@ using namespace Project::etl::literals;
 
 TEST(unordered_map, Initialize) {
     var a = unordered_map<String<8>, int>(); // empty unordered_map
-    EXPECT_EQ(a.begin(), null);
+    EXPECT_EQ(a.begin(), none);
     EXPECT_EQ(a.len(), 0);
 
     val c = unordered_map(pair("one"s, 1), pair("two"s, 2), pair("three"s, 3)); // from variadic function
-    EXPECT_NE(c.begin(), null);
+    EXPECT_NE(c.begin(), none);
     EXPECT_EQ(c.len(), 3);
 
     var d = unordered_map<String<8>, int>({{"one", 1}, {"two", 2}, {"three", 3}}); // from initializer_list
-    EXPECT_NE(d.begin(), null);
+    EXPECT_NE(d.begin(), none);
     EXPECT_EQ(d.len(), 3);
 }
 

@@ -18,7 +18,8 @@ namespace Project::etl::detail {
     size_t json_max_size_variadic(etl::Pair<const char*, const Ts&>... pairs);
 }
 
-namespace Project::etl::json {
+namespace Project::etl {
+    // TODO:
     template <typename T> struct trait_json_serializer<T, etl::enable_if_t<etl::is_integral_v<T>>> : etl::true_type {
         template <typename R = std::string>
         static constexpr R serialize(const T& value) {
@@ -34,7 +35,9 @@ namespace Project::etl::json {
             }
         }
     };
+}
 
+namespace Project::etl::json {
     template <typename T, typename R = std::string> 
     R serialize(const T& value) {
         static_assert(etl::is_same_v<R, std::string> || etl::is_etl_string_v<R>, "Return type must be of type std::string or etl::String<N>");

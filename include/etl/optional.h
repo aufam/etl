@@ -20,19 +20,19 @@ namespace Project::etl {
         typedef T&& rval_reference;
 
         /// empty constructor
-        constexpr Optional() : valid(false) {}
+        constexpr Optional() : storage{}, valid(false) {}
 
         /// copy construct from original type
-        constexpr explicit Optional(const_reference value) : valid(bool(etl::addressof(value))) {
+        constexpr explicit Optional(const_reference value) : storage{}, valid(bool(etl::addressof(value))) {
             if (valid) { new (storage) T(value); }
         }
 
         /// move construct from original type
-        constexpr explicit Optional(rval_reference value) : valid(bool(etl::addressof(value))) {
+        constexpr explicit Optional(rval_reference value) : storage{}, valid(bool(etl::addressof(value))) {
             if (valid) { new (storage) T(etl::move(value)); }
         }
 
-        ~Optional() {
+        constexpr ~Optional() {
             if (valid) {
                 reinterpret_cast<T*>(storage)->~T();
                 valid = false;
@@ -40,17 +40,17 @@ namespace Project::etl {
         }
 
         /// copy construct from another Optional<T>
-        Optional(const Optional& other) : valid(other.valid) {
+        constexpr Optional(const Optional& other) : storage{}, valid(other.valid) {
             if (valid) { new (storage) T(*other); }
         }
 
         /// move construct from another Optional<T>
-        Optional(Optional&& other) noexcept : valid(etl::exchange(other.valid, false)) {
+        constexpr Optional(Optional&& other) noexcept : storage{}, valid(etl::exchange(other.valid, false)) {
             etl::copy(other.storage, storage);
         }
 
         /// copy assign from another Optional<T>
-        Optional& operator=(const Optional& other) {
+        constexpr Optional& operator=(const Optional& other) {
             if (this == &other) {
                 return *this;
             }
@@ -66,7 +66,7 @@ namespace Project::etl {
         }
 
         /// move assign from another Optional<T>
-        Optional& operator=(Optional&& other) noexcept {
+        constexpr Optional& operator=(Optional&& other) noexcept {
             if (this == &other) {
                 return *this;
             }
@@ -109,16 +109,16 @@ namespace Project::etl {
         constexpr explicit operator bool() const { return valid; }
 
         /// arrow operator
-        constexpr const_pointer operator->() const { return valid ? reinterpret_cast<const T*>(storage) : nullptr; }
-        constexpr pointer operator->() { return valid ? reinterpret_cast<T*>(storage) : nullptr; }
+        constexpr const_pointer operator->() const { return valid ? reinterpret_cast<const T*>(&storage[0]) : nullptr; }
+        constexpr pointer operator->() { return valid ? reinterpret_cast<T*>(&storage[0]) : nullptr; }
 
         /// dereference operator
-        constexpr const_reference operator*() const { return *reinterpret_cast<const T*>(valid ? storage : nullptr); }
-        constexpr reference operator*() { return *reinterpret_cast<T*>(valid ? storage : nullptr); }
+        constexpr const_reference operator*() const { return *reinterpret_cast<const T*>(valid ? &storage[0] : nullptr); }
+        constexpr reference operator*() { return *reinterpret_cast<T*>(valid ? &storage[0] : nullptr); }
 
         /// get pointer
-        constexpr const_pointer get() const { return valid ? reinterpret_cast<const T*>(storage) : nullptr; }
-        constexpr pointer get() { return valid ? reinterpret_cast<T*>(storage) : nullptr; }
+        constexpr const_pointer get() const { return valid ? reinterpret_cast<const T*>(&storage[0]) : nullptr; }
+        constexpr pointer get() { return valid ? reinterpret_cast<T*>(&storage[0]) : nullptr; }
 
         /// return value if valid or return other
         constexpr const_reference get_value_or(const_reference other) const { return valid ? *(*this) : other; }
@@ -163,9 +163,7 @@ namespace Project::etl {
 
     /// create optional with variadic template function, the type has to be implicitly specified
     template <typename T, typename... Args> constexpr auto
-    optional(Args&&... args) { 
-        return Optional<T>(T(etl::forward<Args>(args)...));
-    }
+    optional() { return Optional<T>(); }
 
     /// type traits
     template <typename T> struct is_optional : false_type {};

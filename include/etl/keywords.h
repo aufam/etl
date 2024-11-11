@@ -55,18 +55,17 @@
 #define is ==           // python's is (should be used only for comparing a variable to a literal)
 #define is_not !=
 
-#define null Project::etl::none // kotlin's null
 #define var auto        // kotlin's var
 #define val const auto  // kotlin's val
 #define fun auto        // kotlin's fun (should be used to define a function)
 
 #define lambda []       // capture-less lambda expression
-#define _ dummy__[[maybe_unused]] // unused variable
 
 using ::Project::etl::mv;
 using ::Project::etl::cp;
 using ::Project::etl::await;
 using ::Project::etl::defer;
+using ::Project::etl::_;
 
 #endif // ETL_DISABLE_MORE_KEYWORDS
 

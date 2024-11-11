@@ -8,20 +8,6 @@
 
 using namespace Project::etl;
 
-TEST(Any, test) {
-    struct Message {
-        uint8_t cmd;
-        union { float f; int i; uint32_t u; };
-    };
-
-    uint8_t buffer[sizeof(Message)];
-    auto ptr = new (buffer) Message{.cmd=10, .u=2};
-    std::cout << "cmd: " << int(ptr->cmd) << '\n'
-              << "u: " << ptr->u << '\n'
-              << "i: " << ptr->i << '\n'
-              << "f: " << ptr->f << '\n';
-}
-
 TEST(Any, Dynamic) {
     Any a = 10;
     EXPECT_EQ(a.as<int>(), 10);
