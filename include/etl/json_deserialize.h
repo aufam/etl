@@ -5,6 +5,7 @@
 #include "etl/json.h"
 #include "etl/result.h"
 #include "etl/string_view.h"
+#include "etl/type_traits.h"
 #include <optional>
 
 
@@ -135,7 +136,7 @@ namespace Project::etl::json {
                 return deserialize<typename T::type>(js, *res);
             }
         } else {
-            return etl::Err("Cannot deserialize the type");
+            static_assert(etl::always_false<T>::value, "JSON deserializer for the type is not defined");
         }
         return etl::Ok();
     }
