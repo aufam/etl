@@ -158,7 +158,7 @@ namespace Project::etl::json {
             return value ? serialize<etl::decay_t<decltype(*value)>, R>(*value) : "null";
         }
         else {
-            static_assert(etl::always_false<void>::value, "JSON serializer for the type is not defined");
+            static_assert(etl::always_false<T>::value, "JSON serializer for the type is not defined");
         }
     }
 }
