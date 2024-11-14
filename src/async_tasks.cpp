@@ -1,6 +1,7 @@
 #include "etl/async_task.h"
 #include "etl/thread.h"
 #include "etl/bit.h"
+#include <vector>
 
 using namespace Project::etl;
 
@@ -17,6 +18,7 @@ Future<void> task::sleep(Time timeout) {
 }
 
 void task::init() {
+    _ = std::vector<uint8_t>({1}); // make sure heap memory is initialized
     int prio = osPriorityAboveNormal;
     for (auto& thd: threads)
         thd.init({.function=&detail::execute, .prio=(osPriority_t) prio++});
