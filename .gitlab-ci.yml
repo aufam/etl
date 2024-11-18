@@ -21,6 +21,6 @@ build:
 test:
   stage: test
   script:
-    - ./build/test_17
-    - ./build/test_20
-    - ./build/test_23
+    - ./build/tests/test_17
+    - ./build/tests/test_20
+    - ./build/tests/test_23
