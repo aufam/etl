@@ -14,9 +14,9 @@ build:
     - cmake --build build -j10
   artifacts:
     paths:
-      - build/test_17
-      - build/test_20
-      - build/test_23
+      - build/tests/test_17
+      - build/tests/test_20
+      - build/tests/test_23
 
 test:
   stage: test
