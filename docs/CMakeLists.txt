@@ -9,7 +9,8 @@ add_custom_target(docs
     VERBATIM
 )
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/docs/html
+install(
+    DIRECTORY ${CMAKE_BINARY_DIR}/docs/html
     DESTINATION /usr/share/doc/etl
     OPTIONAL
 )

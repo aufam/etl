@@ -7,10 +7,12 @@ project(etl
 
 option(ETL_BUILD_TESTS "Build unit tests using Google Test" OFF)
 option(ETL_BUILD_DOCS "Build docs using Doxygen" OFF)
+option(ETL_INSTALL "Generate install target" ON)
 
 message(STATUS "ETL_VERSION     : ${etl_VERSION}")
 message(STATUS "ETL_BUILD_TESTS : ${ETL_BUILD_TESTS}")
 message(STATUS "ETL_BUILD_DOCS  : ${ETL_BUILD_DOCS}")
+message(STATUS "ETL_INSTALL     : ${ETL_INSTALL}")
 
 add_library(etl INTERFACE)
 
@@ -30,44 +32,31 @@ target_compile_definitions(etl INTERFACE
     -DETL_VERSION_PATCH=${PROJECT_VERSION_PATCH}
 )
 
-install(
-    TARGETS etl
-    EXPORT etlTargets
-    LIBRARY DESTINATION lib COMPONENT Runtime
-    ARCHIVE DESTINATION lib COMPONENT Development
-    RUNTIME DESTINATION bin COMPONENT Runtime
-    PUBLIC_HEADER DESTINATION include COMPONENT Development
-    BUNDLE DESTINATION bin COMPONENT Runtime
-)
+if (ETL_INSTALL)
+    include(CMakePackageConfigHelpers)
+    configure_package_config_file(
+        "${PROJECT_SOURCE_DIR}/cmake/etlConfig.cmake.in"
+        "${PROJECT_BINARY_DIR}/etlConfig.cmake"
+        INSTALL_DESTINATION lib/cmake/etl
+    )
 
-install(
-    DIRECTORY ${PROJECT_SOURCE_DIR}/include/
-    DESTINATION include
-)
+    write_basic_package_version_file(
+        "${PROJECT_BINARY_DIR}/etlConfigVersion.cmake"
+        VERSION ${ETL_VERSION}
+        COMPATIBILITY AnyNewerVersion
+    )
 
-install(
-    EXPORT etlTargets
-    DESTINATION lib/cmake/etl
-)
+    install(
+        FILES "${PROJECT_BINARY_DIR}/etlConfig.cmake"
+              "${PROJECT_BINARY_DIR}/etlConfigVersion.cmake"
+        DESTINATION lib/cmake/etl
+    )
 
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file(
-    "${PROJECT_BINARY_DIR}/etlConfigVersion.cmake"
-    VERSION ${ETL_VERSION}
-    COMPATIBILITY AnyNewerVersion
-)
-
-configure_package_config_file(
-    "${PROJECT_SOURCE_DIR}/cmake/etlConfig.cmake.in"
-    "${PROJECT_BINARY_DIR}/etlConfig.cmake"
-    INSTALL_DESTINATION lib/cmake/etl
-)
-
-install(
-    FILES "${PROJECT_BINARY_DIR}/etlConfigVersion.cmake"
-          "${PROJECT_BINARY_DIR}/etlConfig.cmake"
-    DESTINATION lib/cmake/etl
-)
+    install(
+        DIRECTORY ${PROJECT_SOURCE_DIR}/include/
+        DESTINATION include
+    )
+endif()
 
 if(NOT TARGET uninstall)
     configure_file(
