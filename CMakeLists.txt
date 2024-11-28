@@ -56,6 +56,21 @@ if (ETL_INSTALL)
         DIRECTORY ${PROJECT_SOURCE_DIR}/include/
         DESTINATION include
     )
+
+	install(
+		TARGETS etl
+		EXPORT etlTargets
+		LIBRARY DESTINATION lib COMPONENT Runtime
+		ARCHIVE DESTINATION lib COMPONENT Development
+		RUNTIME DESTINATION bin COMPONENT Runtime
+		PUBLIC_HEADER DESTINATION include COMPONENT Development
+		BUNDLE DESTINATION bin COMPONENT Runtime
+	)
+
+	install(
+		EXPORT etlTargets
+		DESTINATION lib/cmake/etl
+	)
 endif()
 
 if(NOT TARGET uninstall)
