@@ -21,9 +21,11 @@ target_include_directories(etl INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 
-target_compile_options(etl INTERFACE
-    $<$<COMPILE_LANGUAGE:CXX>:-Wno-literal-suffix>
-)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_options(etl INTERFACE
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-literal-suffix>
+    )
+endif()
 
 target_compile_definitions(etl INTERFACE
     -DETL_VERSION="${PROJECT_VERSION}"
