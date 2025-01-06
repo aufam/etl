@@ -32,7 +32,10 @@ namespace Project::etl {
             if (valid) { new (storage) T(etl::move(value)); }
         }
 
-        constexpr ~Optional() {
+#if __cplusplus > 201703L
+        constexpr
+#endif
+        ~Optional() {
             if (valid) {
                 reinterpret_cast<T*>(storage)->~T();
                 valid = false;
