@@ -8,8 +8,8 @@ time computation and better readability.
 The C++ standard template library (STL) has well tested 
 functionality. but there are some parts that do not fit 
 well with limited resource requirements needed by embedded
-systems. Also, most embedded C++ compilers do not support 
-the standard beyond C++03. 
+systems. Also, some embedded compilers do not support 
+the standard beyond C++17. 
 
 ETL is not meant to completely replace STL, but to complement
 it. ETL also has some useful components that are not present
@@ -17,7 +17,7 @@ in STL.
 
 ## Requirements
 * C++17 minimum
-* cmake minimum version 3.7
+* cmake minimum version 3.14
 
 ## Features
 * Cross-platform
@@ -26,6 +26,7 @@ in STL.
 [LinkedList](include/etl/linked_list.h), and [Map](include/etl/map.h))
 * Static [string class](include/etl/string.h)
 * Static [function class](include/etl/function.h)
+* Return error by value using [Result](include/etl/result.h)
 * String view in constexpr context
 * JSON parser in constexpr context
 * No RTTI
@@ -36,7 +37,6 @@ in STL.
 
 ## Installation
 ```bash
-mkdir build
 cmake -B build
 cmake --build build
 sudo cmake --build build --target install
@@ -44,7 +44,7 @@ sudo cmake --build build --target install
 
 To uninstall:
 ```bash
-sudo make uninstall -C build
+sudo cmake --build build --target uninstall
 ```
 
 ## How to use
@@ -61,22 +61,23 @@ if it's not installed
 include_directories(etl/include)
 ```
 
-## Build test
-Prerequisites:
-* [Google Test](https://github.com/google/googletest)
+## Tests
+Build tests:
 ```bash
 cmake -DETL_BUILD_TESTS=ON -B build
 cmake --build build
 ```
-### Run tests
+Run tests:
 ```bash
-ctest --test-dir build --output-on-failure
+ctest --test-dir build/tests --output-on-failure
 ```
 
-## Build documentation
+## Documentation
 Prerequisites:
 * [Doxygen](https://github.com/doxygen/doxygen.git)
+
+Build docs:
 ```bash
 cmake -DETL_BUILD_DOCS=ON -B build
-cmake --build build
+cmake --build build --target docs
 ```
